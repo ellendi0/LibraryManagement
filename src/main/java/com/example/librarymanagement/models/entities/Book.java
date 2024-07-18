@@ -1,14 +1,18 @@
 package com.example.librarymanagement.models.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "book")
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +27,8 @@ public class Book {
     @Column(nullable = false)
     private String publisher;
 
-    @Column(nullable = false)
-    private Date publishedDate;
+    @Column
+    private Integer publishedYear;
 
     @Column(nullable = false)
     private String genre;
