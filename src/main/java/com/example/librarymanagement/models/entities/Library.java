@@ -8,37 +8,23 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "book")
-public class Book {
+@Table(name = "library")
+public class Library {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
 
     @Column(nullable = false)
-    private String author;
+    private String address;
 
-    @Column(nullable = false)
-    private String publisher;
-
-    @Column
-    private Integer publishedYear;
-
-    @Column(nullable = false)
-    private String genre;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "library")
     @JsonIgnore
     private List<Inventory> inventory;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
-    private List<Transaction> transactions;
-
 }

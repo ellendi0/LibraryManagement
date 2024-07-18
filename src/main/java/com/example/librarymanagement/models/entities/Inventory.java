@@ -1,11 +1,11 @@
 package com.example.librarymanagement.models.entities;
 
-import com.example.librarymanagement.models.enums.Availability;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -13,16 +13,28 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "inventory")
-public class Inventory {
+public class Inventory implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Availability availability;
+    private Boolean isAvailable = Boolean.TRUE;
 
-    @OneToMany(mappedBy = "inventory", cascade = CascadeType.REMOVE)
-    private List<Book> books;
+    @Column(nullable = false)
+    private Boolean isReserved = Boolean.TRUE;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id", nullable = false)
+    private Book book;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_id", nullable = false)
+    private Library library;
+
+    public Inventory(Book book, Library library) {
+        this.book = book;
+        this.library = library;
+    }
 }
