@@ -1,5 +1,6 @@
 package com.example.librarymanagement.service.impl;
 
+import com.example.librarymanagement.exception.EntityNotFoundException;
 import com.example.librarymanagement.model.entity.Journal;
 import com.example.librarymanagement.model.entity.Reservation;
 import com.example.librarymanagement.model.enums.Availability;
@@ -9,7 +10,6 @@ import com.example.librarymanagement.repository.BookPresenceRepository;
 import com.example.librarymanagement.repository.ReservationRepository;
 import com.example.librarymanagement.service.BookPresenceService;
 import com.example.librarymanagement.service.JournalService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -39,10 +39,10 @@ public class BookPresenceServiceImpl implements BookPresenceService {
     @Override
     @Transactional
     public BookPresence addUserToBook(User user, Long libraryId, Long bookId) {
-        BookPresence bookPresence = getAllBookByLibraryIdAndBookId(libraryId, bookId).stream()
-                .filter(i -> i.getAvailability().equals(Availability.AVAILABLE))
+        BookPresence bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.AVAILABLE)
+                .stream()
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Available books"));
+                .orElseThrow(() -> new EntityNotFoundException("Unavailable books"));
 
         Journal journal = new Journal(user, bookPresence);
         bookPresence.getJournals().add(journal);
@@ -100,6 +100,11 @@ public class BookPresenceServiceImpl implements BookPresenceService {
         return getByLibraryId(libraryId).stream()
                 .filter(i -> i.getAvailability().equals(availability))
                 .toList();
+    }
+
+    @Override
+    public List<BookPresence> findAllByLibraryIdAndBookIdAndAvailability(Long libraryId, Long bookId, Availability availability) {
+        return bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, availability);
     }
 
     @Override

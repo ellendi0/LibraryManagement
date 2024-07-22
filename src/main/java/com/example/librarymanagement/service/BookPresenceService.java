@@ -14,5 +14,6 @@ public interface BookPresenceService {
     List<BookPresence> getByLibraryId(Long libraryId);
     List<BookPresence> getAllBookByLibraryIdAndBookId(Long libraryId, Long bookId);
     List<BookPresence> getAllBookByLibraryIdAndAvailability(Long libraryId, Availability availability);
+    List<BookPresence> findAllByLibraryIdAndBookIdAndAvailability(Long libraryId, Long bookId, Availability availability);
     void deleteBookPresenceById(Long id);
 }

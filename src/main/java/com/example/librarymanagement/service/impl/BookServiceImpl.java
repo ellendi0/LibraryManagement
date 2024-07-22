@@ -6,8 +6,10 @@ import com.example.librarymanagement.model.entity.Book;
 import com.example.librarymanagement.model.entity.BookPresence;
 import com.example.librarymanagement.model.entity.Reservation;
 import com.example.librarymanagement.repository.BookRepository;
+import com.example.librarymanagement.service.AuthorService;
 import com.example.librarymanagement.service.BookPresenceService;
 import com.example.librarymanagement.service.BookService;
+import com.example.librarymanagement.service.PublisherService;
 import com.example.librarymanagement.service.ReservationService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -20,13 +22,17 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookPresenceService bookPresenceService;
     private final ReservationService reservationService;
+    private final AuthorService authorService;
+    private final PublisherService publisherService;
 
     public BookServiceImpl(BookRepository bookRepository,
                            BookPresenceService bookPresenceService,
-                           ReservationService reservationService) {
+                           ReservationService reservationService, AuthorService authorService, PublisherService publisherService) {
         this.bookRepository = bookRepository;
         this.bookPresenceService = bookPresenceService;
         this.reservationService = reservationService;
+        this.authorService = authorService;
+        this.publisherService = publisherService;
     }
 
     @Override
@@ -53,7 +59,8 @@ public class BookServiceImpl implements BookService {
         if(bookRepository.existsByIsbn(book.getIsbn())){
             throw new DuplicateKeyException("Book", "ISBN");
         }
-
+        book.setAuthor(authorService.getAuthorById(authorId));
+        book.setPublisher(publisherService.getPublisherById(publisherId));
         return bookRepository.save(book);
     }
 
