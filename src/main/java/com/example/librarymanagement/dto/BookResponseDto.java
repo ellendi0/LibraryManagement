@@ -2,16 +2,9 @@ package com.example.librarymanagement.dto;
 
 import com.example.librarymanagement.model.entity.Book;
 import com.example.librarymanagement.model.enums.Genre;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Length;
 
 @Setter
 @Getter

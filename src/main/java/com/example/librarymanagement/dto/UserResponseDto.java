@@ -1,11 +1,9 @@
 package com.example.librarymanagement.dto;
 
+import com.example.librarymanagement.model.entity.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.example.librarymanagement.model.entity.User;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -15,7 +13,6 @@ public class UserResponseDto {
     private String lastName;
     private String email;
     private String phoneNumber;
-    List<ReservationDto> reservations;
 
     public UserResponseDto(User user) {
         firstName = user.getFirstName();

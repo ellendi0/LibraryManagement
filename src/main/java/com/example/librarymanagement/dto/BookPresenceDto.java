@@ -9,19 +9,19 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class BookPresenceDto {
-    private Long physicalIdentifier;
+    private Long id;
     private UserResponseDto userResponseDto;
     private String bookTitle;
-    private String bookAuthor;
-    private String libraryName;
+    private Long bookAuthorId;
+    private Long libraryNameId;
     private String address;
 
     public BookPresenceDto(BookPresence bookPresence) {
-        physicalIdentifier = bookPresence.getId();
+        id = bookPresence.getId();
         userResponseDto = bookPresence.getUser() != null ? new UserResponseDto(bookPresence.getUser()) : null;
         bookTitle = bookPresence.getBook().getTitle();
-        bookAuthor = bookPresence.getBook().getAuthor().getFirstName() + " " + bookPresence.getBook().getAuthor().getLastName();
-        libraryName = bookPresence.getLibrary().getName();
+        bookAuthorId = bookPresence.getBook().getAuthor().getId();
+        libraryNameId = bookPresence.getLibrary().getId();
         address = bookPresence.getLibrary().getAddress();
     }
 }
