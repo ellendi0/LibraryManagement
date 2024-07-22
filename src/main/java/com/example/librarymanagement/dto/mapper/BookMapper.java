@@ -3,19 +3,18 @@ package com.example.librarymanagement.dto.mapper;
 import com.example.librarymanagement.dto.BookRequestDto;
 import com.example.librarymanagement.dto.BookResponseDto;
 import com.example.librarymanagement.model.entity.Book;
-import org.springframework.stereotype.Component;
+import com.example.librarymanagement.model.enums.Genre;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
 public class BookMapper {
     public static Book toBook(BookRequestDto bookDto) {
         Book book = new Book();
         book.setTitle(bookDto.getTitle());
         book.setIsbn(bookDto.getIsbn());
         book.setPublishedYear(bookDto.getPublishedYear());
-        book.setGenre(bookDto.getGenre());
+        book.setGenre(Genre.fromString(bookDto.getGenre()));
         return book;
     }
 

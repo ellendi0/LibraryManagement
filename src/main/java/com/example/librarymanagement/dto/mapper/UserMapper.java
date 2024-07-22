@@ -3,14 +3,11 @@ package com.example.librarymanagement.dto.mapper;
 import com.example.librarymanagement.dto.UserRequestDto;
 import com.example.librarymanagement.dto.UserResponseDto;
 import com.example.librarymanagement.model.entity.User;
-import org.springframework.stereotype.Component;
-
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
 public class UserMapper {
     public static User toUser(UserRequestDto userRequestDto) {
         User user = new User();
