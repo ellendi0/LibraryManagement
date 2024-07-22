@@ -4,7 +4,6 @@ import com.example.librarymanagement.dto.BookPresenceDto;
 import com.example.librarymanagement.dto.LibraryDto;
 import com.example.librarymanagement.dto.mapper.BookPresenceMapper;
 import com.example.librarymanagement.dto.mapper.LibraryMapper;
-import com.example.librarymanagement.model.entity.Library;
 import com.example.librarymanagement.model.enums.Availability;
 import com.example.librarymanagement.service.LibraryService;
 import jakarta.validation.Valid;
@@ -31,7 +30,7 @@ public class LibraryController {
         this.libraryService = libraryService;
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<LibraryDto>> getAllLibraries() {
         return new ResponseEntity<>(LibraryMapper.toLibraryDto(libraryService.findAll()), HttpStatus.OK);
     }
@@ -42,25 +41,29 @@ public class LibraryController {
     }
 
     @PostMapping
-    public ResponseEntity<LibraryDto> createLibrary(@RequestBody @Valid Library library) {
-        return new ResponseEntity<>(new LibraryDto(libraryService.createLibrary(library)), HttpStatus.CREATED);
+    public ResponseEntity<LibraryDto> createLibrary(@RequestBody @Valid LibraryDto libraryDto) {
+        return new ResponseEntity<>(
+                new LibraryDto(libraryService.createLibrary(LibraryMapper.toLibrary(libraryDto))),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LibraryDto> updateLibrary(@PathVariable Long id, @RequestBody @Valid Library library) {
-        return new ResponseEntity<>(new LibraryDto(libraryService.updateLibrary(id, library)), HttpStatus.OK);
+    public ResponseEntity<LibraryDto> updateLibrary(@PathVariable Long id, @RequestBody @Valid LibraryDto libraryDto) {
+        return new ResponseEntity<>(
+                new LibraryDto(libraryService.updateLibrary(id, LibraryMapper.toLibrary(libraryDto))), HttpStatus.OK);
     }
 
-    @PostMapping("/{libraryId}/inventory")
+    @PostMapping("/{libraryId}/contents")
     public ResponseEntity<LibraryDto> addBookToLibrary(@PathVariable Long libraryId, @RequestParam Long bookId) {
         return new ResponseEntity<>(new LibraryDto(libraryService.addBookToLibrary(libraryId, bookId)), HttpStatus.OK);
     }
 
-    @GetMapping("/{libraryId}/inventory")
+    @GetMapping("/{libraryId}/contents")
     public ResponseEntity<List<BookPresenceDto>> getAllBooksByLibraryIdAndStatus(@PathVariable Long libraryId,
-                                                                                 @RequestParam Availability availability) {
+                                                                                 @RequestParam String availability) {
         return new ResponseEntity<>(BookPresenceMapper.toBookPresenceDto(
-                libraryService.getAllBooksByLibraryIdAndAvailability(libraryId, availability)), HttpStatus.OK);
+                libraryService.getAllBooksByLibraryIdAndAvailability(libraryId, Availability.fromString(availability))),
+                HttpStatus.OK);
     }
 
     @GetMapping("/{libraryId}/all")
@@ -69,7 +72,7 @@ public class LibraryController {
                 libraryService.getAllBooksByLibraryId(libraryId)), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{libraryId}/inventory")
+    @DeleteMapping("/{libraryId}/contents")
     public ResponseEntity<Void> removeBookFromLibrary(@PathVariable Long libraryId, @RequestParam Long bookId) {
         libraryService.removeBookFromLibrary(libraryId, bookId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

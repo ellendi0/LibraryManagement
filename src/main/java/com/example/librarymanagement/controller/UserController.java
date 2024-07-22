@@ -69,7 +69,7 @@ public class UserController {
                 ReservationMapper.toReservationDto(userService.findReservationsByUser(id)), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/journal")
+    @GetMapping("/{id}/journals")
     public ResponseEntity<List<JournalDto>> findJournalsByUser(@PathVariable Long id) {
         return new ResponseEntity<>(JournalMapper.toJournalDto(userService.findJournalsByUser(id)), HttpStatus.OK);
     }

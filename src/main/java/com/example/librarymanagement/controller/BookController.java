@@ -39,19 +39,17 @@ public class BookController {
         return new ResponseEntity<>(new BookResponseDto(bookService.getBookById(id)), HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<BookResponseDto> getBookByTitleAndAuthor(@RequestParam String title,
                                                                    @RequestParam Long author) {
         return new ResponseEntity<>(new BookResponseDto(bookService.getBookByTitleAndAuthor(title, author)), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<BookResponseDto> createBook(@RequestParam(name = "author") Long authorId,
-                                                      @RequestParam(name = "publisher") Long publisherId,
-                                                      @RequestBody @Valid BookRequestDto bookDto) {
-        return new ResponseEntity<>(
-                new BookResponseDto(bookService.createBook(authorId, publisherId, BookMapper.toBook(bookDto))),
-                HttpStatus.CREATED);
+    public ResponseEntity<BookResponseDto> createBook(@RequestBody @Valid BookRequestDto bookDto) {
+        return new ResponseEntity<>(new BookResponseDto(
+                        bookService.createBook(bookDto.getAuthorId(), bookDto.getPublisherId(), BookMapper.toBook(bookDto))),
+                        HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
