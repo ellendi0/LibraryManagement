@@ -10,7 +10,8 @@ public class ReservationMapper {
     public static ReservationDto toReservationDto(Reservation reservation) {
         ReservationDto reservationDto = new ReservationDto();
         reservationDto.setBookTitle(reservation.getBook().getTitle());
-        reservationDto.setAuthor(reservationDto.getAuthor());
+        reservationDto.setAuthor(reservation.getBook().getAuthor().getFirstName()
+                + " " + reservation.getBook().getAuthor().getLastName());
         if(reservation.getLibrary() != null){
             reservationDto.setNameOfLibrary(reservation.getLibrary().getName());
         }else {
