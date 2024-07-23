@@ -87,21 +87,21 @@ public class UserController {
                                                                        @RequestParam(required = false) Long libraryId,
                                                                        @RequestParam Long bookId) {
         return new ResponseEntity<>(
-                ReservationMapper.toReservationDto(userService.reserveTheBookFromLibrary(userId, libraryId, bookId)),
+                ReservationMapper.toReservationDto(userService.reserveBookInLibrary(userId, libraryId, bookId)),
                 HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}/borrowings")
-    public ResponseEntity<List<Journal>> returnBookToLibrary(@PathVariable(name = "id") Long userId,
+    public ResponseEntity<List<JournalDto>> returnBookToLibrary(@PathVariable(name = "id") Long userId,
                                                              @RequestParam Long libraryId,
                                                              @RequestParam Long bookId) {
-        return new ResponseEntity<>((userService.returnBookFromLibrary(userId, libraryId, bookId)), HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(JournalMapper.toJournalDto(userService.returnBookToLibrary(userId, libraryId, bookId)), HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/{id}/reservations")
     public ResponseEntity<Void> cancelBookFromLibrary(@PathVariable(name = "id") Long userId,
                                                       @RequestParam Long bookId) {
-        userService.cancelReservationFromLibrary(userId, bookId);
+        userService.cancelReservationInLibrary(userId, bookId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
