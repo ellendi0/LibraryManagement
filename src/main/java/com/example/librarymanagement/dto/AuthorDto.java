@@ -25,7 +25,7 @@ public class AuthorDto {
     private String lastName;
 
     @Size(max = 50, message = "Pseudonym must contain no more that 50 characters")
-    @Pattern(regexp = "\\w", message = "Pseudonym must contain of characters")
+    @Pattern(regexp = "^[a-zA-Z0-9',.-]+( [a-zA-Z0-9',.-]+)*$", message = "Pseudonym must contain of characters")
     private String pseudonym;
 
     public AuthorDto(Author author){

@@ -17,6 +17,6 @@ public class ReservationDto {
         this.bookTitle = reservation.getBook().getTitle();
         this.author = reservation.getBook().getAuthor()
                 .getFirstName() + " " + reservation.getBook().getAuthor().getLastName();
-        this.nameOfLibrary = reservation.getBook().getTitle();
+        this.nameOfLibrary = reservation.getLibrary().getName();
     }
 }

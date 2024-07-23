@@ -30,13 +30,13 @@ public class UserRequestDto {
     @NotBlank(message = "Email can't be empty")
     private String email;
 
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be 10 digits")
+    private String phoneNumber;
+
     @Pattern(regexp = "(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}",
             message = "Password must be at least 6 characters, one uppercase letter and one number")
     @NotBlank(message = "Password can't be empty")
     private String plainPassword;
-
-    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be 10 digits")
-    private String phoneNumber;
 
     public UserRequestDto(User user) {
         firstName = user.getFirstName();

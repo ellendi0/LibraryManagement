@@ -13,8 +13,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LibraryDto {
     @Size(min = 2, max = 50, message = "Name must contain no more than 50 characters")
-    @Pattern(regexp = "^[A-Z][a-zA-Z]*( [A-Z][a-zA-Z]*)*$",
-            message = "Library must start with an uppercase letter, contain alphabetic characters and spaces between words")
+    @Pattern(regexp = "^[a-zA-Z0-9',.-]+( [a-zA-Z0-9',.-]+)*$",
+            message = "Library name must start with an uppercase letter")
     private String name;
 
     @Column(nullable = false)
