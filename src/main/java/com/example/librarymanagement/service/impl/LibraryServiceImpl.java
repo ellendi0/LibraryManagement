@@ -76,8 +76,13 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
-    public void removeBookFromLibrary(Long libraryId, Long bookPresenceId) {
-        bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookPresenceId);
+    public void removeBookFromLibrary(Long libraryId, Long bookPresenceId){
+        Library library = getLibraryById(libraryId);
+        BookPresence bookPresence = bookPresenceService.getById(bookPresenceId);
+
+        library.getBookPresence().remove(bookPresence);
+
+        bookPresenceService.deleteBookPresenceById(bookPresenceId);
     }
 
     @Override

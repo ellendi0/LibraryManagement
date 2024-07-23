@@ -99,18 +99,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Reservation> reserveTheBookFromLibrary(Long userId, Long libraryId, Long bookId) {
+    public List<Reservation> reserveBookInLibrary(Long userId, Long libraryId, Long bookId) {
         return reservationService.doReservationBook(getUserById(userId), libraryId, bookId);
     }
 
     @Override
-    public void cancelReservationFromLibrary(Long userId, Long reservationId) {
+    public void cancelReservationInLibrary(Long userId, Long reservationId) {
         reservationService.removeReservation(getUserById(userId), reservationId);
     }
 
     @Override
     @Transactional
-    public List<Journal> returnBookFromLibrary(Long userId, Long libraryId, Long bookId) {
+    public List<Journal> returnBookToLibrary(Long userId, Long libraryId, Long bookId) {
         return bookPresenceService.removeUserFromBook(getUserById(userId), libraryId, bookId).getJournals();
     }
 

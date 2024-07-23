@@ -10,6 +10,7 @@ public interface BookPresenceService {
     BookPresence createBookPresence(BookPresence bookPresence);
     BookPresence addUserToBook(User user, Long libraryId, Long bookId);
     BookPresence removeUserFromBook(User user, Long libraryId, Long bookId);
+    BookPresence getById(Long id);
     List<BookPresence> getByBookId(Long bookId);
     List<BookPresence> getByLibraryId(Long libraryId);
     List<BookPresence> getAllBookByLibraryIdAndBookId(Long libraryId, Long bookId);

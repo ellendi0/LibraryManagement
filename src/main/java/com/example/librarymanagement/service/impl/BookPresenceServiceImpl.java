@@ -81,6 +81,12 @@ public class BookPresenceServiceImpl implements BookPresenceService {
     }
 
     @Override
+    public BookPresence getById(Long id) {
+        return bookPresenceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book"));
+    }
+
+    @Override
     public List<BookPresence> getByBookId(Long bookId) {
         return bookPresenceRepository.findAllByBookId(bookId);
     }

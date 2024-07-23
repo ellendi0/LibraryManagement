@@ -15,8 +15,8 @@ public interface UserService {
     List<Reservation> findReservationsByUser(Long userId);
     List<Journal> findJournalsByUser(Long userId);
     List<Journal> borrowBookFromLibrary(Long userId, Long libraryId, Long bookId);
-    List<Reservation> reserveTheBookFromLibrary(Long userId, Long libraryId, Long bookId);
-    void cancelReservationFromLibrary(Long userId, Long bookId);
-    List<Journal> returnBookFromLibrary(Long userId, Long libraryId, Long bookId);
+    List<Reservation> reserveBookInLibrary(Long userId, Long libraryId, Long bookId);
+    void cancelReservationInLibrary(Long userId, Long bookId);
+    List<Journal> returnBookToLibrary(Long userId, Long libraryId, Long bookId);
     void deleteUser(Long id);
 }
