@@ -1,18 +1,10 @@
-package com.example.librarymanagement.model.enums;
+package com.example.librarymanagement.model.enums
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonCreator
 
-public enum Genre {
+enum class Genre {
     POETRY, PROSE, DRAMA;
 
     @JsonCreator
-    public static Genre fromValue(String value) {
-        return Genre.valueOf(value.toUpperCase());
-    }
-
-    @JsonValue
-    public String toValue() {
-        return name().toLowerCase();
-    }
+    fun fromString(value: String): Genre = valueOf(value.uppercase())
 }

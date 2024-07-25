@@ -1,36 +1,22 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
-import java.util.List;
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString(exclude = "bookPresence")
 @Table(name = "library")
-public class Library {
+data class Library (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    var id: Long ?= null,
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String address;
+    var name: String = "",
+    var address: String = "",
 
     @OneToMany(mappedBy = "library")
-    private List<BookPresence> bookPresence;
-}
+    var bookPresence: MutableList<BookPresence> = mutableListOf()
+)

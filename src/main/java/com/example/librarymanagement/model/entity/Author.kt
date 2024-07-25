@@ -1,35 +1,24 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "author")
-public class Author {
+data class Author (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    val id: Long ?= null,
 
-    @Column(nullable = false)
-    private String firstName;
+    var firstName: String = "",
+    var lastName: String = "",
+    var pseudonym: String ?= null,
 
-    @Column(nullable = false)
-    private String lastName;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "author")
-    private List<Book> books;
-}
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "author")
+    var books: MutableList<Book> = mutableListOf()
+)
