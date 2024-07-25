@@ -58,7 +58,6 @@ public class LibraryServiceImpl implements LibraryService {
         Book book = bookService.getBookById(bookId);
         BookPresence bookPresence = new BookPresence(book, library);
 
-        book.getBookPresence().add(bookPresence);
         library.getBookPresence().add(bookPresence);
         bookPresenceService.createBookPresence(bookPresence);
 

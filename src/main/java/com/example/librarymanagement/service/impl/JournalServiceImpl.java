@@ -7,7 +7,6 @@ import com.example.librarymanagement.service.JournalService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class JournalServiceImpl implements JournalService {
@@ -46,13 +45,6 @@ public class JournalServiceImpl implements JournalService {
 
     @Override
     public void deleteJournal(Long id) {
-        Optional<Journal> journal = journalRepository.findById(id);
-
-        if (journal.isPresent()) {
-            journal.get().setUser(null);
-            journal.get().setBookPresence(null);
-
-            journalRepository.delete(journal.get());
-        }
+        journalRepository.findById(id).ifPresent(journalRepository::delete);
     }
 }

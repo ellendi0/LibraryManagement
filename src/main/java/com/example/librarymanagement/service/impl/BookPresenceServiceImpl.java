@@ -1,10 +1,11 @@
 package com.example.librarymanagement.service.impl;
 
+import com.example.librarymanagement.exception.BookNotAvailableException;
 import com.example.librarymanagement.exception.EntityNotFoundException;
+import com.example.librarymanagement.model.entity.BookPresence;
 import com.example.librarymanagement.model.entity.Journal;
 import com.example.librarymanagement.model.entity.Reservation;
 import com.example.librarymanagement.model.enums.Availability;
-import com.example.librarymanagement.model.entity.BookPresence;
 import com.example.librarymanagement.model.entity.User;
 import com.example.librarymanagement.repository.BookPresenceRepository;
 import com.example.librarymanagement.repository.ReservationRepository;
@@ -42,7 +43,7 @@ public class BookPresenceServiceImpl implements BookPresenceService {
         BookPresence bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.AVAILABLE)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Unavailable books"));
+                .orElseThrow(() -> new BookNotAvailableException(libraryId, bookId));
 
         Journal journal = new Journal(user, bookPresence);
         bookPresence.getJournals().add(journal);
@@ -51,7 +52,7 @@ public class BookPresenceServiceImpl implements BookPresenceService {
         journalService.createJournal(journal);
 
         bookPresence.setUser(user);
-        bookPresence.setAvailability(Availability.NOT_AVAILABLE);
+        bookPresence.setAvailability(Availability.UNAVAILABLE);
 
         return bookPresenceRepository.save(bookPresence);
     }

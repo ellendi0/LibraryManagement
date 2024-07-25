@@ -4,33 +4,44 @@ import com.example.librarymanagement.dto.UserRequestDto;
 import com.example.librarymanagement.dto.UserResponseDto;
 import com.example.librarymanagement.model.entity.User;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class UserMapper {
-    public static User toUser(UserRequestDto userRequestDto) {
+    private static final String salt = BCrypt.gensalt(12);
+
+    public User toUser(UserRequestDto userRequestDto) {
         User user = new User();
         user.setEmail(userRequestDto.getEmail());
         user.setFirstName(userRequestDto.getFirstName());
         user.setLastName(userRequestDto.getLastName());
         user.setPhoneNumber(userRequestDto.getPhoneNumber());
-        String hashedPassword = hashPassword(userRequestDto.getPlainPassword());
-        user.setPassword(hashedPassword);
+        user.setPassword(hashPassword(userRequestDto.getPassword()));
         return user;
     }
 
-    private static String hashPassword(String plainPassword) {
-        String salt = BCrypt.gensalt(12);
-        return BCrypt.hashpw(plainPassword, salt);
+    public UserResponseDto toUserResponseDto(User user) {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setId(user.getId());
+        userResponseDto.setEmail(user.getEmail());
+        userResponseDto.setFirstName(user.getFirstName());
+        userResponseDto.setLastName(user.getLastName());
+        userResponseDto.setPhoneNumber(user.getPhoneNumber());
+        return userResponseDto;
     }
 
-    public static List<UserResponseDto> toUsers(List<User> usersList) {
-        List<UserResponseDto> users = new ArrayList<>();
+    public List<UserResponseDto> toUserResponseDto(List<User> usersList) {
+        if(usersList == null || usersList.isEmpty()) return new ArrayList<>();
 
-        if(!usersList.isEmpty()){
-            users = usersList.stream().map(UserResponseDto::new).toList();
-        }
-        return users;
+        return usersList.stream()
+                .map(this::toUserResponseDto)
+                .toList();
+    }
+
+    private String hashPassword(String plainPassword) {
+        return BCrypt.hashpw(plainPassword, salt);
     }
 }

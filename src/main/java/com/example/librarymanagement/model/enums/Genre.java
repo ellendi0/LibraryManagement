@@ -4,28 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Genre {
-    POETRY("Poetry"),
-    PROSE("Prose"),
-    DRAMA("Drama");
+    POETRY, PROSE, DRAMA;
 
-    private String value;
-
-    Genre(String value) {
-        this.value = value;
+    @JsonCreator
+    public static Genre fromValue(String value) {
+        return Genre.valueOf(value.toUpperCase());
     }
 
     @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    @JsonCreator
-    public static Genre fromString(String value) {
-        for (Genre genre : Genre.values()) {
-            if (genre.value.equalsIgnoreCase(value)) {
-                return genre;
-            }
-        }
-        throw new IllegalArgumentException("There is no genre with value " + value + ".\nMust be one of Poetry, Prose, Drama");
+    public String toValue() {
+        return name().toLowerCase();
     }
 }

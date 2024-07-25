@@ -1,5 +1,6 @@
 package com.example.librarymanagement.dto;
 
+import com.example.librarymanagement.model.enums.Genre;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class BookRequestDto {
+    private Long id;
+
     @Size(max = 100, message = "Title must contain no more than 100 characters")
     @NotBlank(message = "Title can't be blank")
     private String title;
@@ -24,7 +27,7 @@ public class BookRequestDto {
     private Long isbn;
 
     @NotNull(message = "Genre can't be empty")
-    private String genre;
+    private Genre genre;
 
     @NotNull(message = "Author can't be empty")
     private Long authorId;

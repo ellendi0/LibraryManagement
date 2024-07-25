@@ -7,11 +7,9 @@ import com.example.librarymanagement.dto.UserResponseDto;
 import com.example.librarymanagement.dto.mapper.JournalMapper;
 import com.example.librarymanagement.dto.mapper.ReservationMapper;
 import com.example.librarymanagement.dto.mapper.UserMapper;
-import com.example.librarymanagement.model.entity.Journal;
 import com.example.librarymanagement.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,85 +27,94 @@ import java.util.List;
 @RequestMapping("/api/v1/user")
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
+    private final JournalMapper journalMapper;
+    private final ReservationMapper reservationMapper;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserMapper userMapper, JournalMapper journalMapper, ReservationMapper reservationMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
+        this.journalMapper = journalMapper;
+        this.reservationMapper = reservationMapper;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
-        return new ResponseEntity<>(new UserResponseDto(userService.getUserById(id)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto findById(@PathVariable Long id) {
+        return userMapper.toUserResponseDto(userService.getUserById(id));
     }
 
     @GetMapping
-    public ResponseEntity<UserResponseDto> getUserByPhoneNumberOrEmail(@RequestParam(name = "email", required = false) String email,
-                                                                       @RequestParam(name = "phoneNumber", required = false) String phoneNumber) {
-        return new ResponseEntity<>(new UserResponseDto(userService.getUserByPhoneNumberOrEmail(email, phoneNumber)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto getUserByPhoneNumberOrEmail(@RequestParam(name = "email", required = false) String email,
+                                                       @RequestParam(name = "phoneNumber", required = false) String phoneNumber) {
+        return userMapper.toUserResponseDto(userService.getUserByPhoneNumberOrEmail(email, phoneNumber));
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody @Valid UserRequestDto user) {
-        return new ResponseEntity<>(new UserResponseDto(
-                userService.createUser(UserMapper.toUser(user))), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponseDto createUser(@RequestBody @Valid UserRequestDto user) {
+        return userMapper.toUserResponseDto(userService.createUser(userMapper.toUser(user)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
-                                                      @RequestBody @Valid UserRequestDto userRequestDto) {
-        return new ResponseEntity<>(
-                new UserResponseDto(userService.updateUser(id, UserMapper.toUser(userRequestDto))), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto updateUser(@PathVariable Long id,
+                                      @RequestBody @Valid UserRequestDto userRequestDto) {
+        return userMapper.toUserResponseDto(userService.updateUser(id, userMapper.toUser(userRequestDto)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/{id}/reservations")
-    public ResponseEntity<List<ReservationDto>> findReservationsByUser(@PathVariable Long id) {
-        return new ResponseEntity<>(
-                ReservationMapper.toReservationDto(userService.findReservationsByUser(id)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDto> findReservationsByUser(@PathVariable Long id) {
+        return reservationMapper.toReservationDto(userService.findReservationsByUser(id));
     }
 
     @GetMapping("/{id}/journals")
-    public ResponseEntity<List<JournalDto>> findJournalsByUser(@PathVariable Long id) {
-        return new ResponseEntity<>(JournalMapper.toJournalDto(userService.findJournalsByUser(id)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public List<JournalDto> findJournalsByUser(@PathVariable Long id) {
+        return journalMapper.toJournalDto(userService.findJournalsByUser(id));
     }
 
     @PostMapping("/{id}/borrowings")
-    public ResponseEntity<List<JournalDto>> borrowBookFromLibrary(@PathVariable(name = "id") Long userId,
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<JournalDto> borrowBookFromLibrary(@PathVariable(name = "id") Long userId,
                                                                   @RequestParam Long libraryId,
                                                                   @RequestParam Long bookId) {
-        return new ResponseEntity<>(
-                JournalMapper.toJournalDto(userService.borrowBookFromLibrary(userId, libraryId, bookId)), HttpStatus.OK);
+        return journalMapper.toJournalDto(userService.borrowBookFromLibrary(userId, libraryId, bookId));
     }
 
     @PostMapping("/{id}/reservations")
-    public ResponseEntity<List<ReservationDto>> reserveBookFromLibrary(@PathVariable(name = "id") Long userId,
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<ReservationDto> reserveBookInLibrary(@PathVariable(name = "id") Long userId,
                                                                        @RequestParam(required = false) Long libraryId,
                                                                        @RequestParam Long bookId) {
-        return new ResponseEntity<>(
-                ReservationMapper.toReservationDto(userService.reserveBookInLibrary(userId, libraryId, bookId)),
-                HttpStatus.OK);
+        return reservationMapper.toReservationDto(userService.reserveBookInLibrary(userId, libraryId, bookId));
     }
 
     @DeleteMapping("/{id}/borrowings")
-    public ResponseEntity<List<JournalDto>> returnBookToLibrary(@PathVariable(name = "id") Long userId,
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public List<JournalDto> returnBookToLibrary(@PathVariable(name = "id") Long userId,
                                                              @RequestParam Long libraryId,
                                                              @RequestParam Long bookId) {
-        return new ResponseEntity<>(JournalMapper.toJournalDto(userService.returnBookToLibrary(userId, libraryId, bookId)), HttpStatus.NO_CONTENT);
+        return journalMapper.toJournalDto(userService.returnBookToLibrary(userId, libraryId, bookId));
     }
 
     @DeleteMapping("/{id}/reservations")
-    public ResponseEntity<Void> cancelBookFromLibrary(@PathVariable(name = "id") Long userId,
-                                                      @RequestParam Long bookId) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelBookInLibrary(@PathVariable(name = "id") Long userId, @RequestParam Long bookId) {
         userService.cancelReservationInLibrary(userId, bookId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
-        return new ResponseEntity<>(userService.findAll().stream().map(UserResponseDto::new).toList(), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserResponseDto> getAllUsers() {
+        return userMapper.toUserResponseDto(userService.findAll());
     }
 }

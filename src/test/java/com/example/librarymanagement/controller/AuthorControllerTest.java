@@ -1,7 +1,11 @@
 package com.example.librarymanagement.controller;
 
 import com.example.librarymanagement.dto.AuthorDto;
+import com.example.librarymanagement.dto.ErrorDto;
+import com.example.librarymanagement.dto.mapper.AuthorMapper;
+import com.example.librarymanagement.dto.mapper.ErrorMapper;
 import com.example.librarymanagement.exception.EntityNotFoundException;
+import com.example.librarymanagement.exception.GlobalExceptionHandler;
 import com.example.librarymanagement.model.entity.Author;
 import com.example.librarymanagement.service.AuthorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,35 +38,49 @@ public class AuthorControllerTest {
     @MockBean
     private AuthorService authorService;
 
+    @MockBean
+    private AuthorMapper authorMapper;
+
+    @MockBean
+    private ErrorMapper errorMapper;
+
+    @MockBean
+    private GlobalExceptionHandler globalExceptionHandler;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     private static Author author1;
     private static Author author2;
     private static AuthorDto authorDto1;
+    private static AuthorDto authorDto2;
+    private static ErrorDto errorDto;
 
     @BeforeEach
     public void init() {
+        AuthorMapper authorMapper1 = new AuthorMapper();
+        ErrorMapper errorMapper1 = new ErrorMapper();
+
         author1 = new Author();
-        author1.setId(1L);
         author1.setFirstName("Author");
         author1.setLastName("Author");
-        author1.setPseudonym("Author");
 
         author2 = new Author();
-        author2.setId(2L);
         author2.setFirstName("Author");
         author2.setLastName("Author");
-        author2.setPseudonym("Author");
 
-        authorDto1 = new AuthorDto(author1);
+        authorDto1 = authorMapper1.toAuthorDto(author1);
+        authorDto2 = authorMapper1.toAuthorDto(author2);
+        errorDto = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
     }
 
     @Test
     void createAuthor() throws Exception {
+
         String expected = objectMapper.writeValueAsString(authorDto1);
 
         given(authorService.createAuthor(any(Author.class))).willReturn(author1);
+        given(authorMapper.toAuthorDto((Author) any())).willReturn(authorDto1);
 
         String result = mockMvc.perform(post("/api/v1/author")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -77,6 +96,8 @@ public class AuthorControllerTest {
         authorDto1.setLastName("author");
 
         given(authorService.createAuthor(any(Author.class))).willThrow(new IllegalArgumentException());
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto);
+        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto);
 
         mockMvc.perform(post("/api/v1/author")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -90,6 +111,7 @@ public class AuthorControllerTest {
         String expected = objectMapper.writeValueAsString(authorDto1);
 
         given(authorService.updateAuthor(anyLong(), any(Author.class))).willReturn(author1);
+        given(authorMapper.toAuthorDto((Author) any())).willReturn(authorDto1);
 
         String result = mockMvc.perform(put("/api/v1/author/{id}", 1L)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -105,6 +127,8 @@ public class AuthorControllerTest {
         authorDto1.setLastName("author");
 
         given(authorService.updateAuthor(anyLong(), any(Author.class))).willThrow(new IllegalArgumentException());
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto);
+        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto);
 
         mockMvc.perform(put("/api/v1/author/{id}", 1L)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -115,9 +139,10 @@ public class AuthorControllerTest {
 
     @Test
     void getAllAuthors() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(authorDto1, new AuthorDto(author2)));
+        String expected = objectMapper.writeValueAsString(List.of(authorDto1, authorDto2));
 
         given(authorService.getAllAuthors()).willReturn(List.of(author1, author2));
+        given(authorMapper.toAuthorDto(List.of(author1, author2))).willReturn(List.of(authorDto1, authorDto2));
 
         String result = mockMvc.perform(get("/api/v1/author/all"))
                 .andExpect(status().isOk())
@@ -131,6 +156,7 @@ public class AuthorControllerTest {
         String expected = objectMapper.writeValueAsString(authorDto1);
 
         given(authorService.getAuthorById(1L)).willReturn(author1);
+        given(authorMapper.toAuthorDto(author1)).willReturn(authorDto1);
 
         String result = mockMvc.perform(get("/api/v1/author/{id}", 1L))
                 .andExpect(status().isOk())
@@ -142,6 +168,7 @@ public class AuthorControllerTest {
     @Test
     void getAuthorByIdWithInvalidId() throws Exception {
         given(authorService.getAuthorById(1L)).willThrow(new EntityNotFoundException("Author"));
+        given(errorMapper.toErrorDto(HttpStatus.NOT_FOUND, "Author")).willReturn(errorDto);
 
         mockMvc.perform(get("/api/v1/author/{id}", 1L))
                 .andExpect(status().isNotFound())

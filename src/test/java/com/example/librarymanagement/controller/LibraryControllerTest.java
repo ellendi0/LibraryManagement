@@ -1,9 +1,15 @@
 package com.example.librarymanagement.controller;
 
 import com.example.librarymanagement.dto.BookPresenceDto;
+import com.example.librarymanagement.dto.ErrorDto;
 import com.example.librarymanagement.dto.LibraryDto;
 import com.example.librarymanagement.dto.UserRequestDto;
+import com.example.librarymanagement.dto.mapper.BookPresenceMapper;
+import com.example.librarymanagement.dto.mapper.ErrorMapper;
+import com.example.librarymanagement.dto.mapper.LibraryMapper;
+import com.example.librarymanagement.dto.mapper.UserMapper;
 import com.example.librarymanagement.exception.EntityNotFoundException;
+import com.example.librarymanagement.exception.GlobalExceptionHandler;
 import com.example.librarymanagement.model.entity.Author;
 import com.example.librarymanagement.model.entity.Book;
 import com.example.librarymanagement.model.entity.BookPresence;
@@ -21,12 +27,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -45,34 +53,47 @@ public class LibraryControllerTest {
     @MockBean
     private LibraryService libraryService;
 
+    @MockBean
+    private LibraryMapper libraryMapper;
+
+    @MockBean
+    private ErrorMapper errorMapper;
+
+    @MockBean
+    private BookPresenceMapper bookPresenceMapper;
+
+    @MockBean
+    private GlobalExceptionHandler globalExceptionHandler;
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    private BookPresenceDto bookPresenceDto;
-    private LibraryDto libraryDto;
+    private static BookPresenceDto bookPresenceDto;
+    private static ErrorMapper errorMapper1;
+    private static LibraryDto libraryDto;
     private static Library library;
     private static BookPresence bookPresence;
-
+    private static ErrorDto errorDto1;
+    private static ErrorDto errorDto2;
 
     @BeforeEach
     void setUp() {
+        BookPresenceMapper bookPresenceMapper1 = new BookPresenceMapper(new UserMapper());
+        LibraryMapper libraryMapper1 = new LibraryMapper();
+        ErrorMapper errorMapper1 = new ErrorMapper();
+
         library = new Library();
-        library.setId(1L);
         library.setName("Library 1");
         library.setAddress("Address 1");
 
         Publisher publisher = new Publisher();
-        publisher.setId(1L);
         publisher.setName("Publisher1");
 
         Author author = new Author();
-        author.setId(1L);
         author.setFirstName("Author1");
         author.setLastName("Author1");
-        author.setPseudonym("Author1");
 
         Book book1 = new Book();
-        book1.setId(1L);
         book1.setTitle("Book1");
         book1.setAuthor(author);
         book1.setPublishedYear(2021);
@@ -81,7 +102,6 @@ public class LibraryControllerTest {
         book1.setIsbn(1234567890123L);
 
         User user1 = new User();
-        user1.setId(1L);
         user1.setFirstName("First");
         user1.setLastName("First");
         user1.setEmail("first@email.com");
@@ -89,7 +109,6 @@ public class LibraryControllerTest {
         user1.setPassword("Password1");
 
         bookPresence = new BookPresence();
-        bookPresence.setId(1L);
         bookPresence.setBook(book1);
         bookPresence.setLibrary(library);
         bookPresence.setUser(user1);
@@ -97,34 +116,30 @@ public class LibraryControllerTest {
 
         library.setBookPresence(List.of(bookPresence));
 
-        Journal jornal = new Journal();
-        jornal.setId(1L);
-        jornal.setBookPresence(bookPresence);
-        jornal.setUser(user1);
-        jornal.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
-        jornal.setDateOfReturning(LocalDate.parse("2024-07-22"));
+        Journal journal = new Journal();
+        journal.setUser(user1);
+        journal.setBookPresence(bookPresence);
+        journal.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
+        journal.setDateOfReturning(LocalDate.parse("2024-07-22"));
 
-        Reservation reservation = new Reservation();
-        reservation.setId(1L);
-        reservation.setBook(book1);
-        reservation.setUser(user1);
-        reservation.setLibrary(library);
+        Reservation reservation = new Reservation(user1, book1, library);
 
-        user1.setJournals(List.of(jornal));
+        user1.setJournals(List.of(journal));
         user1.setReservations(List.of(reservation));
         book1.setBookPresence(List.of(bookPresence));
         book1.setReservations(List.of(reservation));
-        bookPresence.setJournals(List.of(jornal));
+        bookPresence.setJournals(List.of(journal));
 
         UserRequestDto userRequestDto = new UserRequestDto();
         userRequestDto.setFirstName("First");
         userRequestDto.setLastName("First");
         userRequestDto.setEmail("first@example.com");
-        userRequestDto.setPlainPassword("Password1");
         userRequestDto.setPhoneNumber("1234567890");
 
-        libraryDto = new LibraryDto(library);
-        bookPresenceDto = new BookPresenceDto(bookPresence);
+        libraryDto = libraryMapper1.toLibraryDto(library);
+        bookPresenceDto = bookPresenceMapper1.toBookPresenceDto(bookPresence);
+        errorDto1 = errorMapper1.toErrorDto(HttpStatus.NOT_FOUND, "Library");
+        errorDto2 = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
     }
 
     @Test
@@ -132,6 +147,7 @@ public class LibraryControllerTest {
         String expected = objectMapper.writeValueAsString(libraryDto);
 
         given(libraryService.createLibrary(any(Library.class))).willReturn(library);
+        given(libraryMapper.toLibraryDto((Library) any())).willReturn(libraryDto);
 
         String result = mockMvc.perform(post("/api/v1/library")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -139,13 +155,17 @@ public class LibraryControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        assert expected.equals(result);
+        assertEquals(expected, result);
     }
+
 
     @Test
     void createLibraryWithInvalidData() throws Exception {
         libraryDto.setName("");
         libraryDto.setAddress("");
+
+        given(libraryService.createLibrary(any(Library.class))).willThrow(new IllegalArgumentException());
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto2);
 
         mockMvc.perform(post("/api/v1/library")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -158,6 +178,7 @@ public class LibraryControllerTest {
         String expected = objectMapper.writeValueAsString(libraryDto);
 
         given(libraryService.updateLibrary(anyLong(), any(Library.class))).willReturn(library);
+        given(libraryMapper.toLibraryDto((Library) any())).willReturn(libraryDto);
 
         String result = mockMvc.perform(put("/api/v1/library/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,13 +186,17 @@ public class LibraryControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assert expected.equals(result);
+        assertEquals(expected, result);
+
     }
 
     @Test
     void updateLibraryWithInvalidData() throws Exception {
         libraryDto.setName("");
         libraryDto.setAddress("");
+
+        given(libraryService.updateLibrary(anyLong(), any(Library.class))).willThrow(new IllegalArgumentException());
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto2);
 
         mockMvc.perform(put("/api/v1/library/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,19 +209,22 @@ public class LibraryControllerTest {
         String expected = objectMapper.writeValueAsString(libraryDto);
 
         given(libraryService.addBookToLibrary(anyLong(), anyLong())).willReturn(library);
+        given(libraryMapper.toLibraryDto((Library) any())).willReturn(libraryDto);
 
         String result = mockMvc.perform(post("/api/v1/library/{id}/contents", 1L)
                         .param("bookId", "1")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        assert expected.equals(result);
+        assertEquals(expected, result);
+
     }
 
     @Test
     void addBookToLibraryWithInvalidData() throws Exception {
         given(libraryService.addBookToLibrary(anyLong(), anyLong())).willThrow(new EntityNotFoundException("Book"));
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto1);
 
         mockMvc.perform(post("/api/v1/library/{id}/contents", 1L)
                         .param("bookId", "0")
@@ -210,6 +238,7 @@ public class LibraryControllerTest {
 
         given(libraryService.getAllBooksByLibraryIdAndAvailability(anyLong(), any(Availability.class)))
                 .willReturn(List.of(bookPresence));
+        given(bookPresenceMapper.toBookPresenceDto((List<BookPresence>) any())).willReturn(List.of(bookPresenceDto));
 
         String result = mockMvc.perform(get("/api/v1/library/{id}/contents", 1L)
                         .param("availability", "AVAILABLE")
@@ -217,13 +246,15 @@ public class LibraryControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assert expected.equals(result);
+        assertEquals(expected, result);
+
     }
 
     @Test
     void getAllBooksByLibraryIdAndStatusWithInvalidData() throws Exception {
         given(libraryService.getAllBooksByLibraryIdAndAvailability(anyLong(), any(Availability.class)))
                 .willThrow(new EntityNotFoundException("Library"));
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto1);
 
         mockMvc.perform(get("/api/v1/library/{id}/contents", 0L)
                         .param("availability", "AVAILABLE")
@@ -236,18 +267,20 @@ public class LibraryControllerTest {
         String expected = objectMapper.writeValueAsString(List.of(bookPresenceDto));
 
         given(libraryService.getAllBooksByLibraryId(anyLong())).willReturn(List.of(bookPresence));
+        given(bookPresenceMapper.toBookPresenceDto((List<BookPresence>) any())).willReturn(List.of(bookPresenceDto));
 
         String result = mockMvc.perform(get("/api/v1/library/{id}/all", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assert expected.equals(result);
+        assertEquals(expected, result);
     }
 
     @Test
     void getAllBooksByLibraryIdWithInvalidData() throws Exception {
         given(libraryService.getAllBooksByLibraryId(anyLong())).willThrow(new EntityNotFoundException("Library"));
+        given(errorMapper.toErrorDto(any(), (List<String>) any())).willReturn(errorDto1);
 
         mockMvc.perform(get("/api/v1/library/{id}/all", 0L)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -257,6 +290,7 @@ public class LibraryControllerTest {
     @Test
     void deleteLibrary() throws Exception {
         willDoNothing().given(libraryService).deleteLibrary(anyLong());
+        given(libraryMapper.toLibraryDto((Library) any())).willReturn(libraryDto);
 
         mockMvc.perform(delete("/api/v1/library/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))

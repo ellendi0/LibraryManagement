@@ -27,7 +27,6 @@ public class AuthorServiceImpl implements AuthorService {
 
         author.setFirstName(updatedAuthor.getFirstName());
         author.setLastName(updatedAuthor.getLastName());
-        author.setPseudonym(updatedAuthor.getPseudonym());
 
         return authorRepository.save(author);
     }

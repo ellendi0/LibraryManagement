@@ -1,7 +1,5 @@
 package com.example.librarymanagement.dto;
 
-import com.example.librarymanagement.model.entity.User;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -36,18 +34,5 @@ public class UserRequestDto {
     @Pattern(regexp = "(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}",
             message = "Password must be at least 6 characters, one uppercase letter and one number")
     @NotBlank(message = "Password can't be empty")
-    private String plainPassword;
-
-    public UserRequestDto(User user) {
-        firstName = user.getFirstName();
-        lastName = user.getLastName();
-        email = user.getEmail();
-        plainPassword = user.getPassword();
-        phoneNumber = user.getPhoneNumber();
-    }
-
-    @JsonProperty("password")
-    public String getPlainPassword() {
-        return plainPassword;
-    }
+    private String password;
 }

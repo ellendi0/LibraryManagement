@@ -5,13 +5,13 @@ import com.example.librarymanagement.dto.mapper.AuthorMapper;
 import com.example.librarymanagement.service.AuthorService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -20,28 +20,34 @@ import java.util.List;
 @RequestMapping("/api/v1/author")
 public class AuthorController {
     private final AuthorService authorService;
+    private final AuthorMapper authorMapper;
 
-    public AuthorController(AuthorService authorService) {
+    public AuthorController(AuthorService authorService, AuthorMapper authorMapper) {
         this.authorService = authorService;
+        this.authorMapper = authorMapper;
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<AuthorDto>> getAllAuthors() {
-        return new ResponseEntity<>(AuthorMapper.toAuthorDto(authorService.getAllAuthors()), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public List<AuthorDto> getAllAuthors() {
+        return authorMapper.toAuthorDto(authorService.getAllAuthors());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AuthorDto> getAuthorById(@PathVariable Long id) {
-        return new ResponseEntity<>(new AuthorDto(authorService.getAuthorById(id)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public AuthorDto getAuthorById(@PathVariable Long id) {
+        return authorMapper.toAuthorDto(authorService.getAuthorById(id));
     }
 
     @PostMapping
-    public ResponseEntity<AuthorDto> createAuthor(@RequestBody @Valid AuthorDto authorDto) {
-        return new ResponseEntity<>(new AuthorDto(authorService.createAuthor(AuthorMapper.toAuthor(authorDto))), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthorDto createAuthor(@RequestBody @Valid AuthorDto authorDto) {
+        return authorMapper.toAuthorDto(authorService.createAuthor(authorMapper.toAuthor(authorDto)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AuthorDto> updateAuthor(@PathVariable Long id, @RequestBody @Valid AuthorDto authorDto) {
-        return new ResponseEntity<>(new AuthorDto(authorService.updateAuthor(id, AuthorMapper.toAuthor(authorDto))), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public AuthorDto updateAuthor(@PathVariable Long id, @RequestBody @Valid AuthorDto authorDto) {
+        return authorMapper.toAuthorDto(authorService.updateAuthor(id, authorMapper.toAuthor(authorDto)));
     }
 }

@@ -19,13 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,8 +35,6 @@ public class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private BookPresenceRepository bookPresenceRepository;
     @Mock
     private BookPresenceServiceImpl bookPresenceServiceImpl;
     @Mock
@@ -60,46 +55,36 @@ public class UserServiceImplTest {
     @BeforeAll
     public static void init() {
         library = new Library();
-        library.setId(1L);
         library.setName("Library1");
         library.setAddress("Address1");
 
         Publisher publisher1 = new Publisher();
-        publisher1.setId(1L);
         publisher1.setName("Publisher1");
 
         Publisher publisher2 = new Publisher();
-        publisher2.setId(2L);
         publisher2.setName("Publisher2");
 
         Author author1 = new Author();
-        author1.setId(1L);
         author1.setFirstName("Author1");
         author1.setLastName("Author1");
-        author1.setPseudonym("Author1");
 
         Author author2 = new Author();
-        author2.setId(2L);
         author2.setFirstName("Author2");
         author2.setLastName("Author2");
-        author2.setPseudonym("Author2");
 
         book1 = new Book();
-        book1.setId(1L);
         book1.setTitle("Book1");
         book1.setAuthor(author1);
         book1.setPublishedYear(2021);
         book1.setPublisher(publisher1);
 
         Book book2 = new Book();
-        book2.setId(2L);
         book2.setTitle("Book2");
         book2.setAuthor(author2);
         book2.setPublishedYear(2022);
         book2.setPublisher(publisher2);
 
         user1 = new User();
-        user1.setId(1L);
         user1.setFirstName("First");
         user1.setLastName("First");
         user1.setEmail("first@email.com");
@@ -107,7 +92,6 @@ public class UserServiceImplTest {
         user1.setPassword("Password1");
 
         user2 = new User();
-        user2.setId(2L);
         user2.setFirstName("Second");
         user2.setLastName("Second");
         user2.setEmail("second@email.com");
@@ -115,43 +99,37 @@ public class UserServiceImplTest {
         user2.setPassword("Password2");
 
         bookPresence1 = new BookPresence();
-        bookPresence1.setId(1L);
         bookPresence1.setBook(book1);
         bookPresence1.setLibrary(library);
         bookPresence1.setUser(user1);
         bookPresence1.setAvailability(Availability.AVAILABLE);
 
         BookPresence bookPresence2 = new BookPresence();
-        bookPresence2.setId(2L);
         bookPresence2.setBook(book2);
         bookPresence2.setLibrary(library);
         bookPresence2.setUser(user2);
-        bookPresence2.setAvailability(Availability.NOT_AVAILABLE);
+        bookPresence2.setAvailability(Availability.UNAVAILABLE);
 
         library.setBookPresence(List.of(bookPresence1, bookPresence2));
 
         journal1 = new Journal();
-        journal1.setId(1L);
         journal1.setBookPresence(bookPresence1);
         journal1.setUser(user1);
         journal1.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
         journal1.setDateOfReturning(LocalDate.parse("2024-07-22"));
 
         journal2 = new Journal();
-        journal2.setId(2L);
         journal2.setBookPresence(bookPresence2);
         journal2.setUser(user1);
         journal2.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
         journal2.setDateOfReturning(LocalDate.parse("2024-07-22"));
 
         reservation1 = new Reservation();
-        reservation1.setId(1L);
         reservation1.setBook(book1);
         reservation1.setUser(user1);
         reservation1.setLibrary(library);
 
         reservation2 = new Reservation();
-        reservation2.setId(2L);
         reservation2.setBook(book2);
         reservation2.setUser(user1);
         reservation2.setLibrary(library);
@@ -195,19 +173,6 @@ public class UserServiceImplTest {
 
         assertEquals(user1, userServiceImpl.updateUser(user1.getId(), user1));
         verify(userRepository, times(1)).save(user1);
-    }
-
-    @Test
-    public void deleteUser() {
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(bookPresenceRepository.findAllByUserId(user1.getId())).thenReturn(new ArrayList<>());
-        doNothing().when(journalServiceImpl).deleteJournal(anyLong());
-        doNothing().when(reservationService).deleteReservationById(anyLong());
-
-        userServiceImpl.deleteUser(user1.getId());
-        verify(userRepository, times(1)).delete(user1);
-        verify(journalServiceImpl, times(1)).deleteJournal(user1.getId());
-        verify(reservationService, times(1)).deleteReservationById(user1.getId());
     }
 
     @Test

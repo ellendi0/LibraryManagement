@@ -1,6 +1,5 @@
 package com.example.librarymanagement.dto;
 
-import com.example.librarymanagement.model.entity.Publisher;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,11 +12,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublisherDto {
-    @Size(max = 50, message = "Publisher must contain no more than 100 characters")
+    private Long id;
+
+    @Size(max = 50, message = "Publisher must contain no more than 50 characters")
     @NotBlank(message = "Publisher can't be blank")
     private String name;
-
-    public PublisherDto(Publisher publisher) {
-        this.name = publisher.getName();
-    }
 }

@@ -31,11 +31,9 @@ public class PublisherServiceImplTest {
     @BeforeAll
     public static void init() {
         publisher1 = new Publisher();
-        publisher1.setId(1L);
         publisher1.setName("Publisher1");
 
         publisher2 = new Publisher();
-        publisher2.setId(2L);
         publisher2.setName("Publisher2");
     }
 

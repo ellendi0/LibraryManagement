@@ -30,16 +30,12 @@ public class AuthorServiceImplTest {
     @BeforeAll
     public static void init() {
         author1 = new Author();
-        author1.setId(1L);
         author1.setFirstName("Author1");
         author1.setLastName("Author1");
-        author1.setPseudonym("Author1");
 
         author2 = new Author();
-        author2.setId(2L);
         author2.setFirstName("Author2");
         author2.setLastName("Author2");
-        author2.setPseudonym("Author2");
     }
 
     @Test

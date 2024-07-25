@@ -2,25 +2,33 @@ package com.example.librarymanagement.dto.mapper;
 
 import com.example.librarymanagement.dto.AuthorDto;
 import com.example.librarymanagement.model.entity.Author;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class AuthorMapper {
-    public static Author toAuthor(AuthorDto authorDto) {
+    public Author toAuthor(AuthorDto authorDto) {
         Author author = new Author();
         author.setFirstName(authorDto.getFirstName());
         author.setLastName(authorDto.getLastName());
-        author.setPseudonym(authorDto.getPseudonym());
         return author;
     }
 
-    public static List<AuthorDto> toAuthorDto(List<Author> authors) {
-        List<AuthorDto> authorDtos = new ArrayList<>();
+    public AuthorDto toAuthorDto(Author author) {
+        AuthorDto authorDto = new AuthorDto();
+        authorDto.setId(author.getId());
+        authorDto.setFirstName(author.getFirstName());
+        authorDto.setLastName(author.getLastName());
+        return authorDto;
+    }
 
-        if(!authors.isEmpty()){
-            authorDtos = authors.stream().map(AuthorDto::new).toList();
-        }
-        return authorDtos;
+    public List<AuthorDto> toAuthorDto(List<Author> authors) {
+        if (authors == null || authors.isEmpty()) return new ArrayList<>();
+
+        return authors.stream()
+                .map(this::toAuthorDto)
+                .toList();
     }
 }

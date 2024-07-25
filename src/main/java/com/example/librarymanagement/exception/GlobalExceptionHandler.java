@@ -1,55 +1,57 @@
 package com.example.librarymanagement.exception;
 
+import com.example.librarymanagement.dto.ErrorDto;
+import com.example.librarymanagement.dto.mapper.ErrorMapper;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("status", HttpStatus.NOT_FOUND);
-        body.put("timestamp", LocalDateTime.now());
+    private final ErrorMapper errorMapper;
 
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    public GlobalExceptionHandler(ErrorMapper errorMapper) {
+        this.errorMapper = errorMapper;
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorDto handleEntityNotFoundException(EntityNotFoundException ex) {
+         return errorMapper.toErrorDto(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("message", ex.getBindingResult().getAllErrors().get(0).getDefaultMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleValidationExceptions(MethodArgumentNotValidException ex) {
+        List<String> errorMessages = ex.getBindingResult()
+                .getAllErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .toList();
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, errorMessages);
     }
 
     @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<?> handleDuplicateKeyException(DuplicateKeyException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("status", HttpStatus.CONFLICT);
-        body.put("timestamp", LocalDateTime.now());
-
-        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorDto handleDuplicateKeyException(DuplicateKeyException ex) {
+        return errorMapper.toErrorDto(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("status", HttpStatus.BAD_REQUEST);
-        body.put("timestamp", LocalDateTime.now());
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleIllegalArgumentException(IllegalArgumentException ex) {
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(BookNotAvailableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleBookNotAvailableException(BookNotAvailableException ex) {
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 }

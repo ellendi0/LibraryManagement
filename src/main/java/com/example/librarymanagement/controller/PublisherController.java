@@ -3,14 +3,15 @@ package com.example.librarymanagement.controller;
 import com.example.librarymanagement.dto.PublisherDto;
 import com.example.librarymanagement.dto.mapper.PublisherMapper;
 import com.example.librarymanagement.service.PublisherService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -19,32 +20,34 @@ import java.util.List;
 @RequestMapping("/api/v1/publisher")
 public class PublisherController {
     private final PublisherService publisherService;
+    private final PublisherMapper publisherMapper;
 
-    public PublisherController(PublisherService publisherService) {
+    public PublisherController(PublisherService publisherService, PublisherMapper publisherMapper) {
         this.publisherService = publisherService;
+        this.publisherMapper = publisherMapper;
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<PublisherDto>> getAllPublishers(){
-        return new ResponseEntity<>(PublisherMapper.toPublishers(publisherService.getAllPublishers()), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public List<PublisherDto> getAllPublishers(){
+        return publisherMapper.toPublisherDto(publisherService.getAllPublishers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PublisherDto> getPublisherById(@PathVariable Long id){
-        return new ResponseEntity<>(new PublisherDto(publisherService.getPublisherById(id)), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public PublisherDto getPublisherById(@PathVariable Long id){
+        return publisherMapper.toPublisherDto(publisherService.getPublisherById(id));
     }
 
     @PostMapping
-    public ResponseEntity<PublisherDto> createPublisher(@RequestBody PublisherDto publisherDto){
-        return new ResponseEntity<>(
-                new PublisherDto(publisherService.createPublisher(PublisherMapper.toPublisher(publisherDto))),
-                HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public PublisherDto createPublisher(@RequestBody @Valid PublisherDto publisherDto){
+        return publisherMapper.toPublisherDto(publisherService.createPublisher(publisherMapper.toPublisher(publisherDto)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PublisherDto> updatePublisher(@PathVariable Long id, @RequestBody PublisherDto publisherDto){
-        return new ResponseEntity<>(
-                new PublisherDto(publisherService.updatePublisher(id, PublisherMapper.toPublisher(publisherDto))),
-                HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public PublisherDto updatePublisher(@PathVariable Long id, @RequestBody @Valid PublisherDto publisherDto){
+        return publisherMapper.toPublisherDto(publisherService.updatePublisher(id, publisherMapper.toPublisher(publisherDto)));
     }
 }

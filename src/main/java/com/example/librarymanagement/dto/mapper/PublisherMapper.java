@@ -2,23 +2,31 @@ package com.example.librarymanagement.dto.mapper;
 
 import com.example.librarymanagement.dto.PublisherDto;
 import com.example.librarymanagement.model.entity.Publisher;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class PublisherMapper {
-    public static Publisher toPublisher(PublisherDto publisherDto) {
+    public Publisher toPublisher(PublisherDto publisherDto) {
         Publisher publisher = new Publisher();
         publisher.setName(publisherDto.getName());
         return publisher;
     }
 
-    public static List<PublisherDto> toPublishers(List<Publisher> publishers) {
-        List<PublisherDto> publishersDto = new ArrayList<>();
+    public PublisherDto toPublisherDto(Publisher publisher) {
+        PublisherDto publisherDto = new PublisherDto();
+        publisherDto.setId(publisher.getId());
+        publisherDto.setName(publisher.getName());
+        return publisherDto;
+    }
 
-        if(!publishers.isEmpty()){
-            publishersDto = publishers.stream().map(PublisherDto::new).toList();
-        }
-        return publishersDto;
+    public List<PublisherDto> toPublisherDto(List<Publisher> publishers) {
+        if (publishers == null || publishers.isEmpty()) return new ArrayList<>();
+
+        return publishers.stream()
+                .map(this::toPublisherDto)
+                .toList();
     }
 }
