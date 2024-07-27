@@ -69,7 +69,6 @@ public class BookPresenceServiceImpl implements BookPresenceService {
         bookPresence.setBook(book);
         bookPresence.setLibrary(library);
 
-        library.getBookPresence().add(bookPresence);
         return createBookPresence(bookPresence);
     }
 

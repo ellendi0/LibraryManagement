@@ -66,34 +66,18 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setBook(book);
             reservation.setLibrary(library);
 
-            book.getReservations().add(reservation);
-            user.getReservations().add(reservation);
-
             reservationRepository.save(reservation);
         }
         return user.getReservations();
     }
 
     @Override
-    @Transactional
     public void removeReservation(User user, Long bookId) {
-        List<Reservation> reservations = getReservationsByBookIdAndUser(bookId, user);
-        for (Reservation reservation : reservations) {
-            reservation.getBook().getReservations().remove(reservation);
-            reservation.getUser().getReservations().remove(reservation);
-            deleteReservationById(reservation.getId());
-        }
+        reservationRepository.deleteAll(getReservationsByBookIdAndUser(bookId, user));
     }
 
     @Override
     public void deleteReservationById(Long id) {
-        reservationRepository.findById(id)
-                .ifPresent(reservation -> {
-                    reservation.setBook(null);
-                    reservation.setUser(null);
-                    reservation.setLibrary(null);
-
-                    reservationRepository.delete(reservation);
-                });
+        reservationRepository.findById(id).ifPresent(reservationRepository::delete);
     }
 }
