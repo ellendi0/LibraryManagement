@@ -2,35 +2,34 @@ package com.example.librarymanagement.service.impl;
 
 import com.example.librarymanagement.exception.BookNotAvailableException;
 import com.example.librarymanagement.exception.EntityNotFoundException;
+import com.example.librarymanagement.model.entity.Book;
 import com.example.librarymanagement.model.entity.BookPresence;
 import com.example.librarymanagement.model.entity.Journal;
+import com.example.librarymanagement.model.entity.Library;
 import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.enums.Availability;
 import com.example.librarymanagement.model.entity.User;
+import com.example.librarymanagement.model.enums.Availability;
 import com.example.librarymanagement.repository.BookPresenceRepository;
+import com.example.librarymanagement.repository.BookRepository;
+import com.example.librarymanagement.repository.LibraryRepository;
 import com.example.librarymanagement.repository.ReservationRepository;
 import com.example.librarymanagement.service.BookPresenceService;
 import com.example.librarymanagement.service.JournalService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookPresenceServiceImpl implements BookPresenceService {
     private final BookPresenceRepository bookPresenceRepository;
+    private final BookRepository bookRepository;
+    private final LibraryRepository libraryRepository;
     private final JournalService journalService;
     private final ReservationRepository reservationRepository;
-
-    public BookPresenceServiceImpl(BookPresenceRepository bookPresenceRepository,
-                                   JournalService journalService,
-                                   ReservationRepository reservationRepository) {
-        this.bookPresenceRepository = bookPresenceRepository;
-        this.journalService = journalService;
-        this.reservationRepository = reservationRepository;
-    }
 
     @Override
     public BookPresence createBookPresence(BookPresence bookPresence) {
@@ -45,9 +44,12 @@ public class BookPresenceServiceImpl implements BookPresenceService {
                 .findFirst()
                 .orElseThrow(() -> new BookNotAvailableException(libraryId, bookId));
 
-        Journal journal = new Journal(user, bookPresence);
+        Journal journal = new Journal();
+        journal.setBookPresence(bookPresence);
+        journal.setDateOfBorrowing(LocalDate.now());
+        journal.setUser(user);
+
         bookPresence.getJournals().add(journal);
-        user.getJournals().add(journal);
 
         journalService.createJournal(journal);
 
@@ -59,32 +61,39 @@ public class BookPresenceServiceImpl implements BookPresenceService {
 
     @Override
     @Transactional
-    public BookPresence removeUserFromBook(User user, Long libraryId, Long bookId) {
-        BookPresence bookPresence = getAllBookByLibraryIdAndBookId(libraryId, bookId).stream()
-                .filter(i -> i.getUser().equals(user))
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Book"));
+    public BookPresence addBookToLibrary(Long libraryId, Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book"));
+        Library library = libraryRepository.findById(libraryId).orElseThrow(() -> new EntityNotFoundException("Library"));
 
-        Journal journal = journalService.getJournalByBookPresenceIdAndUserId(bookPresence.getId(), user.getId());
+        BookPresence bookPresence = new BookPresence();
+        bookPresence.setBook(book);
+        bookPresence.setLibrary(library);
+
+        library.getBookPresence().add(bookPresence);
+        return createBookPresence(bookPresence);
+    }
+
+    @Override
+    @Transactional
+    public BookPresence removeUserFromBook(User user, Long libraryId, Long bookId) {
+        BookPresence bookPresence = bookPresenceRepository.findAllByLibraryIdAndBookIdAndUser(libraryId, bookId, user)
+                .orElseThrow(() -> new EntityNotFoundException("BookPresence"));
+
+        Journal journal = journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.getId(), user.getId());
+
         journal.setDateOfReturning(LocalDate.now());
 
-        journalService.createJournal(journal);
+        journalService.updateJournal(journal.getId(), journal);
 
-        List<Reservation> reservations = reservationRepository.findAllByBookIdAndUserId(bookId, user.getId());
-        if(!reservations.isEmpty()){
-            bookPresence.setUser(reservations.get(0).getUser());
+        Reservation reservation = reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId, libraryId);
+        if(reservation != null){
+            bookPresence.setUser(reservation.getUser());
         }else {
             bookPresence.setAvailability(Availability.AVAILABLE);
             bookPresence.setUser(null);
         }
 
-        return bookPresenceRepository.save(bookPresence);
-    }
-
-    @Override
-    public BookPresence getById(Long id) {
-        return bookPresenceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Book"));
+        return createBookPresence(bookPresence);
     }
 
     @Override
@@ -104,9 +113,7 @@ public class BookPresenceServiceImpl implements BookPresenceService {
 
     @Override
     public List<BookPresence> getAllBookByLibraryIdAndAvailability(Long libraryId, Availability availability) {
-        return getByLibraryId(libraryId).stream()
-                .filter(i -> i.getAvailability().equals(availability))
-                .toList();
+        return bookPresenceRepository.findAllByLibraryIdAndAvailability(libraryId, availability);
     }
 
     @Override
@@ -115,19 +122,13 @@ public class BookPresenceServiceImpl implements BookPresenceService {
     }
 
     @Override
+    @Transactional
+    public void deleteBookPresenceByIdAndLibraryId(Long libraryId, Long bookPresenceId) {
+        bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(bookPresenceId, libraryId);
+    }
+
+    @Override
     public void deleteBookPresenceById(Long id) {
-        Optional<BookPresence> bookPresence = bookPresenceRepository.findById(id);
-
-        if(bookPresence.isPresent()){
-            bookPresence.get().setLibrary(null);
-            bookPresence.get().setBook(null);
-
-            List<Journal> journals = journalService.getJournalByBookPresenceId(id);
-            if(!journals.isEmpty()){
-                journals.forEach(journal -> journal.setBookPresence(null));
-            }
-
-            bookPresenceRepository.delete(bookPresence.get());
-        }
+        bookPresenceRepository.deleteById(id);
     }
 }

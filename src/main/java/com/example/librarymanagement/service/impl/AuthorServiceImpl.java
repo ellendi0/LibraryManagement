@@ -4,17 +4,15 @@ import com.example.librarymanagement.exception.EntityNotFoundException;
 import com.example.librarymanagement.model.entity.Author;
 import com.example.librarymanagement.repository.AuthorRepository;
 import com.example.librarymanagement.service.AuthorService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
-
-    public AuthorServiceImpl(AuthorRepository authorRepository) {
-        this.authorRepository = authorRepository;
-    }
 
     @Override
     public Author createAuthor(Author author) {

@@ -5,8 +5,10 @@ import com.example.librarymanagement.dto.UserResponseDto;
 import com.example.librarymanagement.model.entity.User;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -33,10 +35,10 @@ public class UserMapper {
         return userResponseDto;
     }
 
-    public List<UserResponseDto> toUserResponseDto(List<User> usersList) {
-        if(usersList == null || usersList.isEmpty()) return new ArrayList<>();
+    public List<UserResponseDto> toUserResponseDto(List<User> users) {
+        if(CollectionUtils.isEmpty(users)) return Collections.emptyList();
 
-        return usersList.stream()
+        return users.stream()
                 .map(this::toUserResponseDto)
                 .toList();
     }

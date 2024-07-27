@@ -4,6 +4,7 @@ import com.example.librarymanagement.dto.AuthorDto;
 import com.example.librarymanagement.dto.mapper.AuthorMapper;
 import com.example.librarymanagement.service.AuthorService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,16 +19,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/author")
+@RequiredArgsConstructor
 public class AuthorController {
     private final AuthorService authorService;
     private final AuthorMapper authorMapper;
 
-    public AuthorController(AuthorService authorService, AuthorMapper authorMapper) {
-        this.authorService = authorService;
-        this.authorMapper = authorMapper;
-    }
-
-    @GetMapping("/all")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<AuthorDto> getAllAuthors() {
         return authorMapper.toAuthorDto(authorService.getAllAuthors());

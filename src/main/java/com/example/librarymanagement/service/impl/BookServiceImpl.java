@@ -12,28 +12,20 @@ import com.example.librarymanagement.service.BookService;
 import com.example.librarymanagement.service.PublisherService;
 import com.example.librarymanagement.service.ReservationService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookPresenceService bookPresenceService;
     private final ReservationService reservationService;
     private final AuthorService authorService;
     private final PublisherService publisherService;
-
-    public BookServiceImpl(BookRepository bookRepository,
-                           BookPresenceService bookPresenceService,
-                           ReservationService reservationService, AuthorService authorService, PublisherService publisherService) {
-        this.bookRepository = bookRepository;
-        this.bookPresenceService = bookPresenceService;
-        this.reservationService = reservationService;
-        this.authorService = authorService;
-        this.publisherService = publisherService;
-    }
 
     @Override
     public List<Book> findAll() {
@@ -78,20 +70,17 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Long id) {
-        Optional<Book> book = bookRepository.findById(id);
+        bookRepository.findById(id)
+                .ifPresent(book -> {
+                    List<BookPresence> bookPresences = book.getBookPresence();
+                    List<Reservation> reservations = book.getReservations();
 
-        if (book.isPresent()) {
-            List<BookPresence> bookPresences = book.get().getBookPresence();
-            List<Reservation> reservations = book.get().getReservations();
+                    if (!CollectionUtils.isEmpty(bookPresences) && !CollectionUtils.isEmpty(reservations)) {
+                        bookPresences.forEach(bookPresence -> bookPresenceService.deleteBookPresenceById(bookPresence.getId()));
+                        reservations.forEach(reservation -> reservationService.deleteReservationById(reservation.getId()));
+                    }
 
-            if (bookPresences != null && !bookPresences.isEmpty()) {
-                bookPresences.forEach(bookPresence -> bookPresenceService.deleteBookPresenceById(bookPresence.getId()));
-            }
-
-            if (reservations != null && !reservations.isEmpty()) {
-                reservations.forEach(reservation -> reservationService.deleteReservationById(reservation.getId()));
-            }
-            bookRepository.delete(book.get());
-        }
+                    bookRepository.delete(book);
+        });
     }
 }

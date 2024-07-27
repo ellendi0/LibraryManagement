@@ -3,8 +3,9 @@ package com.example.librarymanagement.dto.mapper;
 import com.example.librarymanagement.dto.BookPresenceDto;
 import com.example.librarymanagement.model.entity.BookPresence;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -20,15 +21,15 @@ public class BookPresenceMapper {
         bookPresenceDto.setId(bookPresence.getId());
         bookPresenceDto.setBookTitle(bookPresence.getBook().getTitle());
         bookPresenceDto.setBookAuthorId(bookPresence.getBook().getAuthor().getId());
-        bookPresenceDto.setLibraryNameId(bookPresence.getLibrary().getId());
-        bookPresenceDto.setUser(userMapper.toUserResponseDto(bookPresence.getUser()));
-        bookPresenceDto.setAddress(bookPresence.getLibrary().getAddress());
+        bookPresenceDto.setLibraryId(bookPresence.getLibrary().getId());
+        bookPresenceDto.setUser(bookPresence.getUser() != null
+                ? userMapper.toUserResponseDto(bookPresence.getUser()): null);
         bookPresenceDto.setAvailability(bookPresence.getAvailability());
         return bookPresenceDto;
     }
 
     public List<BookPresenceDto> toBookPresenceDto(List<BookPresence> bookPresenceList) {
-        if(bookPresenceList == null || bookPresenceList.isEmpty()) return new ArrayList<>();
+        if(CollectionUtils.isEmpty(bookPresenceList)) return Collections.emptyList();
 
         return bookPresenceList.stream()
                 .map(this::toBookPresenceDto)

@@ -13,7 +13,6 @@ public class BookPresenceDto {
     private UserResponseDto user;
     private String bookTitle;
     private Long bookAuthorId;
-    private Long libraryNameId;
-    private String address;
+    private Long libraryId;
     private Availability availability;
 }

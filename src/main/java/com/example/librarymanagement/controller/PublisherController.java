@@ -4,6 +4,7 @@ import com.example.librarymanagement.dto.PublisherDto;
 import com.example.librarymanagement.dto.mapper.PublisherMapper;
 import com.example.librarymanagement.service.PublisherService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,16 +19,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/publisher")
+@RequiredArgsConstructor
 public class PublisherController {
     private final PublisherService publisherService;
     private final PublisherMapper publisherMapper;
 
-    public PublisherController(PublisherService publisherService, PublisherMapper publisherMapper) {
-        this.publisherService = publisherService;
-        this.publisherMapper = publisherMapper;
-    }
-
-    @GetMapping("/all")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<PublisherDto> getAllPublishers(){
         return publisherMapper.toPublisherDto(publisherService.getAllPublishers());

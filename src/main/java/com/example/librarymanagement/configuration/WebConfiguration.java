@@ -1,6 +1,7 @@
 package com.example.librarymanagement.configuration;
 
-import com.example.librarymanagement.converter.StringToEnumConverter;
+import com.example.librarymanagement.converter.StringToEnumAvailabilityConverter;
+import com.example.librarymanagement.converter.StringToEnumGenreConverter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -10,7 +11,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        registry.addConverter(new StringToEnumConverter.StringToEnumGenreConverter());
-        registry.addConverter(new StringToEnumConverter.StringToEnumAvailabilityConverter());
+        registry.addConverter(new StringToEnumGenreConverter());
+        registry.addConverter(new StringToEnumAvailabilityConverter());
     }
 }

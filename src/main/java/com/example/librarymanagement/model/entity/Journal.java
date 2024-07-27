@@ -12,12 +12,13 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @Table(name = "journal")
 public class Journal {
@@ -38,10 +39,4 @@ public class Journal {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookPresence_id")
     private BookPresence bookPresence;
-
-    public Journal(User user, BookPresence bookPresence) {
-        this.dateOfBorrowing = LocalDate.now();
-        this.user = user;
-        this.bookPresence = bookPresence;
-    }
 }

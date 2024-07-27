@@ -5,6 +5,7 @@ import com.example.librarymanagement.dto.BookResponseDto;
 import com.example.librarymanagement.dto.mapper.BookMapper;
 import com.example.librarymanagement.service.BookService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,16 +22,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/book")
+@RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
     private final BookMapper bookMapper;
 
-    public BookController(BookService bookService, BookMapper bookMapper) {
-        this.bookService = bookService;
-        this.bookMapper = bookMapper;
-    }
-
-    @GetMapping("/all")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<BookResponseDto> getAllBooks() {
         return bookMapper.toBookDto(bookService.findAll());
@@ -42,7 +39,7 @@ public class BookController {
         return bookMapper.toBookDto(bookService.getBookById(id));
     }
 
-    @GetMapping
+    @GetMapping(params = {"title", "author"})
     @ResponseStatus(HttpStatus.OK)
     public BookResponseDto getBookByTitleAndAuthor(@RequestParam String title, @RequestParam Long author) {
         return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, author));

@@ -12,24 +12,18 @@ import com.example.librarymanagement.repository.ReservationRepository;
 import com.example.librarymanagement.service.BookPresenceService;
 import com.example.librarymanagement.service.ReservationService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final BookRepository bookRepository;
     private final BookPresenceService bookPresenceService;
-
-    public ReservationServiceImpl(ReservationRepository reservationRepository,
-                                  BookRepository bookRepository,
-                                  BookPresenceService bookPresenceService) {
-        this.reservationRepository = reservationRepository;
-        this.bookRepository = bookRepository;
-        this.bookPresenceService = bookPresenceService;
-    }
 
     @Override
     public List<Reservation> getReservationsByLibraryId(Long libraryId) {
@@ -53,7 +47,7 @@ public class ReservationServiceImpl implements ReservationService {
         List<BookPresence> bookPresenceList;
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book"));
 
-        if(libraryId != null){
+        if (libraryId != null) {
             bookPresenceList = bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId);
             library = bookPresenceList.get(0).getLibrary();
         } else {
@@ -64,10 +58,13 @@ public class ReservationServiceImpl implements ReservationService {
         Optional<BookPresence> bookPresence = bookPresenceList.stream()
                 .filter(i -> i.getAvailability().equals(Availability.AVAILABLE)).findFirst();
 
-        if(bookPresence.isPresent()) {
+        if (bookPresence.isPresent()) {
             bookPresenceService.addUserToBook(user, libraryId, bookId);
         } else {
-            Reservation reservation = new Reservation(user, book, library);
+            Reservation reservation = new Reservation();
+            reservation.setUser(user);
+            reservation.setBook(book);
+            reservation.setLibrary(library);
 
             book.getReservations().add(reservation);
             user.getReservations().add(reservation);
@@ -90,14 +87,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void deleteReservationById(Long id) {
-        Optional<Reservation> reservation = reservationRepository.findById(id);
+        reservationRepository.findById(id)
+                .ifPresent(reservation -> {
+                    reservation.setBook(null);
+                    reservation.setUser(null);
+                    reservation.setLibrary(null);
 
-        if(reservation.isPresent()) {
-            reservation.get().setUser(null);
-            reservation.get().setBook(null);
-            reservation.get().setLibrary(null);
-
-            reservationRepository.delete(reservation.get());
-        }
+                    reservationRepository.delete(reservation);
+                });
     }
 }

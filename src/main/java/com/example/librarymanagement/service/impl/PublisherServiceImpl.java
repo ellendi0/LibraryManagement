@@ -4,17 +4,15 @@ import com.example.librarymanagement.exception.EntityNotFoundException;
 import com.example.librarymanagement.model.entity.Publisher;
 import com.example.librarymanagement.repository.PublisherRepository;
 import com.example.librarymanagement.service.PublisherService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
-
-    public PublisherServiceImpl(PublisherRepository publisherRepository) {
-        this.publisherRepository = publisherRepository;
-    }
 
     @Override
     public Publisher createPublisher(Publisher publisher) {

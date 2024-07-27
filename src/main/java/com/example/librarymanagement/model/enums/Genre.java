@@ -7,12 +7,5 @@ public enum Genre {
     POETRY, PROSE, DRAMA;
 
     @JsonCreator
-    public static Genre fromValue(String value) {
-        return Genre.valueOf(value.toUpperCase());
-    }
-
-    @JsonValue
-    public String toValue() {
-        return name().toLowerCase();
-    }
+    public static Genre fromValue(String value) {return Genre.valueOf(value.toUpperCase());}
 }

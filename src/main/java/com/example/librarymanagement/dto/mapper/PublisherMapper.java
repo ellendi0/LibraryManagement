@@ -3,8 +3,10 @@ package com.example.librarymanagement.dto.mapper;
 import com.example.librarymanagement.dto.PublisherDto;
 import com.example.librarymanagement.model.entity.Publisher;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -23,7 +25,7 @@ public class PublisherMapper {
     }
 
     public List<PublisherDto> toPublisherDto(List<Publisher> publishers) {
-        if (publishers == null || publishers.isEmpty()) return new ArrayList<>();
+        if(CollectionUtils.isEmpty(publishers)) return Collections.emptyList();
 
         return publishers.stream()
                 .map(this::toPublisherDto)

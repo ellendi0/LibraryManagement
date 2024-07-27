@@ -9,6 +9,7 @@ import com.example.librarymanagement.dto.mapper.ReservationMapper;
 import com.example.librarymanagement.dto.mapper.UserMapper;
 import com.example.librarymanagement.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,18 +26,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/user")
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final JournalMapper journalMapper;
     private final ReservationMapper reservationMapper;
-
-    public UserController(UserService userService, UserMapper userMapper, JournalMapper journalMapper, ReservationMapper reservationMapper) {
-        this.userService = userService;
-        this.userMapper = userMapper;
-        this.journalMapper = journalMapper;
-        this.reservationMapper = reservationMapper;
-    }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -44,7 +39,7 @@ public class UserController {
         return userMapper.toUserResponseDto(userService.getUserById(id));
     }
 
-    @GetMapping
+    @GetMapping(params = {"email", "phoneNumber"})
     @ResponseStatus(HttpStatus.OK)
     public UserResponseDto getUserByPhoneNumberOrEmail(@RequestParam(name = "email", required = false) String email,
                                                        @RequestParam(name = "phoneNumber", required = false) String phoneNumber) {
@@ -106,13 +101,14 @@ public class UserController {
         return journalMapper.toJournalDto(userService.returnBookToLibrary(userId, libraryId, bookId));
     }
 
-    @DeleteMapping("/{id}/reservations")
+    @DeleteMapping("/{userId}/reservations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancelBookInLibrary(@PathVariable(name = "id") Long userId, @RequestParam Long bookId) {
-        userService.cancelReservationInLibrary(userId, bookId);
+    public void cancelReservationInLibrary(@PathVariable Long userId,
+                                           @RequestParam(name = "id") Long reservationId) {
+        userService.cancelReservationInLibrary(userId, reservationId);
     }
 
-    @GetMapping("/all")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<UserResponseDto> getAllUsers() {
         return userMapper.toUserResponseDto(userService.findAll());

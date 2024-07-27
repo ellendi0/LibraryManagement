@@ -18,13 +18,14 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
 
 @Entity
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @ToString(exclude = "journals")
 @Table(name = "presence_of_book")
@@ -52,9 +53,4 @@ public class BookPresence {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "bookPresence")
     @JsonIgnore
     private List<Journal> journals;
-
-    public BookPresence(Book book, Library library) {
-        this.book = book;
-        this.library = library;
-    }
 }

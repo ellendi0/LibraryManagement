@@ -3,8 +3,10 @@ package com.example.librarymanagement.dto.mapper;
 import com.example.librarymanagement.dto.AuthorDto;
 import com.example.librarymanagement.model.entity.Author;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -25,7 +27,7 @@ public class AuthorMapper {
     }
 
     public List<AuthorDto> toAuthorDto(List<Author> authors) {
-        if (authors == null || authors.isEmpty()) return new ArrayList<>();
+        if(CollectionUtils.isEmpty(authors)) return Collections.emptyList();
 
         return authors.stream()
                 .map(this::toAuthorDto)

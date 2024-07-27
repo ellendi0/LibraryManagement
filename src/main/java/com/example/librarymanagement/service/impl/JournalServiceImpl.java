@@ -4,17 +4,15 @@ import com.example.librarymanagement.exception.EntityNotFoundException;
 import com.example.librarymanagement.model.entity.Journal;
 import com.example.librarymanagement.repository.JournalRepository;
 import com.example.librarymanagement.service.JournalService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class JournalServiceImpl implements JournalService {
     private final JournalRepository journalRepository;
-
-    public JournalServiceImpl(JournalRepository journalRepository) {
-        this.journalRepository = journalRepository;
-    }
 
     @Override
     public Journal createJournal(Journal journal) {
@@ -22,20 +20,29 @@ public class JournalServiceImpl implements JournalService {
     }
 
     @Override
+    public Journal updateJournal(Long id, Journal updatedJournal) {
+        Journal journal = getJournalById(id);
+        journal.setBookPresence(updatedJournal.getBookPresence());
+        journal.setUser(updatedJournal.getUser());
+        journal.setDateOfBorrowing(updatedJournal.getDateOfBorrowing());
+        journal.setDateOfReturning(updatedJournal.getDateOfReturning());
+        return journalRepository.save(journal);
+    }
+
+    @Override
+    public Journal findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(Long bookPresenceId, Long userId) {
+        return journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Journal"));
+    }
+
+    @Override
     public Journal getJournalById(Long id) {
-        return journalRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Journal"));
+        return journalRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Journal"));
     }
 
     @Override
-    public List<Journal> getJournalByBookPresenceId(Long bookPresenceId) {
-        return journalRepository.findByBookPresenceId(bookPresenceId);
-    }
-
-    @Override
-    public Journal getJournalByBookPresenceIdAndUserId(Long bookPresenceId, Long userId) {
-        return journalRepository.findByBookPresenceIdAndUserId(bookPresenceId, userId).orElseThrow(
-                () -> new EntityNotFoundException("Journal"));
+    public List<Journal> getJournalByBookPresenceIdAndUserId(Long bookPresenceId, Long userId) {
+        return journalRepository.findByBookPresenceIdAndUserId(bookPresenceId, userId);
     }
 
     @Override

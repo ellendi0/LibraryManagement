@@ -12,30 +12,21 @@ import com.example.librarymanagement.service.BookPresenceService;
 import com.example.librarymanagement.service.ReservationService;
 import com.example.librarymanagement.service.UserService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BookPresenceService bookPresenceService;
     private final BookPresenceRepository bookPresenceRepository;
     private final ReservationService reservationService;
     private final JournalServiceImpl journalServiceImpl;
-
-    public UserServiceImpl(UserRepository userRepository,
-                           BookPresenceService bookPresenceService,
-                           BookPresenceRepository bookPresenceRepository,
-                           ReservationService reservationService,
-                           JournalServiceImpl journalServiceImpl) {
-        this.userRepository = userRepository;
-        this.bookPresenceService = bookPresenceService;
-        this.bookPresenceRepository = bookPresenceRepository;
-        this.reservationService = reservationService;
-        this.journalServiceImpl = journalServiceImpl;
-    }
 
     @Override
     public User getUserByPhoneNumberOrEmail(String email, String phoneNumber) {
@@ -50,7 +41,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public User createUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())){
             throw new DuplicateKeyException("User", "email");
@@ -93,7 +83,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public List<Journal> borrowBookFromLibrary(Long userId, Long libraryId, Long bookId) {
         return bookPresenceService.addUserToBook(getUserById(userId), libraryId, bookId).getUser().getJournals();
     }
@@ -109,27 +98,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public List<Journal> returnBookToLibrary(Long userId, Long libraryId, Long bookId) {
         return bookPresenceService.removeUserFromBook(getUserById(userId), libraryId, bookId).getJournals();
     }
 
     @Override
-    @Transactional
     public void deleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
-
-        if(user.isPresent()) {
+        userRepository.findById(id).ifPresent(user -> {
 
             List<BookPresence> bookPresence = bookPresenceRepository.findAllByUserId(id);
-            if(!bookPresence.isEmpty()) {
+
+            if (!CollectionUtils.isEmpty(bookPresence)) {
                 bookPresence.forEach(b -> b.setUser(null));
             }
 
-            user.get().getJournals().forEach(journal -> journalServiceImpl.deleteJournal(journal.getId()));
-            user.get().getReservations().forEach(reservation -> reservationService.deleteReservationById(reservation.getId()));
+            user.getJournals().forEach(journal -> journalServiceImpl.deleteJournal(journal.getId()));
+            user.getReservations().forEach(reservation -> reservationService.deleteReservationById(reservation.getId()));
 
-            userRepository.delete(user.get());
-        }
+            userRepository.delete(user);
+        });
     }
 }
