@@ -8,6 +8,7 @@ import com.example.librarymanagement.exception.EntityNotFoundException;
 import com.example.librarymanagement.exception.GlobalExceptionHandler;
 import com.example.librarymanagement.model.entity.Publisher;
 import com.example.librarymanagement.service.PublisherService;
+import com.example.librarymanagement.data.TestDataFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,28 +51,18 @@ public class PublisherControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static Publisher publisher1;
-    private static Publisher publisher2;
-    private static PublisherDto publisherDto1;
-    private static PublisherDto publisherDto2;
-    private static ErrorDto errorDto1;
-    private static ErrorDto errorDto2;
+    private Publisher publisher1;
+    private PublisherDto publisherDto1;
+    private ErrorDto errorDto1;
+    private ErrorDto errorDto2;
 
     @BeforeEach
     public void init() {
-        PublisherMapper publisherMapper1 = new PublisherMapper();
-        ErrorMapper errorMapper1 = new ErrorMapper();
-
-        publisher1 = new Publisher();
-        publisher1.setName("Publisher1");
-
-        publisher2 = new Publisher();
-        publisher2.setName("Publisher2");
-
-        publisherDto1 = publisherMapper1.toPublisherDto(publisher1);
-        publisherDto2 = publisherMapper1.toPublisherDto(publisher2);
-        errorDto1 = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
-        errorDto2 = errorMapper1.toErrorDto(HttpStatus.NOT_FOUND, "Publisher");
+        publisher1 = TestDataFactory.createPublisher();
+        publisherDto1 = new PublisherMapper().toPublisherDto(publisher1);
+        
+        errorDto1 = new ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
+        errorDto2 = new ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Publisher");
     }
 
     @Test
@@ -137,12 +128,12 @@ public class PublisherControllerTest {
 
     @Test
     void getAllPublishers() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(publisherDto1, publisherDto2));
+        String expected = objectMapper.writeValueAsString(List.of(publisherDto1));
 
-        given(publisherService.getAllPublishers()).willReturn(List.of(publisher1, publisher2));
-        given(publisherMapper.toPublisherDto((List<Publisher>) any())).willReturn(List.of(publisherDto1, publisherDto2));
+        given(publisherService.getAllPublishers()).willReturn(List.of(publisher1));
+        given(publisherMapper.toPublisherDto((List<Publisher>) any())).willReturn(List.of(publisherDto1));
 
-        String result = mockMvc.perform(get("/api/v1/publisher/all"))
+        String result = mockMvc.perform(get("/api/v1/publisher"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 

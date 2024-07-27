@@ -1,5 +1,6 @@
 package com.example.librarymanagement.controller;
 
+import com.example.librarymanagement.data.TestDataFactory;
 import com.example.librarymanagement.dto.AuthorDto;
 import com.example.librarymanagement.dto.ErrorDto;
 import com.example.librarymanagement.dto.mapper.AuthorMapper;
@@ -51,26 +52,17 @@ public class AuthorControllerTest {
     private ObjectMapper objectMapper;
 
     private static Author author1;
-    private static Author author2;
     private static AuthorDto authorDto1;
-    private static AuthorDto authorDto2;
     private static ErrorDto errorDto;
 
     @BeforeEach
     public void init() {
         AuthorMapper authorMapper1 = new AuthorMapper();
         ErrorMapper errorMapper1 = new ErrorMapper();
-
-        author1 = new Author();
-        author1.setFirstName("Author");
-        author1.setLastName("Author");
-
-        author2 = new Author();
-        author2.setFirstName("Author");
-        author2.setLastName("Author");
+        
+        author1 = TestDataFactory.createAuthor();
 
         authorDto1 = authorMapper1.toAuthorDto(author1);
-        authorDto2 = authorMapper1.toAuthorDto(author2);
         errorDto = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
     }
 
@@ -139,12 +131,12 @@ public class AuthorControllerTest {
 
     @Test
     void getAllAuthors() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(authorDto1, authorDto2));
+        String expected = objectMapper.writeValueAsString(List.of(authorDto1));
 
-        given(authorService.getAllAuthors()).willReturn(List.of(author1, author2));
-        given(authorMapper.toAuthorDto(List.of(author1, author2))).willReturn(List.of(authorDto1, authorDto2));
+        given(authorService.getAllAuthors()).willReturn(List.of(author1));
+        given(authorMapper.toAuthorDto(List.of(author1))).willReturn(List.of(authorDto1));
 
-        String result = mockMvc.perform(get("/api/v1/author/all"))
+        String result = mockMvc.perform(get("/api/v1/author"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 

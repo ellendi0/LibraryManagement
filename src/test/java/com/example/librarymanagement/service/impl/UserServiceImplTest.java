@@ -1,15 +1,12 @@
 package com.example.librarymanagement.service.impl;
 
-import com.example.librarymanagement.model.entity.Author;
+import com.example.librarymanagement.data.TestDataFactory;
 import com.example.librarymanagement.model.entity.Book;
 import com.example.librarymanagement.model.entity.BookPresence;
 import com.example.librarymanagement.model.entity.Journal;
 import com.example.librarymanagement.model.entity.Library;
-import com.example.librarymanagement.model.entity.Publisher;
 import com.example.librarymanagement.model.entity.Reservation;
 import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.model.enums.Availability;
-import com.example.librarymanagement.repository.BookPresenceRepository;
 import com.example.librarymanagement.repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,100 +41,22 @@ public class UserServiceImplTest {
     private static Library library;
     private static Book book1;
     private static User user1;
-    private static User user2;
     private static Journal journal1;
-    private static Journal journal2;
     private static Reservation reservation1;
-    private static Reservation reservation2;
     private static BookPresence bookPresence1;
 
     @BeforeAll
     public static void init() {
-        library = new Library();
-        library.setName("Library1");
-        library.setAddress("Address1");
+        TestDataFactory.TestDataRel data = TestDataFactory.createTestDataRel();
 
-        Publisher publisher1 = new Publisher();
-        publisher1.setName("Publisher1");
-
-        Publisher publisher2 = new Publisher();
-        publisher2.setName("Publisher2");
-
-        Author author1 = new Author();
-        author1.setFirstName("Author1");
-        author1.setLastName("Author1");
-
-        Author author2 = new Author();
-        author2.setFirstName("Author2");
-        author2.setLastName("Author2");
-
-        book1 = new Book();
-        book1.setTitle("Book1");
-        book1.setAuthor(author1);
-        book1.setPublishedYear(2021);
-        book1.setPublisher(publisher1);
-
-        Book book2 = new Book();
-        book2.setTitle("Book2");
-        book2.setAuthor(author2);
-        book2.setPublishedYear(2022);
-        book2.setPublisher(publisher2);
-
-        user1 = new User();
-        user1.setFirstName("First");
-        user1.setLastName("First");
-        user1.setEmail("first@email.com");
-        user1.setPhoneNumber("1234567890");
-        user1.setPassword("Password1");
-
-        user2 = new User();
-        user2.setFirstName("Second");
-        user2.setLastName("Second");
-        user2.setEmail("second@email.com");
-        user2.setPhoneNumber("0987654321");
-        user2.setPassword("Password2");
-
-        bookPresence1 = new BookPresence();
-        bookPresence1.setBook(book1);
-        bookPresence1.setLibrary(library);
-        bookPresence1.setUser(user1);
-        bookPresence1.setAvailability(Availability.AVAILABLE);
-
-        BookPresence bookPresence2 = new BookPresence();
-        bookPresence2.setBook(book2);
-        bookPresence2.setLibrary(library);
-        bookPresence2.setUser(user2);
-        bookPresence2.setAvailability(Availability.UNAVAILABLE);
-
-        library.setBookPresence(List.of(bookPresence1, bookPresence2));
-
-        journal1 = new Journal();
-        journal1.setBookPresence(bookPresence1);
-        journal1.setUser(user1);
-        journal1.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
-        journal1.setDateOfReturning(LocalDate.parse("2024-07-22"));
-
-        journal2 = new Journal();
-        journal2.setBookPresence(bookPresence2);
-        journal2.setUser(user1);
-        journal2.setDateOfBorrowing(LocalDate.parse("2024-07-15"));
-        journal2.setDateOfReturning(LocalDate.parse("2024-07-22"));
-
-        reservation1 = new Reservation();
-        reservation1.setBook(book1);
-        reservation1.setUser(user1);
-        reservation1.setLibrary(library);
-
-        reservation2 = new Reservation();
-        reservation2.setBook(book2);
-        reservation2.setUser(user1);
-        reservation2.setLibrary(library);
-
-        user1.setJournals(List.of(journal1, journal2));
-        user1.setReservations(List.of(reservation1, reservation2));
-        book1.setBookPresence(List.of(bookPresence1));
-        bookPresence1.setJournals(List.of(journal1, journal2));
+        library = data.library;
+        user1 = data.user;
+        book1 = data.book;
+        bookPresence1 = data.bookPresence;
+        journal1 = data.journal;
+        reservation1 = data.reservation;
     }
+
 
     @Test
     public void getUserByPhoneNumberOrEmail() {
@@ -177,27 +95,27 @@ public class UserServiceImplTest {
 
     @Test
     public void findAll(){
-        when(userRepository.findAll()).thenReturn(List.of(user1, user2));
+        when(userRepository.findAll()).thenReturn(List.of(user1));
 
-        assertEquals(List.of(user1, user2), userServiceImpl.findAll());
+        assertEquals(List.of(user1), userServiceImpl.findAll());
         verify(userRepository, times(1)).findAll();
     }
 
     @Test
     public void findJournalsByUser(){
         when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(journalServiceImpl.getJournalByUserId(user1.getId())).thenReturn(List.of(journal1, journal2));
+        when(journalServiceImpl.getJournalByUserId(user1.getId())).thenReturn(List.of(journal1));
 
-        assertEquals(List.of(journal1, journal2), userServiceImpl.findJournalsByUser(user1.getId()));
+        assertEquals(List.of(journal1), userServiceImpl.findJournalsByUser(user1.getId()));
         verify(journalServiceImpl, times(1)).getJournalByUserId(user1.getId());
     }
 
     @Test
     public void findReservationsByUser(){
         when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(reservationService.getReservationsByUserId(user1.getId())).thenReturn(List.of(reservation1, reservation2));
+        when(reservationService.getReservationsByUserId(user1.getId())).thenReturn(List.of(reservation1));
 
-        assertEquals(List.of(reservation1, reservation2), userServiceImpl.findReservationsByUser(user1.getId()));
+        assertEquals(List.of(reservation1), userServiceImpl.findReservationsByUser(user1.getId()));
         verify(reservationService, times(1)).getReservationsByUserId(user1.getId());
     }
 
@@ -206,7 +124,7 @@ public class UserServiceImplTest {
         when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         when(bookPresenceServiceImpl.addUserToBook(user1, library.getId(), book1.getId())).thenReturn(bookPresence1);
 
-        assertEquals(List.of(journal1, journal2), userServiceImpl.borrowBookFromLibrary(user1.getId(), library.getId(), book1.getId()));
+        assertEquals(List.of(journal1), userServiceImpl.borrowBookFromLibrary(user1.getId(), library.getId(), book1.getId()));
         verify(bookPresenceServiceImpl, times(1)).addUserToBook(user1, library.getId(), book1.getId());
     }
 
@@ -215,7 +133,7 @@ public class UserServiceImplTest {
         when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         when(bookPresenceServiceImpl.removeUserFromBook(user1, library.getId(), book1.getId())).thenReturn(bookPresence1);
 
-        assertEquals(List.of(journal1, journal2), userServiceImpl.returnBookToLibrary(user1.getId(), library.getId(), book1.getId()));
+        assertEquals(List.of(journal1), userServiceImpl.returnBookToLibrary(user1.getId(), library.getId(), book1.getId()));
         verify(bookPresenceServiceImpl, times(1)).removeUserFromBook(user1, library.getId(), book1.getId());
     }
 
@@ -236,4 +154,3 @@ public class UserServiceImplTest {
         verify(reservationService, times(1)).removeReservation(user1, book1.getId());
     }
 }
-

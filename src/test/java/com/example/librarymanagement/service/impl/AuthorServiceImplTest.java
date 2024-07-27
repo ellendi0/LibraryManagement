@@ -1,5 +1,6 @@
 package com.example.librarymanagement.service.impl;
 
+import com.example.librarymanagement.data.TestDataFactory;
 import com.example.librarymanagement.model.entity.Author;
 import com.example.librarymanagement.repository.AuthorRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,24 +26,17 @@ public class AuthorServiceImplTest {
     private AuthorRepository authorRepository;
 
     private static Author author1;
-    private static Author author2;
 
     @BeforeAll
     public static void init() {
-        author1 = new Author();
-        author1.setFirstName("Author1");
-        author1.setLastName("Author1");
-
-        author2 = new Author();
-        author2.setFirstName("Author2");
-        author2.setLastName("Author2");
+        author1 = TestDataFactory.createAuthor();
     }
 
     @Test
     public void findAll() {
-        when(authorRepository.findAll()).thenReturn(List.of(author1, author2));
+        when(authorRepository.findAll()).thenReturn(List.of(author1));
 
-        assertEquals(List.of(author1, author2), authorServiceImpl.getAllAuthors());
+        assertEquals(List.of(author1), authorServiceImpl.getAllAuthors());
         verify(authorRepository, times(1)).findAll();
     }
 
