@@ -1,38 +1,24 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Publisher;
-import com.example.librarymanagement.repository.PublisherRepository;
-import com.example.librarymanagement.service.PublisherService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.model.entity.Publisher
+import com.example.librarymanagement.repository.PublisherRepository
+import com.example.librarymanagement.service.PublisherService
+import org.springframework.stereotype.Service
 
 @Service
-@RequiredArgsConstructor
-public class PublisherServiceImpl implements PublisherService {
-    private final PublisherRepository publisherRepository;
+class PublisherServiceImpl(private val publisherRepository: PublisherRepository): PublisherService {
 
-    @Override
-    public Publisher createPublisher(Publisher publisher) {
-        return publisherRepository.save(publisher);
+    override fun createPublisher(publisher: Publisher): Publisher = publisherRepository.save(publisher)
+
+    override fun updatePublisher(id: Long, updatedPublisher: Publisher): Publisher {
+        val publisher = getPublisherById(id).apply { this.name = updatedPublisher.name }
+        return publisherRepository.save(publisher)
     }
 
-    @Override
-    public Publisher updatePublisher(Long id, Publisher updatedPublisher) {
-        Publisher publisher = getPublisherById(id);
-        publisher.setName(updatedPublisher.getName());
-        return publisherRepository.save(publisher);
+    override fun getPublisherById(id: Long): Publisher {
+        return publisherRepository.findById(id).orElseThrow { throw EntityNotFoundException("Publisher") }
     }
 
-    @Override
-    public Publisher getPublisherById(Long id) {
-        return publisherRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Publisher"));
-    }
-
-    @Override
-    public List<Publisher> getAllPublishers() {
-        return publisherRepository.findAll();
-    }
+    override fun getAllPublishers(): List<Publisher> = publisherRepository.findAll()
 }

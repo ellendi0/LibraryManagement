@@ -1,12 +1,10 @@
-package com.example.librarymanagement.service;
+package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Publisher;
+import com.example.librarymanagement.model.entity.Publisher
 
-import java.util.List;
-
-public interface PublisherService {
-    Publisher createPublisher(Publisher publisher);
-    Publisher updatePublisher(Long id, Publisher updatedPublisher);
-    Publisher getPublisherById(Long id);
-    List<Publisher> getAllPublishers();
+interface PublisherService {
+    fun createPublisher(publisher: Publisher): Publisher
+    fun updatePublisher(id: Long, updatedPublisher: Publisher): Publisher
+    fun getPublisherById(id: Long): Publisher
+    fun getAllPublishers(): List<Publisher>
 }

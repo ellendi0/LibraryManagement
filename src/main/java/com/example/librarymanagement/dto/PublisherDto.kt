@@ -1,20 +1,12 @@
-package com.example.librarymanagement.dto;
+package com.example.librarymanagement.dto
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PublisherDto {
-    private Long id;
+class PublisherDto (
+    val id: Long,
 
-    @Size(max = 50, message = "Publisher must contain no more than 50 characters")
-    @NotBlank(message = "Publisher can't be blank")
-    private String name;
-}
+    @field:Size(max = 50, message = "Publisher must contain no more than 50 characters")
+    @field:NotBlank(message = "Publisher can't be blank")
+    var name: String
+)

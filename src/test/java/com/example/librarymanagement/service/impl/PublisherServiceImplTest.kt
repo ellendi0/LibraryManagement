@@ -1,69 +1,52 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.model.entity.Publisher;
-import com.example.librarymanagement.repository.PublisherRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.repository.PublisherRepository
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import java.util.*
 
-import java.util.List;
+class PublisherServiceImplTest {
+    private val publisherRepository: PublisherRepository = mockk()
+    private val publisherService = PublisherServiceImpl(publisherRepository)
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+    private val publisher = TestDataFactory.createPublisher()
 
-@ExtendWith(MockitoExtension.class)
-public class PublisherServiceImplTest {
+    @Test
+    fun shouldFindAll() {
+        every { publisherRepository.findAll() } returns (listOf(publisher))
 
-    @InjectMocks
-    private PublisherServiceImpl publisherServiceImpl;
-
-    @Mock
-    private PublisherRepository publisherRepository;
-
-    private static Publisher publisher;
-
-    @BeforeAll
-    public static void init() {
-        publisher = TestDataFactory.createPublisher();
+        Assertions.assertEquals(listOf(publisher), publisherService.getAllPublishers())
+        verify(exactly = 1) { publisherRepository.findAll() }
     }
 
     @Test
-    public void findAll() {
-        when(publisherRepository.findAll()).thenReturn(List.of(publisher));
+    fun shouldFindById() {
+        every { publisherRepository.findById(1) } returns Optional.of(publisher)
 
-        assertEquals(1, publisherServiceImpl.getAllPublishers().size());
-        verify(publisherRepository, times(1)).findAll();
+        Assertions.assertEquals(publisher, publisherService.getPublisherById(1))
+        verify(exactly = 1) { publisherRepository.findById(1) }
     }
 
     @Test
-    public void findById() {
-        when(publisherRepository.findById(1L)).thenReturn(java.util.Optional.of(publisher));
+    fun shouldCreatePublisher() {
+        every { publisherRepository.save(publisher) } returns publisher
 
-        assertEquals(publisher, publisherServiceImpl.getPublisherById(1L));
-        verify(publisherRepository, times(1)).findById(1L);
+        Assertions.assertEquals(publisher, publisherService.createPublisher(publisher))
+        verify(exactly = 1) { publisherRepository.save(publisher) }
     }
 
     @Test
-    public void create() {
-        when(publisherRepository.save(publisher)).thenReturn(publisher);
+    fun shouldUpdatePublisher() {
+        val updatedPublisher = publisher.copy(name = "Updated")
+        every { publisherRepository.findById(1) } returns Optional.of(publisher)
+        every { publisherRepository.save(updatedPublisher) } returns updatedPublisher
 
-        assertEquals(publisher, publisherServiceImpl.createPublisher(publisher));
-        verify(publisherRepository, times(1)).save(publisher);
-    }
-
-    @Test
-    public void update() {
-        when(publisherRepository.findById(1L)).thenReturn(java.util.Optional.of(publisher));
-        when(publisherRepository.save(publisher)).thenReturn(publisher);
-
-        assertEquals(publisher, publisherServiceImpl.updatePublisher(1L, publisher));
-        verify(publisherRepository, times(1)).findById(1L);
-        verify(publisherRepository, times(1)).save(publisher);
+        Assertions.assertEquals(updatedPublisher, publisherService.updatePublisher(1, updatedPublisher))
+        verify(exactly = 1) { publisherRepository.findById(1) }
+        verify(exactly = 1) { publisherRepository.save(updatedPublisher) }
     }
 }

@@ -1,166 +1,173 @@
-package com.example.librarymanagement.controller;
+package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.dto.ErrorDto;
-import com.example.librarymanagement.dto.PublisherDto;
-import com.example.librarymanagement.dto.mapper.ErrorMapper;
-import com.example.librarymanagement.dto.mapper.PublisherMapper;
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.exception.GlobalExceptionHandler;
-import com.example.librarymanagement.model.entity.Publisher;
-import com.example.librarymanagement.service.PublisherService;
-import com.example.librarymanagement.data.TestDataFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.dto.PublisherDto
+import com.example.librarymanagement.dto.mapper.ErrorMapper
+import com.example.librarymanagement.dto.mapper.PublisherMapper
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.exception.GlobalExceptionHandler
+import com.example.librarymanagement.model.entity.Publisher
+import com.example.librarymanagement.service.PublisherService
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import java.util.List;
+class PublisherControllerTest {
+    private lateinit var mockMvc: MockMvc
+    private lateinit var publisherService: PublisherService
+    private lateinit var publisherController: PublisherController
+    private lateinit var publisherMapper: PublisherMapper
+    private lateinit var globalExceptionHandler: GlobalExceptionHandler
+    private lateinit var errorMapper: ErrorMapper
+    private val objectMapper: ObjectMapper = ObjectMapper()
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@WebMvcTest(PublisherController.class)
-public class PublisherControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private PublisherService publisherService;
-
-    @MockBean
-    private PublisherMapper publisherMapper;
-
-    @MockBean
-    private GlobalExceptionHandler globalExceptionHandler;
-
-    @MockBean
-    private ErrorMapper errorMapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private Publisher publisher1;
-    private PublisherDto publisherDto1;
-    private ErrorDto errorDto1;
-    private ErrorDto errorDto2;
+    private var publisher = TestDataFactory.createPublisher()
+    private lateinit var publisherDto: PublisherDto
+    private var errorDto1 = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
+    private var errorDto2 = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Publisher")
 
     @BeforeEach
-    public void init() {
-        publisher1 = TestDataFactory.createPublisher();
-        publisherDto1 = new PublisherMapper().toPublisherDto(publisher1);
-        
-        errorDto1 = new ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
-        errorDto2 = new ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Publisher");
+    fun setUp() {
+        publisherService = mockk(relaxed = true)
+        publisherController = mockk(relaxed = true)
+        publisherMapper = mockk(relaxed = true)
+        errorMapper = mockk(relaxed = true)
+        globalExceptionHandler = GlobalExceptionHandler(errorMapper)
+        publisherController = PublisherController(publisherService, publisherMapper)
+
+        publisherDto = PublisherMapper().toPublisherDto(publisher)
+
+        mockMvc = MockMvcBuilders.standaloneSetup(publisherController)
+            .setControllerAdvice(globalExceptionHandler)
+            .build()
     }
 
     @Test
-    void createPublisher() throws Exception {
-        String expected = objectMapper.writeValueAsString(publisherDto1);
+    fun shouldCreatePublisher() {
+        val expected = objectMapper.writeValueAsString(publisherDto)
 
-        given(publisherService.createPublisher(any(Publisher.class))).willReturn(publisher1);
-        given(publisherMapper.toPublisherDto((Publisher) any())).willReturn(publisherDto1);
+        every { publisherService.createPublisher(any()) } returns publisher
+        every { publisherMapper.toPublisherDto(any<Publisher>()) } returns publisherDto
 
-        String result = mockMvc.perform(post("/api/v1/publisher")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(publisherDto1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        val result = mockMvc.perform(post("/api/v1/publisher")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isCreated())
+            .andReturn()
     }
 
     @Test
-    void createPublisherWithInvalidData() throws Exception {
-        publisherDto1.setName("");
-
-        given(publisherService.createPublisher(any(Publisher.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+    fun shouldNotCreatePublisher() {
+        every { publisherService.createPublisher(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/publisher")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(publisherDto1)))
-                .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isBadRequest())
+            .andReturn()
     }
 
     @Test
-    void updatePublisher() throws Exception {
-        String expected = objectMapper.writeValueAsString(publisherDto1);
+    fun shouldUpdatePublisher() {
+        val expected = objectMapper.writeValueAsString(publisherDto)
 
-        given(publisherService.updatePublisher(anyLong(), any(Publisher.class))).willReturn(publisher1);
-        given(publisherMapper.toPublisherDto((Publisher) any())).willReturn(publisherDto1);
+        every { publisherService.updatePublisher(any(), any()) } returns publisher
+        every { publisherMapper.toPublisherDto(any<Publisher>()) } returns publisherDto
 
-        String result = mockMvc.perform(put("/api/v1/publisher/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(publisherDto1)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(put("/api/v1/publisher/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isOk())
+            .andReturn().response.contentAsString
 
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void updatePublisherWithInvalidData() throws Exception {
-        publisherDto1.setName("");
-
-        given(publisherService.updatePublisher(anyLong(), any(Publisher.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
+    fun shouldNotUpdatePublisher() {
+        every { publisherService.updatePublisher(any(), any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(put("/api/v1/publisher/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(publisherDto1)))
-                .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isBadRequest())
+            .andReturn()
     }
 
     @Test
-    void getAllPublishers() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(publisherDto1));
+    fun shouldNotUpdateNonExistingPublisher() {
+        every { publisherService.updatePublisher(any(), any()) } throws EntityNotFoundException("Publisher")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
-        given(publisherService.getAllPublishers()).willReturn(List.of(publisher1));
-        given(publisherMapper.toPublisherDto((List<Publisher>) any())).willReturn(List.of(publisherDto1));
-
-        String result = mockMvc.perform(get("/api/v1/publisher"))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc.perform(put("/api/v1/publisher/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isNotFound())
+            .andReturn()
     }
 
     @Test
-    void getPublisherById() throws Exception {
-        String expected = objectMapper.writeValueAsString(publisherDto1);
+    fun shouldNotUpdatePublisherWithInvalidData() {
+        publisherDto.name = ""
 
-        given(publisherService.getPublisherById(1L)).willReturn(publisher1);
-        given(publisherMapper.toPublisherDto((Publisher) any())).willReturn(publisherDto1);
+        every { publisherService.updatePublisher(any(), any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
-        String result = mockMvc.perform(get("/api/v1/publisher/{id}", 1L))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc.perform(put("/api/v1/publisher/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(publisherDto)))
+            .andExpect(status().isBadRequest())
+            .andReturn()
     }
 
     @Test
-    void getPublisherByIdWithInvalidId() throws Exception {
-        given(publisherService.getPublisherById(1L)).willThrow(new EntityNotFoundException("Publisher"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
+    fun shouldGetPublisherById() {
+        val expected = objectMapper.writeValueAsString(publisherDto)
 
-        mockMvc.perform(get("/api/v1/publisher/{id}", 1L))
-                .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+        every { publisherService.getPublisherById(any()) } returns publisher
+        every { publisherMapper.toPublisherDto(any<Publisher>()) } returns publisherDto
+
+        val result = mockMvc.perform(get("/api/v1/publisher/{id}", 1L))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
+    }
+
+    @Test
+    fun shouldNotGetPublisherById() {
+        every { publisherService.getPublisherById(any()) } throws EntityNotFoundException("Publisher")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
+
+        mockMvc.perform(get("/api/v1/publisher/{id}", 0L))
+            .andExpect(status().isNotFound)
+            .andReturn()
+    }
+
+    @Test
+    fun shouldGetAllPublishers() {
+        val expected = objectMapper.writeValueAsString(listOf(publisherDto))
+
+        every { publisherService.getAllPublishers() } returns listOf(publisher)
+        every { publisherMapper.toPublisherDto(any<List<Publisher>>()) } returns listOf(publisherDto)
+
+        val result = mockMvc.perform(get("/api/v1/publisher"))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
     }
 }
