@@ -1,83 +1,60 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.model.entity.BookPresence;
-import com.example.librarymanagement.model.entity.Library;
-import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.model.enums.Availability;
-import com.example.librarymanagement.repository.BookRepository;
-import com.example.librarymanagement.repository.ReservationRepository;
-import com.example.librarymanagement.service.BookPresenceService;
-import com.example.librarymanagement.service.ReservationService;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.exception.ExistingReservationException
+import com.example.librarymanagement.model.entity.Reservation
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.enums.Availability
+import com.example.librarymanagement.repository.BookRepository
+import com.example.librarymanagement.repository.ReservationRepository
+import com.example.librarymanagement.service.BookPresenceService
+import com.example.librarymanagement.service.ReservationService
+import jakarta.transaction.Transactional
+import org.springframework.stereotype.Service
 
 @Service
-@RequiredArgsConstructor
-public class ReservationServiceImpl implements ReservationService {
-    private final ReservationRepository reservationRepository;
-    private final BookRepository bookRepository;
-    private final BookPresenceService bookPresenceService;
+class ReservationServiceImpl(
+    private val reservationRepository: ReservationRepository,
+    private val bookRepository: BookRepository,
+    private val bookPresenceService: BookPresenceService
+) : ReservationService {
 
-    @Override
-    public List<Reservation> getReservationsByLibraryId(Long libraryId) {
-        return reservationRepository.findAllByLibraryId(libraryId);
+    override fun getReservationsByLibraryId(libraryId: Long): List<Reservation> {
+        return reservationRepository.findAllByLibraryId(libraryId)
     }
 
-    @Override
-    public List<Reservation> getReservationsByUserId(Long userId) {
-        return reservationRepository.findAllByUserId(userId);
+    override fun getReservationsByUserId(userId: Long): List<Reservation> = reservationRepository.findAllByUserId(userId)
+
+    override fun getReservationsByBookIdAndUser(bookId: Long, user: User): List<Reservation> {
+        return reservationRepository.findAllByBookIdAndUserId(bookId, user.id!!)
     }
 
-    @Override
-    public List<Reservation> getReservationsByBookIdAndUser(Long bookId, User user) {
-        return reservationRepository.findAllByBookIdAndUserId(bookId, user.getId());
-    }
-
-    @Override
     @Transactional
-    public List<Reservation> doReservationBook(User user, Long libraryId, Long bookId) {
-        Library library;
-        List<BookPresence> bookPresenceList;
-        Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book"));
+    override fun reserveBook(user: User, libraryId: Long?, bookId: Long): List<Reservation> {
+        val book = bookRepository.findById(bookId).orElseThrow { throw EntityNotFoundException("Book") }
+        if (reservationRepository.existsByBookIdAndUser(bookId, user)) { throw ExistingReservationException(bookId, user.id!!) }
 
-        if (libraryId != null) {
-            bookPresenceList = bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId);
-            library = bookPresenceList.get(0).getLibrary();
-        } else {
-            bookPresenceList = bookPresenceService.getByBookId(bookId);
-            library = null;
+        val bookPresenceList = libraryId?.let {
+            bookPresenceService.getAllBookByLibraryIdAndAvailability(it, Availability.AVAILABLE)
+        } ?: bookPresenceService.getByBookId(bookId)
+
+        val bookPresence = bookPresenceList.firstOrNull { it.availability == Availability.AVAILABLE }
+
+        bookPresence?.library?.id?.let {
+            bookPresenceService.addUserToBook(user, it, bookId)
+        } ?: run {
+            val reservation = Reservation(book = book, user = user, library = bookPresenceList.firstOrNull()?.library)
+            reservationRepository.save(reservation)
         }
-
-        Optional<BookPresence> bookPresence = bookPresenceList.stream()
-                .filter(i -> i.getAvailability().equals(Availability.AVAILABLE)).findFirst();
-
-        if (bookPresence.isPresent()) {
-            bookPresenceService.addUserToBook(user, libraryId, bookId);
-        } else {
-            Reservation reservation = new Reservation();
-            reservation.setUser(user);
-            reservation.setBook(book);
-            reservation.setLibrary(library);
-
-            reservationRepository.save(reservation);
-        }
-        return user.getReservations();
+        return getReservationsByUserId(user.id!!)
     }
 
-    @Override
-    public void removeReservation(User user, Long bookId) {
-        reservationRepository.deleteAll(getReservationsByBookIdAndUser(bookId, user));
+    @Transactional
+    override fun removeReservation(user: User, bookId: Long) {
+        reservationRepository.deleteAll(getReservationsByBookIdAndUser(bookId, user))
     }
 
-    @Override
-    public void deleteReservationById(Long id) {
-        reservationRepository.findById(id).ifPresent(reservationRepository::delete);
+    override fun deleteReservationById(id: Long) {
+        reservationRepository.findById(id).ifPresent { reservationRepository.delete(it) }
     }
 }
