@@ -49,7 +49,7 @@ public class BookPresenceController {
 
     @DeleteMapping("/presence/{presenceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeBookFromLibrary(@PathVariable Long libraryId, @PathVariable(name = "bookId") Long presenceId) {
-        bookPresenceService.deleteBookPresenceByIdAndLibraryId(libraryId, presenceId);
+    public void removeBookFromLibrary(@PathVariable Long presenceId) {
+        bookPresenceService.deleteBookPresenceById(presenceId);
     }
 }
