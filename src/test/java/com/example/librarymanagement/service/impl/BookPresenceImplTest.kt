@@ -1,228 +1,166 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.exception.BookNotAvailableException;
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.model.entity.BookPresence;
-import com.example.librarymanagement.model.entity.Journal;
-import com.example.librarymanagement.model.entity.Library;
-import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.model.enums.Availability;
-import com.example.librarymanagement.repository.BookPresenceRepository;
-import com.example.librarymanagement.repository.BookRepository;
-import com.example.librarymanagement.repository.LibraryRepository;
-import com.example.librarymanagement.repository.ReservationRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.model.entity.Book
+import com.example.librarymanagement.model.entity.BookPresence
+import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.model.entity.Library
+import com.example.librarymanagement.model.entity.Reservation
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.enums.Availability
+import com.example.librarymanagement.repository.BookPresenceRepository
+import com.example.librarymanagement.repository.BookRepository
+import com.example.librarymanagement.repository.LibraryRepository
+import com.example.librarymanagement.repository.ReservationRepository
+import com.example.librarymanagement.service.JournalService
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.util.*
 
-import java.util.List;
-import java.util.Optional;
+class BookPresenceImplTest {
+    private val bookPresenceRepository: BookPresenceRepository = mockk()
+    private val journalService: JournalService = mockk()
+    private val libraryRepository: LibraryRepository = mockk()
+    private val reservationRepository: ReservationRepository = mockk()
+    private val bookRepository: BookRepository = mockk()
+    private val bookPresenceService = BookPresenceServiceImpl(
+        bookPresenceRepository,
+        journalService,
+        reservationRepository,
+        bookRepository,
+        libraryRepository
+    )
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+    private lateinit var bookPresence: BookPresence
+    private lateinit var book: Book
+    private lateinit var user: User
+    private lateinit var journal: Journal
+    private lateinit var library: Library
+    private lateinit var reservation: Reservation
+    private lateinit var reservationWithUser: Reservation
 
-@ExtendWith(MockitoExtension.class)
-public class BookPresenceImplTest {
-    @InjectMocks
-    private BookPresenceServiceImpl bookPresenceServiceImpl;
-
-    @Mock
-    private BookPresenceRepository bookPresenceRepository;
-
-    @Mock
-    private BookRepository bookRepository;
-
-    @Mock
-    private LibraryRepository libraryRepository;
-
-    @Mock
-    private ReservationRepository reservationRepository;
-
-    @Mock
-    private JournalServiceImpl journalService;
-
-    private static BookPresence bookPresence;
-    private static Library library;
-    private static Book book;
-    private static User user;
-    private static Journal journal;
-    private static Reservation reservation;
-
-    @BeforeAll
-    public static void init() {
-        TestDataFactory.TestDataRel data = TestDataFactory.createTestDataRel();
-        bookPresence = data.bookPresence;
-        library = data.library;
-        book = data.book;
-        user = data.user;
-        journal = data.journal;
-        reservation = data.reservation;
+    @BeforeEach
+    fun setUp() {
+        var test = TestDataFactory.createTestDataRelForServices()
+        book = test.book
+        user = test.user
+        library = test.library
+        bookPresence = test.bookPresence
+        journal = test.journal
+        reservation = test.reservation
     }
 
     @Test
-    public void createBookPresence() {
-        when(bookPresenceRepository.save(bookPresence)).thenReturn(bookPresence);
+    fun shouldCreateBookPresence() {
+        every { bookPresenceRepository.save(bookPresence) } returns bookPresence
 
-        assertEquals(bookPresence, bookPresenceServiceImpl.createBookPresence(bookPresence));
-        verify(bookPresenceRepository, times(1)).save(bookPresence);
+        Assertions.assertEquals(bookPresence, bookPresenceService.createBookPresence(bookPresence))
+        verify(exactly = 1) { bookPresenceRepository.save(bookPresence) }
     }
 
     @Test
-    public void addUserToBook() {
-        when(bookPresenceRepository
-                .findAllByLibraryIdAndBookIdAndAvailability(library.getId(), book.getId(), Availability.AVAILABLE))
-                .thenReturn(List.of(bookPresence));
-        when(bookPresenceRepository.save(any(BookPresence.class))).thenReturn(bookPresence);
-        when(journalService.createJournal(any(Journal.class))).thenReturn(journal);
+    fun shouldUpdateBookPresence() {
+        val updatedBookPresence = bookPresence.copy(availability = Availability.AVAILABLE)
+        every { bookPresenceRepository.findById(1) } returns Optional.of(bookPresence)
+        every { bookPresenceRepository.save(updatedBookPresence) } returns updatedBookPresence
 
-        assertEquals(bookPresence, bookPresenceServiceImpl.addUserToBook(user, library.getId(), book.getId()));
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookIdAndAvailability(1L, 1L, Availability.AVAILABLE);
-        verify(bookPresenceRepository, times(1)).save(any(BookPresence.class));
-        verify(journalService, times(1)).createJournal(any(Journal.class));
+        Assertions.assertEquals(updatedBookPresence, bookPresenceService.updateBookPresence(1, updatedBookPresence))
+        verify(exactly = 1) { bookPresenceRepository.findById(1) }
+        verify(exactly = 1) { bookPresenceRepository.save(updatedBookPresence) }
     }
 
     @Test
-    public void addUserToBook_BookNotAvailable() {
-        when(bookPresenceRepository
-                .findAllByLibraryIdAndBookIdAndAvailability(library.getId(), book.getId(), Availability.AVAILABLE))
-                .thenReturn(List.of());
+    fun shouldAddUserToBook() {
+        every {
+            bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
+                library.id!!,
+                book.id!!,
+                Availability.AVAILABLE
+            )
+        }
+            .returns(listOf(bookPresence))
+        every { bookPresenceRepository.save(any()) } returns bookPresence
+        every { journalService.createJournal(any()) } returns journal
 
-        assertThrows(BookNotAvailableException.class, () -> {
-            bookPresenceServiceImpl.addUserToBook(user, library.getId(), book.getId());
-        });
-
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookIdAndAvailability(1L, 1L, Availability.AVAILABLE);
-        verify(bookPresenceRepository, never()).save(any(BookPresence.class));
-        verify(journalService, never()).createJournal(any(Journal.class));
+        Assertions.assertEquals(bookPresence, bookPresenceService.addUserToBook(user, library.id!!, book.id!!))
+        verify(exactly = 1) {
+            bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
+                library.id!!,
+                book.id!!,
+                Availability.AVAILABLE
+            )
+        }
+        verify(exactly = 1) { bookPresenceRepository.save(any()) }
+        verify(exactly = 1) { journalService.createJournal(any()) }
     }
 
     @Test
-    public void removeUserFromBook() {
-        when(bookPresenceRepository.findAllByLibraryIdAndBookIdAndUser(library.getId(), book.getId(), user))
-                .thenReturn(Optional.of(bookPresence));
-        when(journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.getId(), user.getId()))
-                .thenReturn(journal);
-        when(journalService.updateJournal(journal.getId(), journal)).thenReturn(journal);
-        when(reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.getId(), library.getId()))
-                .thenReturn(reservation);
-        when(bookPresenceRepository.save(bookPresence)).thenReturn(bookPresence);
+    fun shouldRemoveUserFromBookWithoutReservation() {
+        every { bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
+            .returns(listOf(bookPresence))
+        every { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
+            .returns(journal)
+        every { journalService.createJournal(journal) } returns journal
+        every { bookPresenceRepository.save(bookPresence) } returns bookPresence
+        every { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id!!) }
+            .returns(null)
+        every { bookPresenceRepository.findById(bookPresence.id!!) } returns Optional.of(bookPresence)
 
-        assertEquals(bookPresence, bookPresenceServiceImpl.removeUserFromBook(user, library.getId(), book.getId()));
+        Assertions.assertEquals(bookPresence, bookPresenceService.removeUserFromBook(user, library.id!!, book.id!!))
 
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookIdAndUser(library.getId(), book.getId(), user);
-        verify(journalService, times(1))
-                .findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.getId(), user.getId());
-        verify(journalService, times(1)).updateJournal(journal.getId(), journal);
-        verify(bookPresenceRepository, times(1)).save(bookPresence);
+        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
+        verify(exactly = 1) { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
+        verify(exactly = 1) { journalService.createJournal(journal) }
+        verify(exactly = 2) { bookPresenceRepository.save(bookPresence) }
+        verify(exactly = 1) { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id!!) }
+        verify(exactly = 1) { bookPresenceRepository.findById(bookPresence.id!!) }
     }
 
     @Test
-    public void removeUserFromBook_BookPresenceNotFound() {
-        when(bookPresenceRepository.findAllByLibraryIdAndBookIdAndUser(library.getId(), book.getId(), user))
-                .thenReturn(Optional.empty());
+    fun shouldGetBookPresenceByLibraryId(){
+        every { bookPresenceRepository.findAllByLibraryId(library.id!!) } returns listOf(bookPresence)
 
-        assertThrows(EntityNotFoundException.class,
-                () -> {bookPresenceServiceImpl.removeUserFromBook(user, library.getId(), book.getId());});
-
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookIdAndUser(library.getId(), book.getId(), user);
-        verify(journalService, never()).findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(anyLong(), anyLong());
-        verify(journalService, never()).updateJournal(anyLong(), any(Journal.class));
-        verify(bookPresenceRepository, never()).save(any(BookPresence.class));
+        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getByLibraryId(library.id!!))
+        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryId(library.id!!) }
     }
 
     @Test
-    public void addBookToLibrary() {
-        when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book));
-        when(libraryRepository.findById(book.getId())).thenReturn(Optional.of(library));
-        when(bookPresenceRepository.save(any(BookPresence.class))).thenReturn(bookPresence);
+    fun shouldGetBookPresenceByBookId(){
+        every { bookPresenceRepository.findAllByBookId(book.id!!) } returns listOf(bookPresence)
 
-        assertEquals(bookPresence, bookPresenceServiceImpl.addBookToLibrary(library.getId(), book.getId()));
-        verify(bookRepository, times(1)).findById(book.getId());
-        verify(libraryRepository, times(1)).findById(library.getId());
-        verify(bookPresenceRepository, times(1)).save(any(BookPresence.class));
+        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getByBookId(book.id!!))
+        verify(exactly = 1) { bookPresenceRepository.findAllByBookId(book.id!!) }
     }
 
     @Test
-    public void getByBookId() {
-        when(bookPresenceRepository.findAllByBookId(book.getId())).thenReturn(List.of(bookPresence));
+    fun shouldGetBookPresenceByLibraryIdAndBookId() {
+        every { bookPresenceRepository.findAllByLibraryIdAndBookId(library.id!!, book.id!!) } returns listOf(
+            bookPresence
+        )
 
-        assertEquals(List.of(bookPresence), bookPresenceServiceImpl.getByBookId(book.getId()));
-        verify(bookPresenceRepository, times(1)).findAllByBookId(book.getId());
+        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getAllBookByLibraryIdAndBookId(library.id!!, book.id!!))
+        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndBookId(library.id!!, book.id!!) }
     }
 
     @Test
-    public void getByLibraryId() {
-        when(bookPresenceRepository.findAllByLibraryId(library.getId())).thenReturn(List.of(bookPresence));
+    fun shouldGetBookPresenceByLibraryIdAndAvailability() {
+        every { bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE) } returns listOf(
+            bookPresence
+        )
 
-        assertEquals(List.of(bookPresence), bookPresenceServiceImpl.getByLibraryId(library.getId()));
-        verify(bookPresenceRepository, times(1)).findAllByLibraryId(library.getId());
+        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getAllBookByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE))
+        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE) }
     }
 
     @Test
-    public void getAllBookByLibraryIdAndBookId(){
-        when(bookPresenceRepository
-                .findAllByLibraryIdAndBookId(library.getId(), book.getId())).thenReturn(List.of(bookPresence));
+    fun shouldDeleteBookPresenceByIdAndLibraryId() {
+        every { bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(book.id!!, library.id!!) } returns Unit
 
-        assertEquals(List.of(bookPresence),
-                bookPresenceServiceImpl.getAllBookByLibraryIdAndBookId(library.getId(), book.getId()));
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookId(library.getId(), book.getId());
-    }
-
-    @Test
-    public void getAllBookByLibraryIdAndAvailability(){
-        when(bookPresenceRepository
-                .findAllByLibraryIdAndAvailability(library.getId(), Availability.AVAILABLE)).thenReturn(List.of(bookPresence));
-
-        assertEquals(List.of(bookPresence),
-                bookPresenceServiceImpl.getAllBookByLibraryIdAndAvailability(library.getId(), Availability.AVAILABLE));
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndAvailability(library.getId(), Availability.AVAILABLE);
-    }
-
-    @Test
-    public void findAllByLibraryIdAndBookIdAndAvailability(){
-        when(bookPresenceRepository
-                .findAllByLibraryIdAndBookIdAndAvailability(library.getId(), book.getId(), Availability.AVAILABLE))
-                .thenReturn(List.of(bookPresence));
-
-        assertEquals(List.of(bookPresence), bookPresenceServiceImpl
-                .findAllByLibraryIdAndBookIdAndAvailability(library.getId(), book.getId(), Availability.AVAILABLE));
-        verify(bookPresenceRepository, times(1))
-                .findAllByLibraryIdAndBookIdAndAvailability(library.getId(), book.getId(), Availability.AVAILABLE);
-    }
-
-    @Test
-    public void deleteBookPresenceByIdAndLibraryId(){
-        doNothing().when(bookPresenceRepository).deleteBookPresenceByIdAndLibraryId(book.getId(), library.getId());
-
-        bookPresenceServiceImpl.deleteBookPresenceByIdAndLibraryId(library.getId(), bookPresence.getId());
-        verify(bookPresenceRepository, times(1))
-                .deleteBookPresenceByIdAndLibraryId(book.getId(), library.getId());
-    }
-
-    @Test
-    public void deleteBookPresenceById(){
-        doNothing().when(bookPresenceRepository).deleteById(bookPresence.getId());
-
-        bookPresenceServiceImpl.deleteBookPresenceById(bookPresence.getId());
-        verify(bookPresenceRepository, times(1)).deleteById(bookPresence.getId());
+        bookPresenceService.deleteBookPresenceByIdAndLibraryId(library.id!!, book.id!!)
+        verify(exactly = 1) { bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(book.id!!, library.id!!) }
     }
 }

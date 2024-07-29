@@ -1,38 +1,23 @@
-package com.example.librarymanagement.dto.mapper;
+package com.example.librarymanagement.dto.mapper
 
-import com.example.librarymanagement.dto.BookPresenceDto;
-import com.example.librarymanagement.model.entity.BookPresence;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Collections;
-import java.util.List;
+import com.example.librarymanagement.dto.BookPresenceDto
+import com.example.librarymanagement.model.entity.BookPresence
+import org.springframework.stereotype.Component
 
 @Component
-public class BookPresenceMapper {
-    private final UserMapper userMapper;
-
-    public BookPresenceMapper(UserMapper userMapper) {
-        this.userMapper = userMapper;
+class BookPresenceMapper(private val userMapper: UserMapper) {
+    fun toBookPresenceDto(bookPresence: BookPresence): BookPresenceDto {
+        return BookPresenceDto(
+            id = bookPresence.id!!,
+            bookTitle = bookPresence.book.title,
+            bookAuthorId = bookPresence.book.author!!.id!!,
+            libraryId = bookPresence.library.id!!,
+            user = bookPresence.user?.let { userMapper.toUserResponseDto(it) },
+            availability = bookPresence.availability
+        )
     }
 
-    public BookPresenceDto toBookPresenceDto(BookPresence bookPresence) {
-        BookPresenceDto bookPresenceDto = new BookPresenceDto();
-        bookPresenceDto.setId(bookPresence.getId());
-        bookPresenceDto.setBookTitle(bookPresence.getBook().getTitle());
-        bookPresenceDto.setBookAuthorId(bookPresence.getBook().getAuthor().getId());
-        bookPresenceDto.setLibraryId(bookPresence.getLibrary().getId());
-        bookPresenceDto.setUser(bookPresence.getUser() != null
-                ? userMapper.toUserResponseDto(bookPresence.getUser()): null);
-        bookPresenceDto.setAvailability(bookPresence.getAvailability());
-        return bookPresenceDto;
-    }
-
-    public List<BookPresenceDto> toBookPresenceDto(List<BookPresence> bookPresenceList) {
-        if(CollectionUtils.isEmpty(bookPresenceList)) return Collections.emptyList();
-
-        return bookPresenceList.stream()
-                .map(this::toBookPresenceDto)
-                .toList();
+    fun toBookPresenceDto(bookPresenceList: List<BookPresence?>): List<BookPresenceDto> {
+        return bookPresenceList.map { toBookPresenceDto(it!!) }
     }
 }

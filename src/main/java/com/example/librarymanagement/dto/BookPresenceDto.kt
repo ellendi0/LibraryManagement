@@ -1,18 +1,12 @@
-package com.example.librarymanagement.dto;
+package com.example.librarymanagement.dto
 
-import com.example.librarymanagement.model.enums.Availability;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.example.librarymanagement.model.enums.Availability
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class BookPresenceDto {
-    private Long id;
-    private UserResponseDto user;
-    private String bookTitle;
-    private Long bookAuthorId;
-    private Long libraryId;
-    private Availability availability;
-}
+class BookPresenceDto (
+    val id: Long,
+    val user: UserResponseDto ?= null,
+    val bookTitle: String,
+    val bookAuthorId: Long,
+    val libraryId: Long,
+    val availability: Availability,
+)

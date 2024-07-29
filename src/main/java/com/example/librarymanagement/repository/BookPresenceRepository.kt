@@ -1,22 +1,20 @@
-package com.example.librarymanagement.repository;
+package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.BookPresence;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.model.enums.Availability;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
+import com.example.librarymanagement.model.entity.BookPresence
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.enums.Availability
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import java.util.*
 
 @Repository
-public interface BookPresenceRepository extends JpaRepository<BookPresence, Long> {
-    List<BookPresence> findAllByBookId(Long bookId);
-    List<BookPresence> findAllByLibraryId(Long libraryId);
-    List<BookPresence> findAllByUserId(Long userId);
-    List<BookPresence> findAllByLibraryIdAndBookId(Long libraryId, Long bookId);
-    Optional<BookPresence> findAllByLibraryIdAndBookIdAndUser(Long libraryId, Long bookId, User user);
-    List<BookPresence> findAllByLibraryIdAndBookIdAndAvailability(Long libraryId, Long bookId, Availability availability);
-    List<BookPresence> findAllByLibraryIdAndAvailability(Long libraryId, Availability availability);
-    void deleteBookPresenceByIdAndLibraryId(Long bookId, Long libraryId);
+interface BookPresenceRepository : JpaRepository<BookPresence, Long> {
+    fun findAllByBookId(bookId: Long): List<BookPresence>
+    fun findAllByLibraryId(libraryId: Long): List<BookPresence>
+    fun findAllByUserId(userId: Long): List<BookPresence>
+    fun findAllByLibraryIdAndBookId(libraryId: Long, bookId: Long): List<BookPresence>
+    fun findAllByLibraryIdAndBookIdAndUser(libraryId: Long, bookId: Long, user: User): Optional<BookPresence>
+    fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long, bookId: Long, availability: Availability): List<BookPresence>
+    fun findAllByLibraryIdAndAvailability(libraryId: Long, availability: Availability): List<BookPresence>
+    fun deleteBookPresenceByIdAndLibraryId(bookId: Long, libraryId: Long)
 }

@@ -1,56 +1,42 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import com.example.librarymanagement.model.enums.Availability;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
-
-import java.util.List;
+import com.example.librarymanagement.model.enums.Availability
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import lombok.ToString
 
 @Entity
-@Data
-@NoArgsConstructor(force = true)
-@AllArgsConstructor
-@ToString(exclude = "journals")
 @Table(name = "presence_of_book")
-public class BookPresence {
+@ToString(exclude = ["journals"])
+data class BookPresence (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    val id: Long ?= null,
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Availability availability = Availability.AVAILABLE;
+    var availability: Availability = Availability.AVAILABLE,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id")
-    private Book book;
+    @ManyToOne
+    @JoinColumn(name = "book_id", nullable = false)
+    var book: Book,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_id")
-    private Library library;
+    @ManyToOne
+    @JoinColumn(name = "library_id", nullable = false)
+    var library: Library,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    var user: User ?= null,
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bookPresence")
-    @JsonIgnore
-    private List<Journal> journals;
-}
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "bookPresence")
+    var journals: MutableList<Journal> = mutableListOf()
+)

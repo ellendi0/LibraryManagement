@@ -1,133 +1,109 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.BookNotAvailableException;
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.model.entity.BookPresence;
-import com.example.librarymanagement.model.entity.Journal;
-import com.example.librarymanagement.model.entity.Library;
-import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.model.enums.Availability;
-import com.example.librarymanagement.repository.BookPresenceRepository;
-import com.example.librarymanagement.repository.BookRepository;
-import com.example.librarymanagement.repository.LibraryRepository;
-import com.example.librarymanagement.repository.ReservationRepository;
-import com.example.librarymanagement.service.BookPresenceService;
-import com.example.librarymanagement.service.JournalService;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
+import com.example.librarymanagement.exception.BookNotAvailableException
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.model.entity.BookPresence
+import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.enums.Availability
+import com.example.librarymanagement.repository.BookPresenceRepository
+import com.example.librarymanagement.repository.BookRepository
+import com.example.librarymanagement.repository.LibraryRepository
+import com.example.librarymanagement.repository.ReservationRepository
+import com.example.librarymanagement.service.BookPresenceService
+import com.example.librarymanagement.service.JournalService
+import jakarta.transaction.Transactional
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
-@RequiredArgsConstructor
-public class BookPresenceServiceImpl implements BookPresenceService {
-    private final BookPresenceRepository bookPresenceRepository;
-    private final BookRepository bookRepository;
-    private final LibraryRepository libraryRepository;
-    private final JournalService journalService;
-    private final ReservationRepository reservationRepository;
+class BookPresenceServiceImpl(
+    private val bookPresenceRepository: BookPresenceRepository,
+    private val journalService: JournalService,
+    private val reservationRepository: ReservationRepository,
+    private val bookRepository: BookRepository,
+    private val libraryRepository: LibraryRepository
+) : BookPresenceService {
 
-    @Override
-    public BookPresence createBookPresence(BookPresence bookPresence) {
-        return bookPresenceRepository.save(bookPresence);
+    override fun createBookPresence(bookPresence: BookPresence): BookPresence {
+        return bookPresenceRepository.save(bookPresence)
     }
 
-    @Override
-    @Transactional
-    public BookPresence addUserToBook(User user, Long libraryId, Long bookId) {
-        BookPresence bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.AVAILABLE)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new BookNotAvailableException(libraryId, bookId));
-
-        Journal journal = new Journal();
-        journal.setBookPresence(bookPresence);
-        journal.setDateOfBorrowing(LocalDate.now());
-        journal.setUser(user);
-
-        bookPresence.getJournals().add(journal);
-
-        journalService.createJournal(journal);
-
-        bookPresence.setUser(user);
-        bookPresence.setAvailability(Availability.UNAVAILABLE);
-
-        return bookPresenceRepository.save(bookPresence);
+    override fun updateBookPresence(id:Long, bookPresence: BookPresence): BookPresence {
+        val bookPresenceToUpdate = bookPresenceRepository.findByIdOrNull(id) ?: throw EntityNotFoundException("Presence")
+        bookPresenceToUpdate.availability = bookPresence.availability
+        return bookPresenceRepository.save(bookPresenceToUpdate)
     }
 
-    @Override
     @Transactional
-    public BookPresence addBookToLibrary(Long libraryId, Long bookId) {
-        Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book"));
-        Library library = libraryRepository.findById(libraryId).orElseThrow(() -> new EntityNotFoundException("Library"));
+    override fun addUserToBook(user: User, libraryId: Long, bookId: Long): BookPresence {
+        val bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.AVAILABLE)
+            .firstOrNull() ?: throw BookNotAvailableException(libraryId, bookId)
 
-        BookPresence bookPresence = new BookPresence();
-        bookPresence.setBook(book);
-        bookPresence.setLibrary(library);
+        val journal = Journal(user = user, bookPresence = bookPresence, dateOfBorrowing = LocalDate.now())
 
-        return createBookPresence(bookPresence);
+        bookPresence.journals.add(journal)
+        journalService.createJournal(journal)
+
+        bookPresence.user = user
+        bookPresence.availability = Availability.UNAVAILABLE
+
+        return bookPresenceRepository.save(bookPresence)
     }
 
-    @Override
+    override fun addBookToLibrary(libraryId: Long, bookId: Long): BookPresence {
+        val book = bookRepository.findByIdOrNull(bookId) ?: throw EntityNotFoundException("Book")
+        val library = libraryRepository.findByIdOrNull(libraryId) ?: throw EntityNotFoundException("Library")
+
+        val bookPresence = BookPresence(book = book, library = library)
+        return bookPresenceRepository.save(bookPresence)
+    }
+
     @Transactional
-    public BookPresence removeUserFromBook(User user, Long libraryId, Long bookId) {
-        BookPresence bookPresence = bookPresenceRepository.findAllByLibraryIdAndBookIdAndUser(libraryId, bookId, user)
-                .orElseThrow(() -> new EntityNotFoundException("BookPresence"));
+    override fun removeUserFromBook(user: User, libraryId: Long, bookId: Long): BookPresence {
+        val bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.UNAVAILABLE)
+            .firstOrNull() ?: throw BookNotAvailableException(libraryId, bookId)
 
-        Journal journal = journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.getId(), user.getId());
+        val journal = journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!)
+        journal.dateOfReturning = LocalDate.now()
 
-        journal.setDateOfReturning(LocalDate.now());
+        journalService.createJournal(journal)
+        updateBookPresence(bookPresence.id!!, bookPresence.apply { availability = Availability.AVAILABLE })
 
-        journalService.updateJournal(journal.getId(), journal);
+        val reservation = reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId, libraryId)
 
-        Reservation reservation = reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId, libraryId);
-        if(reservation != null){
-            bookPresence.setUser(reservation.getUser());
-        }else {
-            bookPresence.setAvailability(Availability.AVAILABLE);
-            bookPresence.setUser(null);
+        reservation?.let {
+            addUserToBook(it.user!!, libraryId, bookId)
+            reservationRepository.delete(reservation)
+        } ?: run {
+            bookPresence.availability = Availability.AVAILABLE
+            bookPresence.user = null
         }
-
-        return createBookPresence(bookPresence);
+        return bookPresenceRepository.save(bookPresence)
     }
 
-    @Override
-    public List<BookPresence> getByBookId(Long bookId) {
-        return bookPresenceRepository.findAllByBookId(bookId);
+    override fun getByBookId(bookId: Long): List<BookPresence> = bookPresenceRepository.findAllByBookId(bookId)
+
+    override fun getByLibraryId(libraryId: Long): List<BookPresence> {
+        return bookPresenceRepository.findAllByLibraryId(libraryId)
     }
 
-    @Override
-    public List<BookPresence> getByLibraryId(Long libraryId) {
-        return bookPresenceRepository.findAllByLibraryId(libraryId);
+    override fun getAllBookByLibraryIdAndBookId(libraryId: Long, bookId: Long): List<BookPresence> {
+        return bookPresenceRepository.findAllByLibraryIdAndBookId(libraryId, bookId)
     }
 
-    @Override
-    public List<BookPresence> getAllBookByLibraryIdAndBookId(Long libraryId, Long bookId) {
-        return bookPresenceRepository.findAllByLibraryIdAndBookId(libraryId, bookId);
+    override fun getAllBookByLibraryIdAndAvailability(libraryId: Long, availability: Availability): List<BookPresence> {
+        return bookPresenceRepository.findAllByLibraryIdAndAvailability(libraryId, availability)
     }
 
-    @Override
-    public List<BookPresence> getAllBookByLibraryIdAndAvailability(Long libraryId, Availability availability) {
-        return bookPresenceRepository.findAllByLibraryIdAndAvailability(libraryId, availability);
+    override fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long, bookId: Long, availability: Availability): List<BookPresence> {
+        return bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, availability)
     }
 
-    @Override
-    public List<BookPresence> findAllByLibraryIdAndBookIdAndAvailability(Long libraryId, Long bookId, Availability availability) {
-        return bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, availability);
+    override fun deleteBookPresenceByIdAndLibraryId(libraryId: Long, bookId: Long) {
+        bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(bookId, libraryId)
     }
 
-    @Override
-    @Transactional
-    public void deleteBookPresenceByIdAndLibraryId(Long libraryId, Long bookPresenceId) {
-        bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(bookPresenceId, libraryId);
-    }
-
-    @Override
-    public void deleteBookPresenceById(Long id) {
-        bookPresenceRepository.deleteById(id);
-    }
+    override fun deleteBookPresenceById(id: Long) = bookPresenceRepository.deleteById(id)
 }
