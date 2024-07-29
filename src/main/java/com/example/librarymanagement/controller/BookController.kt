@@ -1,65 +1,53 @@
-package com.example.librarymanagement.controller;
+package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.dto.BookRequestDto;
-import com.example.librarymanagement.dto.BookResponseDto;
-import com.example.librarymanagement.dto.mapper.BookMapper;
-import com.example.librarymanagement.service.BookService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import com.example.librarymanagement.dto.BookRequestDto
+import com.example.librarymanagement.dto.BookResponseDto
+import com.example.librarymanagement.dto.mapper.BookMapper
+import com.example.librarymanagement.service.BookService
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/book")
-@RequiredArgsConstructor
-public class BookController {
-    private final BookService bookService;
-    private final BookMapper bookMapper;
+class BookController(private val bookService: BookService, private val bookMapper: BookMapper) {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<BookResponseDto> getAllBooks() {
-        return bookMapper.toBookDto(bookService.findAll());
-    }
+    fun getAllBooks(): List<BookResponseDto> = bookMapper.toBookDto(bookService.findAll())
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public BookResponseDto getBookById(@PathVariable Long id) {
-        return bookMapper.toBookDto(bookService.getBookById(id));
-    }
-
-    @GetMapping(params = {"title", "author"})
-    @ResponseStatus(HttpStatus.OK)
-    public BookResponseDto getBookByTitleAndAuthor(@RequestParam String title, @RequestParam Long author) {
-        return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, author));
-    }
+    fun getBookById(@PathVariable id: Long): BookResponseDto = bookMapper.toBookDto(bookService.getBookById(id))
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookResponseDto createBook(@RequestBody @Valid BookRequestDto bookDto) {
-        return bookMapper.toBookDto(bookService.createBook(bookDto.getAuthorId(), bookDto.getPublisherId(), bookMapper.toBook(bookDto)));
+    fun createBook(@RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
+        return bookMapper.toBookDto(bookService.createBook(bookDto.authorId, bookDto.publisherId, bookMapper.toBook(bookDto)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public BookResponseDto updateBook(@PathVariable Long id, @RequestBody @Valid BookRequestDto book) {
-        return bookMapper.toBookDto(bookService.updateBook(id, bookMapper.toBook(book)));
+    fun updateBook(@PathVariable id: Long, @RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
+        return bookMapper.toBookDto(bookService.updateBook(id, bookMapper.toBook(bookDto)))
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
+    fun deleteBook(@PathVariable id: Long) { bookService.deleteBook(id) }
+
+    @GetMapping(params = ["title", "author"])
+    @ResponseStatus(HttpStatus.OK)
+    fun getBookByTitleAndAuthor(@RequestParam title: String, @RequestParam author: Long): BookResponseDto {
+        return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, author))
     }
 }

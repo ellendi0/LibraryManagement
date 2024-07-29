@@ -1,37 +1,29 @@
-package com.example.librarymanagement.dto;
+package com.example.librarymanagement.dto
 
-import com.example.librarymanagement.model.enums.Genre;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.example.librarymanagement.model.enums.Genre
+import jakarta.validation.constraints.Digits
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 
-@Setter
-@Getter
-@NoArgsConstructor
-public class BookRequestDto {
-    private Long id;
+class BookRequestDto(
+    @field:Size(max = 100, message = "Title must contain no more than 100 characters")
+    @field:NotBlank(message = "Title can't be blank")
+    var title: String,
 
-    @Size(max = 100, message = "Title must contain no more than 100 characters")
-    @NotBlank(message = "Title can't be blank")
-    private String title;
+    @field:Digits(integer = 4, fraction = 0, message = "Year of publish must be in YYYY format")
+    val publishedYear: Int,
 
-    @Digits(integer = 4, fraction = 0, message = "Year of publish must be in YYYY format")
-    private Integer publishedYear;
+    @field:Digits(integer = 13, message = "ISBN must contain 13 digits", fraction = 0)
+    @field:NotNull(message = "ISBN can't be empty")
+    val isbn: Long,
 
-    @Digits(integer = 13, message = "ISBN must contain 13 digits", fraction = 0)
-    @NotNull(message = "ISBN can't be empty")
-    private Long isbn;
+    @field:NotNull(message = "Genre can't be empty")
+    val genre: Genre,
 
-    @NotNull(message = "Genre can't be empty")
-    private Genre genre;
+    @field:NotNull(message = "Author can't be empty")
+    var authorId: Long,
 
-    @NotNull(message = "Author can't be empty")
-    private Long authorId;
-
-    @NotNull(message = "Publisher can't be empty")
-    private Long publisherId;
-}
+    @field:NotNull(message = "Publisher can't be empty")
+    val publisherId: Long
+)
