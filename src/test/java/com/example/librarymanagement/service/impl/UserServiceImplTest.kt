@@ -1,156 +1,136 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.model.entity.BookPresence;
-import com.example.librarymanagement.model.entity.Journal;
-import com.example.librarymanagement.model.entity.Library;
-import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.repository.UserRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.repository.BookPresenceRepository
+import com.example.librarymanagement.repository.UserRepository
+import com.example.librarymanagement.service.BookPresenceService
+import com.example.librarymanagement.service.JournalService
+import com.example.librarymanagement.service.ReservationService
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import java.util.*
 
-import java.util.List;
-import java.util.Optional;
+class UserServiceImplTest {
+    private val userRepository: UserRepository = mockk()
+    private val reservationService: ReservationService = mockk()
+    private val journalService: JournalService = mockk()
+    private val bookPresenceService: BookPresenceService = mockk()
+    private val bookPresenceRepository: BookPresenceRepository = mockk()
+    private val userService = UserServiceImpl(
+        userRepository,
+        journalService,
+        reservationService,
+        bookPresenceRepository,
+        bookPresenceService
+    )
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@ExtendWith(MockitoExtension.class)
-public class UserServiceImplTest {
-
-    @InjectMocks
-    private UserServiceImpl userServiceImpl;
-
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private BookPresenceServiceImpl bookPresenceServiceImpl;
-    @Mock
-    private ReservationServiceImpl reservationService;
-    @Mock
-    private JournalServiceImpl journalServiceImpl;
-
-    private static Library library;
-    private static Book book1;
-    private static User user1;
-    private static Journal journal1;
-    private static Reservation reservation1;
-    private static BookPresence bookPresence1;
-
-    @BeforeAll
-    public static void init() {
-        TestDataFactory.TestDataRel data = TestDataFactory.createTestDataRel();
-
-        library = data.library;
-        user1 = data.user;
-        book1 = data.book;
-        bookPresence1 = data.bookPresence;
-        journal1 = data.journal;
-        reservation1 = data.reservation;
-    }
-
+    private val testDataRel = TestDataFactory.createTestDataRelForServices()
+    private val user = testDataRel.user
+    private val journal = testDataRel.journal
+    private val reservation = testDataRel.reservation
+    private val bookPresence = testDataRel.bookPresence
+    private val library = testDataRel.library
+    private val book = testDataRel.book
 
     @Test
-    public void getUserByPhoneNumberOrEmail() {
-        when(userRepository.findByEmailOrPhoneNumber(user1.getEmail(), user1.getPhoneNumber())).thenReturn(Optional.of(user1));
+    fun shouldCreateUser() {
+        every { userRepository.existsByEmail(user.email) } returns false
+        every { userRepository.existsByPhoneNumber(user.phoneNumber) } returns false
+        every { userRepository.save(user) } returns user
 
-        assertEquals(user1, userServiceImpl.getUserByPhoneNumberOrEmail(user1.getEmail(), user1.getPhoneNumber()));
-        verify(userRepository, times(1)).findByEmailOrPhoneNumber(user1.getEmail(), user1.getPhoneNumber());
+        Assertions.assertEquals(user, userService.createUser(user))
+        verify(exactly = 1) { userRepository.save(user) }
     }
 
     @Test
-    public void getUserById() {
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+    fun shouldUpdateUser() {
+        val updatedUser = user.copy(firstName = "Updated")
+        every { userRepository.existsByEmail(updatedUser.email) } returns false
+        every { userRepository.existsByPhoneNumber(updatedUser.phoneNumber) } returns false
+        every { userRepository.findById(1) } returns Optional.of(user)
+        every { userRepository.save(updatedUser) } returns updatedUser
 
-        assertEquals(user1, userServiceImpl.getUserById(user1.getId()));
-        verify(userRepository, times(1)).findById(user1.getId());
+        Assertions.assertEquals(updatedUser, userService.updateUser(1, updatedUser))
+        verify(exactly = 1) { userRepository.findById(1) }
+        verify(exactly = 1) { userRepository.save(updatedUser) }
     }
 
     @Test
-    public void createUser() {
-        when(userRepository.existsByEmail(user1.getEmail())).thenReturn(false);
-        when(userRepository.existsByPhoneNumber(user1.getPhoneNumber())).thenReturn(false);
-        when(userRepository.save(user1)).thenReturn(user1);
+    fun shouldGetUserById() {
+        every { userRepository.findById(1) } returns Optional.of(user)
 
-        assertEquals(user1, userServiceImpl.createUser(user1));
-        verify(userRepository, times(1)).save(user1);
+        Assertions.assertEquals(user, userService.getUserById(1))
+        verify(exactly = 1) { userRepository.findById(1) }
     }
 
     @Test
-    public void updateUser() {
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(userRepository.save(user1)).thenReturn(user1);
+    fun shouldGetUserByPhoneNumberOrEmail() {
+        every { userRepository.findByEmailOrPhoneNumber("email", "phoneNumber") } returns user
 
-        assertEquals(user1, userServiceImpl.updateUser(user1.getId(), user1));
-        verify(userRepository, times(1)).save(user1);
+        Assertions.assertEquals(user, userService.getUserByPhoneNumberOrEmail("email", "phoneNumber"))
+        verify(exactly = 1) { userRepository.findByEmailOrPhoneNumber("email", "phoneNumber") }
     }
 
     @Test
-    public void findAll(){
-        when(userRepository.findAll()).thenReturn(List.of(user1));
+    fun shouldFindAll(){
+        every { userRepository.findAll() } returns(listOf(user))
 
-        assertEquals(List.of(user1), userServiceImpl.findAll());
-        verify(userRepository, times(1)).findAll();
+        Assertions.assertEquals(listOf(user), userService.findAll())
+        verify(exactly = 1){ userRepository.findAll() }
     }
 
     @Test
-    public void findJournalsByUser(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(journalServiceImpl.getJournalByUserId(user1.getId())).thenReturn(List.of(journal1));
+    fun shouldFindJournalByUserId(){
+        every { journalService.getJournalByUserId(1) } returns listOf(journal)
 
-        assertEquals(List.of(journal1), userServiceImpl.findJournalsByUser(user1.getId()));
-        verify(journalServiceImpl, times(1)).getJournalByUserId(user1.getId());
+        Assertions.assertEquals(listOf(journal), userService.findJournalsByUser(1))
+        verify(exactly = 1){ journalService.getJournalByUserId(1) }
     }
 
     @Test
-    public void findReservationsByUser(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(reservationService.getReservationsByUserId(user1.getId())).thenReturn(List.of(reservation1));
+    fun shouldFindReservationsByUserId() {
+        every { reservationService.getReservationsByUserId(1) } returns listOf(reservation)
 
-        assertEquals(List.of(reservation1), userServiceImpl.findReservationsByUser(user1.getId()));
-        verify(reservationService, times(1)).getReservationsByUserId(user1.getId());
+        Assertions.assertEquals(listOf(reservation), userService.findReservationsByUser(1))
+        verify(exactly = 1) { reservationService.getReservationsByUserId(1) }
     }
 
     @Test
-    public void borrowBookFromLibrary(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(bookPresenceServiceImpl.addUserToBook(user1, library.getId(), book1.getId())).thenReturn(bookPresence1);
+    fun shouldBorrowBookFromLibrary() {
+        every { userRepository.findById(1) } returns Optional.of(user)
+        every { bookPresenceService.addUserToBook(user, library.id!!, bookPresence.id!!) } returns bookPresence
 
-        assertEquals(List.of(journal1), userServiceImpl.borrowBookFromLibrary(user1.getId(), library.getId(), book1.getId()));
-        verify(bookPresenceServiceImpl, times(1)).addUserToBook(user1, library.getId(), book1.getId());
+        Assertions.assertEquals(listOf(journal), userService.borrowBookFromLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        verify(exactly = 1) { bookPresenceService.addUserToBook(user, library.id!!, bookPresence.id!!) }
     }
 
     @Test
-    public void returnBookToLibrary(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(bookPresenceServiceImpl.removeUserFromBook(user1, library.getId(), book1.getId())).thenReturn(bookPresence1);
+    fun shouldReturnBookToLibrary() {
+        every { userRepository.findById(1) } returns Optional.of(user)
+        every { bookPresenceService.removeUserFromBook(user, library.id!!, bookPresence.id!!) } returns bookPresence
 
-        assertEquals(List.of(journal1), userServiceImpl.returnBookToLibrary(user1.getId(), library.getId(), book1.getId()));
-        verify(bookPresenceServiceImpl, times(1)).removeUserFromBook(user1, library.getId(), book1.getId());
+        Assertions.assertEquals(listOf(journal), userService.returnBookToLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        verify(exactly = 1) { bookPresenceService.removeUserFromBook(user, library.id!!, bookPresence.id!!) }
     }
 
     @Test
-    public void reserveBookInLibrary(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        when(reservationService.doReservationBook(user1, library.getId(), book1.getId())).thenReturn(List.of(reservation1));
+    fun shouldReserveBookInLibrary() {
+        every { userRepository.findById(1) } returns Optional.of(user)
+        every { reservationService.reserveBook(user, library.id!!, bookPresence.id!!) } returns listOf(reservation)
 
-        assertEquals(List.of(reservation1), userServiceImpl.reserveBookInLibrary(user1.getId(), library.getId(), book1.getId()));
-        verify(reservationService, times(1)).doReservationBook(user1, library.getId(), book1.getId());
+        Assertions.assertEquals(listOf(reservation), userService.reserveBookInLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        verify(exactly = 1) { reservationService.reserveBook(user, library.id!!, bookPresence.id!!) }
     }
 
     @Test
-    public void cancelReservationInLibrary(){
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        userServiceImpl.cancelReservationInLibrary(user1.getId(), book1.getId());
+    fun shouldCancelReservation() {
+        every { userRepository.findById(1) } returns Optional.of(user)
+        every { reservationService.removeReservation(user, book.id!!) } returns Unit
 
-        verify(reservationService, times(1)).removeReservation(user1, book1.getId());
+        userService.cancelReservationInLibrary(user.id!!, book.id!!)
+        verify(exactly = 1) { reservationService.removeReservation(user, book.id!!) }
     }
 }

@@ -1,49 +1,36 @@
-package com.example.librarymanagement.dto.mapper;
+package com.example.librarymanagement.dto.mapper
 
-import com.example.librarymanagement.dto.UserRequestDto;
-import com.example.librarymanagement.dto.UserResponseDto;
-import com.example.librarymanagement.model.entity.User;
-import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.example.librarymanagement.dto.UserRequestDto
+import com.example.librarymanagement.dto.UserResponseDto
+import com.example.librarymanagement.model.entity.User
+import org.mindrot.jbcrypt.BCrypt
+import org.springframework.stereotype.Component
 
 @Component
-public class UserMapper {
-    private static final String salt = BCrypt.gensalt(12);
+class UserMapper {
+    private val salt = BCrypt.gensalt()
 
-    public User toUser(UserRequestDto userRequestDto) {
-        User user = new User();
-        user.setEmail(userRequestDto.getEmail());
-        user.setFirstName(userRequestDto.getFirstName());
-        user.setLastName(userRequestDto.getLastName());
-        user.setPhoneNumber(userRequestDto.getPhoneNumber());
-        user.setPassword(hashPassword(userRequestDto.getPassword()));
-        return user;
+    fun toUser(userRequestDto: UserRequestDto) : User {
+        return User(
+            firstName = userRequestDto.firstName,
+            lastName = userRequestDto.lastName,
+            email = userRequestDto.email,
+            password = hashPassword(userRequestDto.password),
+            phoneNumber = userRequestDto.phoneNumber
+        )
     }
 
-    public UserResponseDto toUserResponseDto(User user) {
-        UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setId(user.getId());
-        userResponseDto.setEmail(user.getEmail());
-        userResponseDto.setFirstName(user.getFirstName());
-        userResponseDto.setLastName(user.getLastName());
-        userResponseDto.setPhoneNumber(user.getPhoneNumber());
-        return userResponseDto;
+    fun toUserResponseDto(user: User) : UserResponseDto {
+        return UserResponseDto(
+            id = user.id!!,
+            firstName = user.firstName,
+            lastName = user.lastName,
+            email = user.email,
+            phoneNumber = user.phoneNumber
+        )
     }
 
-    public List<UserResponseDto> toUserResponseDto(List<User> users) {
-        if(CollectionUtils.isEmpty(users)) return Collections.emptyList();
+    fun toUserResponseDto(user: List<User>) : List<UserResponseDto> = user.map { toUserResponseDto(it) }
 
-        return users.stream()
-                .map(this::toUserResponseDto)
-                .toList();
-    }
-
-    private String hashPassword(String plainPassword) {
-        return BCrypt.hashpw(plainPassword, salt);
-    }
+    fun hashPassword(password: String): String = BCrypt.hashpw(password, salt)
 }

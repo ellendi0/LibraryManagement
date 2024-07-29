@@ -1,662 +1,548 @@
-package com.example.librarymanagement.controller;
+package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.dto.ErrorDto;
-import com.example.librarymanagement.dto.JournalDto;
-import com.example.librarymanagement.dto.ReservationDto;
-import com.example.librarymanagement.dto.UserRequestDto;
-import com.example.librarymanagement.dto.UserResponseDto;
-import com.example.librarymanagement.dto.mapper.ErrorMapper;
-import com.example.librarymanagement.dto.mapper.JournalMapper;
-import com.example.librarymanagement.dto.mapper.ReservationMapper;
-import com.example.librarymanagement.dto.mapper.UserMapper;
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.exception.GlobalExceptionHandler;
-import com.example.librarymanagement.model.entity.Journal;
-import com.example.librarymanagement.model.entity.Reservation;
-import com.example.librarymanagement.model.entity.User;
-import com.example.librarymanagement.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.data.TestDataFactory.TestDataRel
+import com.example.librarymanagement.data.TestDataFactory.createTestDataRelForController
+import com.example.librarymanagement.dto.JournalDto
+import com.example.librarymanagement.dto.ReservationDto
+import com.example.librarymanagement.dto.UserRequestDto
+import com.example.librarymanagement.dto.UserResponseDto
+import com.example.librarymanagement.dto.mapper.ErrorMapper
+import com.example.librarymanagement.dto.mapper.JournalMapper
+import com.example.librarymanagement.dto.mapper.ReservationMapper
+import com.example.librarymanagement.dto.mapper.UserMapper
+import com.example.librarymanagement.exception.DuplicateKeyException
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.exception.GlobalExceptionHandler
+import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.model.entity.Reservation
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.service.UserService
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@WebMvcTest(UserController.class)
 class UserControllerTest {
+    private lateinit var mockMvc: MockMvc
+    private lateinit var userService: UserService
+    private lateinit var userController: UserController
+    private lateinit var userMapper: UserMapper
+    private lateinit var reservationMapper: ReservationMapper
+    private lateinit var journalMapper: JournalMapper
+    private lateinit var globalExceptionHandler: GlobalExceptionHandler
+    private lateinit var errorMapper: ErrorMapper
+    private val objectMapper: ObjectMapper = ObjectMapper().registerModule(JavaTimeModule())
 
-    @Autowired
-    private MockMvc mockMvc;
+    private var testData: TestDataRel = createTestDataRelForController()
+    private var user = testData.user
+    private var reservation = testData.reservation
+    private var journal = testData.journal
+    private lateinit var userRequestDto: UserRequestDto
+    private lateinit var userResponseDto: UserResponseDto
+    private lateinit var reservationDto: ReservationDto
+    private lateinit var journalDto: JournalDto
 
-    @MockBean
-    private UserService userService;
-
-    @MockBean
-    private UserMapper userMapper;
-
-    @MockBean
-    private ErrorMapper errorMapper;
-
-    @MockBean
-    private ReservationMapper reservationMapper;
-
-    @MockBean
-    private JournalMapper journalMapper;
-
-    @MockBean
-    private GlobalExceptionHandler globalExceptionHandler;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private UserRequestDto userRequestDto;
-    private ReservationDto reservationDto;
-    private JournalDto journalDto;
-    private UserResponseDto userResponseDto;
-    private static User user1;
-    private static Journal journal;
-    private static Reservation reservation;
-    private static ErrorDto errorDto1;
-    private static ErrorDto errorDto2;
+    private var errorDto1 = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
+    private var errorDto2 = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "User")
+    private var errorDto3 = ErrorMapper().toErrorDto(HttpStatus.CONFLICT, listOf("User", "email"))
 
     @BeforeEach
-    void setUp() {
-        ReservationMapper reservationMapper1 = new ReservationMapper();
-        JournalMapper journalMapper1 = new JournalMapper();
-        UserMapper userMapper1 = new UserMapper();
-        ErrorMapper errorMapper1 = new ErrorMapper();
+    fun setUp() {
+        userService = mockk(relaxed = true)
+        userController = mockk(relaxed = true)
+        userMapper = mockk(relaxed = true)
+        reservationMapper = mockk(relaxed = true)
+        journalMapper = mockk(relaxed = true)
+        errorMapper = mockk(relaxed = true)
+        globalExceptionHandler = GlobalExceptionHandler(errorMapper)
+        userController = UserController(userService, userMapper, journalMapper, reservationMapper)
 
-        TestDataFactory.TestDataRel testData = TestDataFactory.createTestDataRel();
+        userRequestDto = TestDataFactory.createUserRequestDto()
+        userResponseDto = UserMapper().toUserResponseDto(user)
+        reservationDto = ReservationMapper().toReservationDto(reservation)
+        journalDto = JournalMapper().toJournalDto(journal)
 
-        user1 = testData.user;
-        journal = testData.journal;
-        reservation = testData.reservation;
-
-        userRequestDto = TestDataFactory.createUserRequestDto();
-        userResponseDto = userMapper1.toUserResponseDto(user1);
-        reservationDto = reservationMapper1.toReservationDto(reservation);
-        journalDto = journalMapper1.toJournalDto(journal);
-        errorDto1 = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
-        errorDto2 = errorMapper1.toErrorDto(HttpStatus.NOT_FOUND, "User");
-    }
-
-
-    @Test
-    void createUser() throws Exception {
-        String expected = objectMapper.writeValueAsString(userResponseDto);
-
-        given(userService.createUser(any(User.class))).willReturn(user1);
-        given(userMapper.toUserResponseDto((User) any())).willReturn(userResponseDto);
-
-        String result = mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc = MockMvcBuilders.standaloneSetup(userController)
+            .setControllerAdvice(globalExceptionHandler)
+            .build()
     }
 
     @Test
-    void createUserWithInvalidEmail() throws Exception {
-        userRequestDto.setEmail("first.first.example.com");
+    fun shouldCreateUser() {
+        val expected = objectMapper.writeValueAsString(userResponseDto)
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } returns user
+        every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
+
+        val result = mockMvc.perform(post("/api/v1/user")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
+    }
+
+    @Test
+    fun shouldNotCreateWithInvalidEmail() {
+        userRequestDto.email = "invalid"
+
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithInvalidPassword() throws Exception {
-        userRequestDto.setPassword("password");
+    fun shouldNotCreateWithInvalidFirstName() {
+        userRequestDto.firstName = "first"
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithInvalidPhoneNumber() throws Exception {
-        userRequestDto.setPhoneNumber("123456789");
+    fun shouldNotCreateWithInvalidLastName() {
+        userRequestDto.lastName = "first"
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithInvalidFirstName() throws Exception {
-        userRequestDto.setFirstName("first");
+    fun shouldNotCreateWithInvalidPassword() {
+        userRequestDto.password = "first"
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithInvalidLastName() throws Exception {
-        userRequestDto.setLastName("first");
+    fun shouldNotCreateWithInvalidPhone() {
+        userRequestDto.phoneNumber = "first"
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithEmptyFirstName() throws Exception {
-        userRequestDto.setFirstName("");
+    fun shouldNotCreateWithEmptyEmail() {
+        userRequestDto.email = ""
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithEmptyLastName() throws Exception {
-        userRequestDto.setLastName("");
+    fun shouldNotCreateWithEmptyFirstName() {
+        userRequestDto.firstName = ""
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithEmptyEmail() throws Exception {
-        userRequestDto.setEmail("");
+    fun shouldNotCreateWithEmptyLastName() {
+        userRequestDto.lastName = ""
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithEmptyPhoneNumber() throws Exception {
-        userRequestDto.setPhoneNumber("");
+    fun shouldNotCreateWithEmptyPassword() {
+        userRequestDto.password = ""
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void createUserWithEmptyPassword() throws Exception {
-        userRequestDto.setPassword("");
+    fun shouldNotCreateWithEmptyPhone() {
+        userRequestDto.phoneNumber = ""
 
-        given(userService.createUser(any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void updateUser() throws Exception {
-        String expected = objectMapper.writeValueAsString(userResponseDto);
+    fun shouldNotCreateWithDuplicateEmail() {
+        every { userService.createUser(any()) } throws DuplicateKeyException("User", "email")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
-        given(userService.updateUser(anyLong(), any(User.class))).willReturn(user1);
-        given(userMapper.toUserResponseDto((User) any())).willReturn(userResponseDto);
-
-        String result = mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc.perform(post("/api/v1/user")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isConflict)
     }
 
     @Test
-    void updateUserWithInvalidEmail() throws Exception {
-        userRequestDto.setEmail("second.second.example.com");
+    fun shouldNotCreateWithDuplicatePhone() {
+        every { userService.createUser(any()) } throws DuplicateKeyException("User", "phone")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        mockMvc.perform(post("/api/v1/user")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isConflict)
+    }
+
+    @Test
+    fun shouldUpdateUser() {
+        val expected = objectMapper.writeValueAsString(userResponseDto)
+
+        every { userService.updateUser(any(), any()) } returns user
+        every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
+
+        val result = mockMvc.perform(put("/api/v1/user/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
+    }
+
+    @Test
+    fun shouldNotUpdateWithDuplicateEmail() {
+        userRequestDto.email = "first@email.com"
+
+        every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "email")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
         mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isConflict)
     }
 
     @Test
-    void updateUserWithInvalidPassword() throws Exception {
-        userRequestDto.setPassword("newpassword");
+    fun shouldNotUpdateWithDuplicatePhone() {
+        userRequestDto.phoneNumber = "1234567890"
 
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "phone")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
         mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isConflict)
     }
 
     @Test
-    void updateUserWithInvalidPhoneNumber() throws Exception {
-        userRequestDto.setPhoneNumber("098765432");
+    fun shouldGetUserById() {
+        val expected = objectMapper.writeValueAsString(userResponseDto)
 
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
+        every { userService.getUserById(any()) } returns user
+        every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
 
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
+        val result = mockMvc.perform(put("/api/v1/user/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void updateUserWithInvalidFirstName() throws Exception {
-        userRequestDto.setFirstName("second");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithInvalidLastName() throws Exception {
-        userRequestDto.setLastName("second");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithEmptyFirstName() throws Exception {
-        userRequestDto.setFirstName("");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithEmptyLastName() throws Exception {
-        userRequestDto.setLastName("");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithEmptyEmail() throws Exception {
-        userRequestDto.setEmail("");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithEmptyPhoneNumber() throws Exception {
-        userRequestDto.setPhoneNumber("");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateUserWithEmptyPassword() throws Exception {
-        userRequestDto.setPassword("");
-
-        given(userService.updateUser(anyLong(), any(User.class))).willThrow(new IllegalArgumentException());
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
-        given(globalExceptionHandler.handleIllegalArgumentException(any(IllegalArgumentException.class))).willReturn(errorDto1);
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void deleteUser() throws Exception {
-        willDoNothing().given(userService).deleteUser(anyLong());
-
-        mockMvc.perform(delete("/api/v1/user/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void findById() throws Exception {
-        String expected = objectMapper.writeValueAsString(userResponseDto);
-
-        given(userService.getUserById(anyLong())).willReturn(user1);
-        given(userMapper.toUserResponseDto((User) any())).willReturn(userResponseDto);
-
-        String result = mockMvc.perform(get("/api/v1/user/{id}", 1L)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
-    }
-
-    @Test
-    void findByNonExistingId() throws Exception {
-        given(userService.getUserById(anyLong())).willThrow(new EntityNotFoundException("User"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotGetNotExistingUserById() {
+        every { userService.getUserById(any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(get("/api/v1/user/{id}", 0L)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void findReservationsByUser() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(reservationDto));
+    fun shouldGetReservationsByUserId() {
+        val expected = objectMapper.writeValueAsString(listOf(reservationDto))
 
-        given(userService.findReservationsByUser(anyLong())).willReturn(Collections.singletonList(reservation));
-        given(reservationMapper.toReservationDto(List.of(reservation))).willReturn(List.of(reservationDto));
+        every { userService.findReservationsByUser(any()) } returns listOf(reservation)
+        every { reservationMapper.toReservationDto(any<List<Reservation>>()) } returns listOf(reservationDto)
 
-        String result = mockMvc.perform(get("/api/v1/user/{id}/reservations", 1L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(get("/api/v1/user/{id}/reservations", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
 
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void findReservationsByNonExistingUser() throws Exception {
-        given(userService.findReservationsByUser(anyLong())).willThrow(new EntityNotFoundException("User"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotGetReservationsByUserId() {
+        every { userService.findReservationsByUser(any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(get("/api/v1/user/{id}/reservations", 0L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void findJournalsByUser() throws Exception {
-        String expected = objectMapper.writeValueAsString(Collections.singletonList(journalDto));
+    fun shouldGetJournalsByUserId() {
+        val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
-        given(userService.findJournalsByUser(anyLong())).willReturn(Collections.singletonList(journal));
-        given(journalMapper.toJournalDto(List.of(journal))).willReturn(List.of(journalDto));
+        every { userService.findJournalsByUser(any()) } returns listOf(journal)
+        every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        String result = mockMvc.perform(get("/api/v1/user/{id}/journals", 1L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(get("/api/v1/user/{id}/journals", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
 
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void getUserByPhoneNumberOrEmail() throws Exception {
-        String expected = objectMapper.writeValueAsString(userResponseDto);
+    fun shouldNotGetJournalsByUserId() {
+        every { userService.findJournalsByUser(any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
-        given(userService.getUserByPhoneNumberOrEmail(any(String.class), any(String.class))).willReturn(user1);
-        given(userMapper.toUserResponseDto((User) any())).willReturn(userResponseDto);
-        given(userService.getUserByPhoneNumberOrEmail(any(String.class), any(String.class))).willReturn(user1);
-
-        String result = mockMvc.perform(get("/api/v1/user")
-                        .param("email", "first@example.com")
-                        .param("phoneNumber", "1234567890")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
-
+        mockMvc.perform(get("/api/v1/user/{id}/journals", 0L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void getUserByPhoneNumberOrEmailWithNonExistingUser() throws Exception {
-        given(userService.getUserByPhoneNumberOrEmail(any(String.class), any(String.class))).willThrow(new EntityNotFoundException("User"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldGetUserByPhoneNumberOrEmail() {
+        val expected = objectMapper.writeValueAsString(userResponseDto)
+
+        every { userService.getUserByPhoneNumberOrEmail(any(), any()) } returns user
+        every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
+
+        val result = mockMvc.perform(get("/api/v1/user")
+            .param("phoneNumber", "1234567890")
+            .param("email", "first@example.com")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
+    }
+
+    @Test
+    fun shouldNotGetUserByPhoneNumberOrEmailWithInvalidData() {
+        every { userService.getUserByPhoneNumberOrEmail(any(), any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(get("/api/v1/user")
-                        .param("email", "first@example.com")
-                        .param("phoneNumber", "1234567890")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("phoneNumber", "123456789")
+            .param("email", "first")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .andExpect(status().isBadRequest)
     }
 
     @Test
-    void borrowBookFromLibrary() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(journalDto));
+    fun shouldBorrowBookFromLibrary(){
+        val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
-        given(userService.borrowBookFromLibrary(anyLong(), anyLong(), anyLong())).willReturn(List.of(journal));
-        given(journalMapper.toJournalDto(List.of(journal))).willReturn(List.of(journalDto));
+        every { userService.borrowBookFromLibrary(any(), any(), any()) } returns listOf(journal)
+        every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        String result = mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
-                        .param("libraryId", "1")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isCreated)
+            .andReturn().response.contentAsString
 
-        assertEquals(expected, result);
-
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void borrowBookFromLibraryWithNonExistingUser() throws Exception {
-        given(userService.borrowBookFromLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("User"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotBorrowBookFromLibraryWithNonExistingUser(){
+        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/borrowings", 0L)
-                        .param("libraryId", "1")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void borrowBookFromLibraryWithNonExistingLibrary() throws Exception {
-        given(userService.borrowBookFromLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("Library"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotBorrowBookFromLibraryWithNonExistingLibrary(){
+        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("Library")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
-                        .param("libraryId", "0")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "0")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void borrowBookFromLibraryWithNonExistingBook() throws Exception {
-        given(userService.borrowBookFromLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("Book"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotBorrowBookFromLibraryWithNonExistingBook(){
+        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("Book")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
-                        .param("libraryId", "1")
-                        .param("bookId", "0")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "1")
+            .param("bookId", "0")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void reserveBookInLibrary() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(reservationDto));
+    fun shouldReturnBookToLibrary(){
+        val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
-        given(userService.reserveBookInLibrary(anyLong(), anyLong(), anyLong())).willReturn(List.of(reservation));
-        given(reservationMapper.toReservationDto(List.of(reservation))).willReturn(List.of(reservationDto));
+        every { userService.returnBookToLibrary(any(), any(), any()) } returns listOf(journal)
+        every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        String result = mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
-                        .param("libraryId", "1")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 1L)
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent)
+            .andReturn().response.contentAsString
 
-        assertEquals(expected, result);
-
+        Assertions.assertEquals(expected, result)
     }
 
     @Test
-    void reserveBookInLibraryWithNonExistingUser() throws Exception {
-        given(userService.reserveBookInLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("User"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotReturnBookToLibraryWithNonExistingUser(){
+        every { userService.returnBookToLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
+
+        mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 0L)
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun shouldReserveBookInLibrary(){
+        val expected = objectMapper.writeValueAsString(listOf(reservationDto))
+
+        every { userService.reserveBookInLibrary(any(), any(), any()) } returns listOf(reservation)
+        every { reservationMapper.toReservationDto(any<List<Reservation>>()) } returns listOf(reservationDto)
+
+        val result = mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        Assertions.assertEquals(expected, result)
+    }
+
+    @Test
+    fun shouldNotReserveBookInLibraryWithNonExistingUser(){
+        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/reservations", 0L)
-                        .param("libraryId", "1")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "1")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void reserveBookInLibraryWithNonExistingLibrary() throws Exception {
-        given(userService.reserveBookInLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("Library"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotReserveBookInLibraryWithNonExistingLibrary(){
+        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("Library")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
-                        .param("libraryId", "0")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "0")
+            .param("bookId", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void reserveBookInLibraryWithNonExistingBook() throws Exception {
-        given(userService.reserveBookInLibrary(anyLong(), anyLong(), anyLong())).willThrow(new EntityNotFoundException("Book"));
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        given(globalExceptionHandler.handleEntityNotFoundException(any(EntityNotFoundException.class))).willReturn(errorDto2);
+    fun shouldNotReserveBookInLibraryWithNonExistingBook(){
+        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("Book")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
         mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
-                        .param("libraryId", "1")
-                        .param("bookId", "0")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            .param("libraryId", "1")
+            .param("bookId", "0")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 
     @Test
-    void cancelReservationInLibrary() throws Exception {
-        willDoNothing().given(userService).cancelReservationInLibrary(anyLong(), anyLong());
+    fun shouldCancelReservation(){
+        every { userService.cancelReservationInLibrary(any(), any()) } returns Unit
 
         mockMvc.perform(delete("/api/v1/user/{id}/reservations", 1L)
-                        .param("id", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void returnBookToLibrary() throws Exception {
-        String expected = objectMapper.writeValueAsString(List.of(journalDto));
-
-        given(userService.returnBookToLibrary(anyLong(), anyLong(), anyLong())).willReturn(List.of(journal));
-        given(journalMapper.toJournalDto(List.of(journal))).willReturn(List.of(journalDto));
-
-        String result = mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 1L)
-                        .param("libraryId", "1")
-                        .param("bookId", "1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+            .param("id", "1")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent)
     }
 }

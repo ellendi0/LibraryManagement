@@ -1,47 +1,42 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
-import java.util.List;
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import lombok.EqualsAndHashCode
+import lombok.ToString
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString(exclude = {"journals", "reservations"})
-public class User {
+@Table(name = "user")
+@ToString(exclude = ["journals", "reservations"])
+@EqualsAndHashCode(exclude = ["journals", "reservations"])
+data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    val id: Long ?= null,
 
-    @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
+    @Column(name = "first_name", nullable = false)
+    var firstName: String,
+    @Column(name = "last_name", nullable = false)
+    var lastName: String,
 
     @Column(unique = true, nullable = false)
-    private String email;
+    var email: String,
 
     @Column(nullable = false)
-    private String password;
+    var password: String,
 
-    @Column(unique = true, nullable = false, length = 10)
-    private String phoneNumber;
+    @Column(unique = true, length = 10, nullable = false)
+    var phoneNumber: String,
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
-    private List<Journal> journals;
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "user", orphanRemoval = true)
+    var journals: MutableList<Journal> = mutableListOf(),
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
-    private List<Reservation> reservations;
-}
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "user", orphanRemoval = true)
+    var reservations: MutableList<Reservation> = mutableListOf(),
+)

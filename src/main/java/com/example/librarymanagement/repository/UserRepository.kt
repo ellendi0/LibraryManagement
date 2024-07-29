@@ -1,14 +1,12 @@
-package com.example.librarymanagement.repository;
+package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
+import com.example.librarymanagement.model.entity.User
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Boolean existsByEmail(String email);
-    Boolean existsByPhoneNumber(String phoneNumber);
-    Optional<User> findByEmailOrPhoneNumber(String email, String phoneNumber);
+interface UserRepository : JpaRepository<User, Long?> {
+    fun existsByEmail(email: String): Boolean
+    fun existsByPhoneNumber(phoneNumber: String): Boolean
+    fun findByEmailOrPhoneNumber(email: String?, phoneNumber: String?): User?
 }
