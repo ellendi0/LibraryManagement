@@ -47,7 +47,7 @@ public class BookPresenceController {
         return bookPresenceMapper.toBookPresenceDto(bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId));
     }
 
-    @DeleteMapping("/{libraryId}/book/{bookId}/presence")
+    @DeleteMapping("/presence/{presenceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeBookFromLibrary(@PathVariable Long libraryId, @PathVariable(name = "bookId") Long presenceId) {
         bookPresenceService.deleteBookPresenceByIdAndLibraryId(libraryId, presenceId);
