@@ -1,211 +1,209 @@
-package com.example.librarymanagement.controller;
+package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.dto.BookRequestDto;
-import com.example.librarymanagement.dto.BookResponseDto;
-import com.example.librarymanagement.dto.ErrorDto;
-import com.example.librarymanagement.dto.mapper.BookMapper;
-import com.example.librarymanagement.dto.mapper.ErrorMapper;
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.exception.GlobalExceptionHandler;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.service.BookService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.dto.BookRequestDto
+import com.example.librarymanagement.dto.mapper.BookMapper
+import com.example.librarymanagement.dto.mapper.ErrorMapper
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.exception.GlobalExceptionHandler
+import com.example.librarymanagement.model.entity.Book
+import com.example.librarymanagement.service.BookService
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import java.util.List;
+class BookControllerTest {
+    private lateinit var mockMvc: MockMvc
+    private lateinit var bookService: BookService
+    private lateinit var bookController: BookController
+    private lateinit var bookMapper: BookMapper
+    private lateinit var globalExceptionHandler: GlobalExceptionHandler
+    private lateinit var errorMapper: ErrorMapper
+    private val objectMapper: ObjectMapper = ObjectMapper()
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@WebMvcTest(BookController.class)
-public class BookControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private BookService bookService;
-
-    @MockBean
-    private BookMapper bookMapper;
-
-    @MockBean
-    private ErrorMapper errorMapper;
-
-    @MockBean
-    private GlobalExceptionHandler globalExceptionHandler;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private static BookRequestDto bookRequestDto;
-    private static BookRequestDto bookUpdateRequestDto;
-    private static BookResponseDto bookResponseDto;
-    private static Book book1;
-    private static Book updatedBook;
-    private static ErrorDto errorDto1;
-    private static ErrorDto errorDto2;
-    private static BookMapper bookMapper1;
-    private static ErrorMapper errorMapper1;
+    private var book = TestDataFactory.createBook()
+    private lateinit var bookRequestDto: BookRequestDto
+    private var bookResponseDto = BookMapper().toBookDto(book)
+    private var errorDto1 = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
+    private var errorDto2 = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Not found")
 
     @BeforeEach
-    void setUp() {
-        TestDataFactory.TestDataRel testData = TestDataFactory.createTestDataRel();
-        bookMapper1 = new BookMapper();
-        errorMapper1 = new ErrorMapper();
+    fun setUp() {
+        bookService = mockk(relaxed = true)
+        bookController = mockk(relaxed = true)
+        bookMapper = mockk(relaxed = true)
+        errorMapper = mockk(relaxed = true)
+        globalExceptionHandler = GlobalExceptionHandler(errorMapper)
+        bookController = BookController(bookService, bookMapper)
 
-        book1 = testData.book;
-        updatedBook = testData.book;
-        updatedBook.setTitle("Book Updated");
+        bookRequestDto = TestDataFactory.createBookRequestDto()
 
-        bookRequestDto = TestDataFactory.createBookRequestDto();
-        bookUpdateRequestDto = TestDataFactory.createBookRequestDto();
-        bookUpdateRequestDto.setTitle("Book Updated");
-
-        bookResponseDto = bookMapper1.toBookDto(book1);
-        errorDto1 = errorMapper1.toErrorDto(HttpStatus.BAD_REQUEST, "Invalid data");
-        errorDto2 = errorMapper1.toErrorDto(HttpStatus.NOT_FOUND, "Book not found");
+        mockMvc = MockMvcBuilders.standaloneSetup(bookController)
+            .setControllerAdvice(globalExceptionHandler)
+            .build()
     }
 
     @Test
-    void createBook() throws Exception {
-        String expected = objectMapper.writeValueAsString(bookResponseDto);
+    fun shouldCreateBook() {
+        val expected = objectMapper.writeValueAsString(bookResponseDto)
 
-        given(bookService.createBook(anyLong(), anyLong(), any(Book.class))).willReturn(book1);
-        given(bookMapper.toBookDto((Book) any())).willReturn(bookResponseDto);
+        every { bookService.createBook(any(), any(), any()) } returns book
+        every { bookMapper.toBookDto(any<Book>()) } returns bookResponseDto
 
-        String result = mockMvc.perform(post("/api/v1/book")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookRequestDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        val result = mockMvc.perform(post("/api/v1/book")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .andExpect(status().isCreated())
+            .andReturn()
 
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result.response.contentAsString)
     }
 
     @Test
-    void createBookWithNull() throws Exception {
-        bookRequestDto.setTitle(null);
+    fun shouldNotCreateBookWithInvalidData() {
+        bookRequestDto.title = ""
 
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
+        every { bookService.createBook(any(), any(), any()) } throws (IllegalArgumentException("Invalid"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/book")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .andExpect(status().isBadRequest())
     }
 
     @Test
-    void createBookWithEmpty() throws Exception {
-        bookRequestDto.setTitle("");
+    fun shouldNotCreateBookWithInvalidData2() {
+        bookRequestDto.authorId = 0
 
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto1);
+        every { bookService.createBook(any(), any(), any()) } throws (IllegalArgumentException("Invalid"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
-        mockMvc.perform(post("/api/v1/book")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookRequestDto)))
-                .andExpect(status().isBadRequest());
+        val result = mockMvc.perform(post("/api/v1/book")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .andExpect(status().isBadRequest())
     }
 
     @Test
-    void updateBook() throws Exception {
-        BookResponseDto updatedBookResponseDto = bookMapper1.toBookDto(updatedBook);
+    fun shouldUpdateBook() {
+        val expected = objectMapper.writeValueAsString(bookResponseDto)
 
-        String expected = objectMapper.writeValueAsString(updatedBookResponseDto);
+        every { bookService.updateBook(any(), any()) } returns book
+        every { bookMapper.toBookDto(any<Book>()) } returns bookResponseDto
 
-        given(bookService.updateBook(anyLong(), any(Book.class))).willReturn(updatedBook);
-        given(bookMapper.toBookDto((Book) any())).willReturn(updatedBookResponseDto);
+        val result = mockMvc.perform(put("/api/v1/book/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .andExpect(status().isOk)
+            .andReturn()
 
-        String result = mockMvc.perform(put("/api/v1/book/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookUpdateRequestDto)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result.response.contentAsString)
     }
 
     @Test
-    void updateBookWithNull() throws Exception {
-        bookRequestDto.setTitle(null);
+    fun shouldNotUpdateBookWithInvalidData() {
+        bookRequestDto.title = ""
+
+        every { bookService.updateBook(any(), any()) } throws (IllegalArgumentException("Invalid"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(put("/api/v1/book/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookRequestDto)))
-                .andExpect(status().isBadRequest());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .andExpect(status().isBadRequest())
     }
 
     @Test
-    void updateBookWithEmpty() throws Exception {
-        bookRequestDto.setTitle("");
+    fun shouldGetBookById() {
+        val expected = objectMapper.writeValueAsString(bookResponseDto)
 
-        mockMvc.perform(put("/api/v1/book/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookRequestDto)))
-                .andExpect(status().isBadRequest());
+        every { bookService.getBookById(any()) } returns book
+        every { bookMapper.toBookDto(any<Book>()) } returns bookResponseDto
+
+        val result = mockMvc.perform(get("/api/v1/book/{id}", 1L))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        Assertions.assertEquals(expected, result.response.contentAsString)
     }
 
     @Test
-    void getBookById() throws Exception {
-        String expected = objectMapper.writeValueAsString(bookResponseDto);
+    fun shouldNotGetBookByNotExistingId() {
+        every { bookService.getBookById(any()) } throws (EntityNotFoundException("Not found"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
 
-        given(bookService.getBookById(anyLong())).willReturn(book1);
-        given(bookMapper.toBookDto((Book) any())).willReturn(bookResponseDto);
-
-        String result = mockMvc.perform(get("/api/v1/book/{id}", 1L)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc.perform(get("/api/v1/book/{id}", 1L))
+            .andExpect(status().isNotFound())
     }
 
     @Test
-    void getBookByNonExistingId() throws Exception {
-        given(bookService.getBookById(anyLong())).willThrow(new EntityNotFoundException("Book"));
+    fun shouldGetAllBooks() {
+        val expected = objectMapper.writeValueAsString(listOf(bookResponseDto))
 
-        given(errorMapper.toErrorDto((HttpStatus) any(), (List<String>) any())).willReturn(errorDto2);
-        mockMvc.perform(get("/api/v1/book/{id}", 1L)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        every { bookService.findAll() } returns listOf(book)
+        every { bookMapper.toBookDto(any<List<Book>>()) } returns listOf(bookResponseDto)
+
+        val result = mockMvc.perform(get("/api/v1/book"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        Assertions.assertEquals(expected, result.response.contentAsString)
     }
 
     @Test
-    void getAllBooks() throws Exception {
-        List<Book> books = List.of(book1);
-        List<BookResponseDto> bookResponseDtos = List.of(bookResponseDto);
+    fun shouldDeleteBook() {
+        every { bookService.deleteBook(any()) } returns Unit
 
-        String expected = objectMapper.writeValueAsString(bookResponseDtos);
-
-        given(bookService.findAll()).willReturn(books);
-        given(bookMapper.toBookDto(books)).willReturn(bookResponseDtos);
-
-        String result = mockMvc.perform(get("/api/v1/book")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertEquals(expected, result);
+        mockMvc.perform(delete("/api/v1/book/{id}", 1L))
+            .andExpect(status().isNoContent)
     }
 
     @Test
-    void deleteBook() throws Exception {
-        mockMvc.perform(delete("/api/v1/book/{id}", 1L)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+    fun shouldGetBookByTitleAndAuthor() {
+        val expected = objectMapper.writeValueAsString(bookResponseDto)
+
+        every { bookService.getBookByTitleAndAuthor(any(), any()) } returns book
+        every { bookMapper.toBookDto(any<Book>()) } returns bookResponseDto
+
+        val result = mockMvc.perform(get("/api/v1/book?title=Title&author=1"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        Assertions.assertEquals(expected, result.response.contentAsString)
+    }
+
+    @Test
+    fun shouldNotGetBookByTitleAndAuthor1() {
+        every { bookService.getBookByTitleAndAuthor(any(), any()) } throws (EntityNotFoundException("Not found"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
+
+        mockMvc.perform(get("/api/v1/book")
+            .param("title", "0")
+            .param("author", "0"))
+            .andExpect(status().isNotFound())
+    }
+
+    @Test
+    fun shouldNotGetBookByTitleAndAuthor2() {
+        every { bookService.getBookByTitleAndAuthor(any(), any()) } throws (EntityNotFoundException("Not found"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
+
+        mockMvc.perform(get("/api/v1/book")
+            .param("title", "")
+            .param("author", "0"))
+            .andExpect(status().isNotFound())
     }
 }

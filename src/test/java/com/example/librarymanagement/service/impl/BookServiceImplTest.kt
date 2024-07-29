@@ -1,106 +1,103 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory;
-import com.example.librarymanagement.model.entity.Author;
-import com.example.librarymanagement.model.entity.Book;
-import com.example.librarymanagement.model.entity.Publisher;
-import com.example.librarymanagement.repository.BookRepository;
-import com.example.librarymanagement.service.BookPresenceService;
-import com.example.librarymanagement.service.ReservationService;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.model.entity.Book
+import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.model.entity.Library
+import com.example.librarymanagement.model.entity.Reservation
+import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.repository.BookRepository
+import com.example.librarymanagement.service.AuthorService
+import com.example.librarymanagement.service.BookPresenceService
+import com.example.librarymanagement.service.PublisherService
+import com.example.librarymanagement.service.ReservationService
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.util.*
 
-import java.util.List;
-import java.util.Optional;
+class BookServiceImplTest {
+    private val bookRepository: BookRepository = mockk()
+    private val authorService: AuthorService = mockk()
+    private val publisherService: PublisherService = mockk()
+    private val reservationService: ReservationService = mockk()
+    private val bookPresenceService: BookPresenceService = mockk()
+    private val bookService = BookServiceImpl(
+        bookRepository,
+        authorService,
+        publisherService,
+        bookPresenceService,
+        reservationService)
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+    private lateinit var book: Book
+    private lateinit var library: Library
+    private lateinit var user : User
+    private lateinit var journal: Journal
+    private lateinit var reservation: Reservation
 
-@ExtendWith(MockitoExtension.class)
-public class BookServiceImplTest {
-
-    @InjectMocks
-    private BookServiceImpl bookServiceImpl;
-
-    @Mock
-    private BookRepository bookRepository;
-    @Mock
-    private AuthorServiceImpl authorServiceImpl;
-    @Mock
-    private PublisherServiceImpl publisherServiceImpl;
-    @Mock
-    private BookPresenceService bookPresenceService;
-    @Mock
-    private ReservationService reservationService;
-
-    private static Author author1;
-    private static Publisher publisher;
-    private static Book book1;
-
-    @BeforeAll
-    public static void init(){
-        TestDataFactory.TestDataRel testDataRel = TestDataFactory.createTestDataRel();
-
-        book1 = testDataRel.book;
+    @BeforeEach
+    fun setUp() {
+        var test = TestDataFactory.createTestDataRelForServices()
+        book = test.book
+        user = test.user
+        library = test.library
+        journal = test.journal
+        reservation = test.reservation
     }
 
     @Test
-    public void findAll() {
-        when(bookRepository.findAll()).thenReturn(List.of(book1));
+    fun shouldCreateBook() {
+        every { bookRepository.existsByIsbn(book.isbn) } returns false
+        every { authorService.getAuthorById(1L) } returns book.author!!
+        every { publisherService.getPublisherById(1L) } returns book.publisher!!
+        every { bookRepository.save(book) } returns book
 
-        assertEquals(List.of(book1), bookServiceImpl.findAll());
-        verify(bookRepository, times(1)).findAll();
+        Assertions.assertEquals(book, bookService.createBook(1L, 1L, book))
+        verify (exactly = 1) { bookRepository.save(book) }
     }
 
     @Test
-    public void getBookById() {
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
+    fun shouldGetBookById() {
+        every { bookRepository.findById(1L) } returns Optional.of(book)
 
-        assertEquals(book1, bookServiceImpl.getBookById(1L));
-        verify(bookRepository, times(1)).findById(1L);
+        Assertions.assertEquals(book, bookService.getBookById(1L))
+        verify (exactly = 1) { bookRepository.findById(1L) }
     }
 
     @Test
-    public void getBookByTitleAndAuthor() {
-        when(bookRepository.findBookByTitleAndAuthorId("Book1", 1L)).thenReturn(Optional.of(book1));
+    fun shouldGetAllBooks() {
+        val books = listOf(book)
+        every { bookRepository.findAll() } returns books
 
-        assertEquals(book1, bookServiceImpl.getBookByTitleAndAuthor("Book1", 1L));
-        verify(bookRepository, times(1)).findBookByTitleAndAuthorId("Book1", 1L);
+        Assertions.assertEquals(books, bookService.findAll())
+        verify (exactly = 1) { bookRepository.findAll() }
     }
 
     @Test
-    public void createBook() {
-        when(authorServiceImpl.getAuthorById(1L)).thenReturn(author1);
-        when(publisherServiceImpl.getPublisherById(1L)).thenReturn(publisher);
-        when(bookRepository.save(book1)).thenReturn(book1);
+    fun shouldUpdateBook() {
+        val updatedBook = book.copy(title = "Updated Book")
+        every { bookRepository.findById(1L) } returns Optional.of(book)
+        every { bookRepository.save(updatedBook) } returns updatedBook
 
-        assertEquals(book1, bookServiceImpl.createBook(1L, 1L, book1));
-        verify(bookRepository, times(1)).save(book1);
+        Assertions.assertEquals(updatedBook, bookService.updateBook(1L, updatedBook))
+        verify (exactly = 1) { bookRepository.findById(1L) }
+        verify (exactly = 1) { bookRepository.save(updatedBook) }
     }
 
     @Test
-    public void updateBook() {
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
-        when(bookRepository.save(book1)).thenReturn(book1);
+    fun shouldDeleteBook() {
+        every { bookRepository.findById(1L) } returns Optional.of(book)
+        every { bookPresenceService.deleteBookPresenceById(1L) } returns Unit
+        every { reservationService.deleteReservationById(1L) } returns Unit
+        every { bookRepository.deleteById(1L) } returns Unit
 
-        assertEquals(book1, bookServiceImpl.updateBook(1L, book1));
-        verify(bookRepository, times(1)).save(book1);
-    }
-
-    @Test
-    public void deleteBook() {
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(book1));
-        doNothing().when(bookRepository).delete(book1);
-
-        bookServiceImpl.deleteBook(1L);
-        verify(bookRepository, times(1)).delete(book1);
-        verify(bookRepository, times(1)).findById(1L);
+        bookService.deleteBook(1L)
+        verify (exactly = 1) { bookRepository.findById(1L) }
+        verify (exactly = 1) { bookPresenceService.deleteBookPresenceById(1L) }
+        verify (exactly = 1) { reservationService.deleteReservationById(1L) }
+        verify (exactly = 1) { bookRepository.deleteById(1L) }
     }
 }

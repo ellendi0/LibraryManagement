@@ -1,60 +1,52 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import com.example.librarymanagement.model.enums.Genre;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
-import java.util.List;
+import com.example.librarymanagement.model.enums.Genre
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import lombok.ToString
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString(exclude = {"bookPresence", "reservations"})
 @Table(name = "book")
-public class Book {
+@ToString(exclude = ["bookPresence", "reservations"])
+data class Book (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    val id: Long? = null,
 
     @Column(nullable = false)
-    private String title;
+    var title: String,
 
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
-    private Author author;
+    var author: Author ?= null,
 
     @ManyToOne
     @JoinColumn(name = "publisher_id", nullable = false)
-    private Publisher publisher;
+    var publisher: Publisher ?= null,
 
-    @Column(name = "published_year")
-    private Integer publishedYear;
+    @Column(nullable = false)
+    var publishedYear: Int,
 
-    @Column(unique = true)
-    private Long isbn;
+    @Column(nullable = false)
+    var isbn: Long,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Genre genre;
+    var genre: Genre,
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
-    private List<BookPresence> bookPresence;
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
+    var bookPresence: MutableList<BookPresence> = mutableListOf(),
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
-    private List<Reservation> reservations;
-}
+    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
+    var reservations: MutableList<Reservation> = mutableListOf()
+)

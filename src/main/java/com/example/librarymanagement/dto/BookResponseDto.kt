@@ -1,19 +1,13 @@
-package com.example.librarymanagement.dto;
+package com.example.librarymanagement.dto
 
-import com.example.librarymanagement.model.enums.Genre;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.example.librarymanagement.model.enums.Genre
 
-@Setter
-@Getter
-@NoArgsConstructor
-public class BookResponseDto {
-    private Long id;
-    private String title;
-    private String author;
-    private String publisher;
-    private Integer publishedYear;
-    private Long isbn;
-    private Genre genre;
-}
+class BookResponseDto (
+    val id: Long,
+    val title: String,
+    val author: String,
+    val publisher: String,
+    val publishedYear: Int,
+    val isbn: Long,
+    val genre: Genre,
+)

@@ -1,14 +1,12 @@
-package com.example.librarymanagement.service;
+package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Book;
+import com.example.librarymanagement.model.entity.Book
 
-import java.util.List;
-
-public interface BookService {
-    List<Book> findAll();
-    Book getBookById(Long id);
-    Book getBookByTitleAndAuthor(String title, Long authorId);
-    Book createBook(Long authorId, Long publisherId, Book book);
-    Book updateBook(Long id, Book updatedBook);
-    void deleteBook(Long id);
+interface BookService {
+    fun findAll(): List<Book>
+    fun getBookById(id: Long): Book
+    fun getBookByTitleAndAuthor(title: String, authorId: Long): Book
+    fun createBook(authorId: Long, publisherId: Long, book: Book): Book
+    fun updateBook(id: Long, updatedBook: Book): Book
+    fun deleteBook(id: Long)
 }
