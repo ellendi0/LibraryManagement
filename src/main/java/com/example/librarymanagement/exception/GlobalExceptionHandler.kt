@@ -1,57 +1,56 @@
-package com.example.librarymanagement.exception;
+package com.example.librarymanagement.exception
 
-import com.example.librarymanagement.dto.ErrorDto;
-import com.example.librarymanagement.dto.mapper.ErrorMapper;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.List;
+import com.example.librarymanagement.dto.ErrorDto
+import com.example.librarymanagement.dto.mapper.ErrorMapper
+import org.springframework.http.HttpStatus
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
-
-    private final ErrorMapper errorMapper;
-
-    public GlobalExceptionHandler(ErrorMapper errorMapper) {
-        this.errorMapper = errorMapper;
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
+class GlobalExceptionHandler(private val errorMapper: ErrorMapper) {
+    @ExceptionHandler(EntityNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorDto handleEntityNotFoundException(EntityNotFoundException ex) {
-         return errorMapper.toErrorDto(HttpStatus.NOT_FOUND, ex.getMessage());
+    fun handleEntityNotFoundException(exception: EntityNotFoundException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.NOT_FOUND, exception.message)
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorDto handleValidationExceptions(MethodArgumentNotValidException ex) {
-        List<String> errorMessages = ex.getBindingResult()
-                .getAllErrors()
-                .stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                .toList();
-        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, errorMessages);
+    fun handleMethodArgumentNotValidException(exception: MethodArgumentNotValidException): ErrorDto {
+        val errorMessages = exception.bindingResult.allErrors.map { it.defaultMessage }.toList()
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, errorMessages as List<String>)
     }
 
-    @ExceptionHandler(DuplicateKeyException.class)
+    @ExceptionHandler(DuplicateKeyException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorDto handleDuplicateKeyException(DuplicateKeyException ex) {
-        return errorMapper.toErrorDto(HttpStatus.CONFLICT, ex.getMessage());
+    fun handleDuplicateKeyException(exception: DuplicateKeyException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.CONFLICT, exception.message)
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(IllegalArgumentException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorDto handleIllegalArgumentException(IllegalArgumentException ex) {
-        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, ex.getMessage());
+    fun handleIllegalArgumentException(exception: IllegalArgumentException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, exception.message!!)
     }
 
-    @ExceptionHandler(BookNotAvailableException.class)
+    @ExceptionHandler(HttpMessageNotReadableException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorDto handleBookNotAvailableException(BookNotAvailableException ex) {
-        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, ex.getMessage());
+    fun handleHttpMessageNotReadableException(exception: HttpMessageNotReadableException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, exception.message!!)
+    }
+
+    @ExceptionHandler(BookNotAvailableException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleBookNotAvailableException(exception: BookNotAvailableException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.NOT_FOUND, exception.message)
+    }
+
+    @ExceptionHandler(ExistingReservationException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun handleExistingReservationException(exception: ExistingReservationException): ErrorDto {
+        return errorMapper.toErrorDto(HttpStatus.CONFLICT, exception.message)
     }
 }
