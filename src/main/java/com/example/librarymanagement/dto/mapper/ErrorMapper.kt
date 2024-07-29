@@ -1,24 +1,22 @@
-package com.example.librarymanagement.dto.mapper;
+package com.example.librarymanagement.dto.mapper
 
-import com.example.librarymanagement.dto.ErrorDto;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
+import com.example.librarymanagement.dto.ErrorDto
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Component
 
 @Component
-public class ErrorMapper {
-    public ErrorDto toErrorDto(HttpStatus status, List<String> message) {
-        ErrorDto errorDto = new ErrorDto();
-        errorDto.setStatus(status.value());
-        errorDto.setMessage(message);
-        return errorDto;
+class ErrorMapper {
+    fun toErrorDto(status: HttpStatus, messages: List<String>): ErrorDto {
+        return ErrorDto(
+            status = status.value(),
+            messages = messages
+        )
     }
 
-    public ErrorDto toErrorDto(HttpStatus status, String message) {
-        ErrorDto errorDto = new ErrorDto();
-        errorDto.setStatus(status.value());
-        errorDto.setMessage(List.of(message));
-        return errorDto;
+    fun toErrorDto(status: HttpStatus, message: String): ErrorDto {
+        return ErrorDto(
+            status = status.value(),
+            messages = listOf(message)
+        )
     }
 }
