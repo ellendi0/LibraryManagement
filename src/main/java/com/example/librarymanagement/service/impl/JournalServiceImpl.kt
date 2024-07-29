@@ -1,57 +1,34 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Journal;
-import com.example.librarymanagement.repository.JournalRepository;
-import com.example.librarymanagement.service.JournalService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.repository.JournalRepository
+import com.example.librarymanagement.service.JournalService
+import org.springframework.stereotype.Service
 
 @Service
-@RequiredArgsConstructor
-public class JournalServiceImpl implements JournalService {
-    private final JournalRepository journalRepository;
+class JournalServiceImpl(private val journalRepository: JournalRepository) : JournalService {
+    override fun createJournal(journal: Journal): Journal = journalRepository.save(journal)
 
-    @Override
-    public Journal createJournal(Journal journal) {
-        return journalRepository.save(journal);
+    override fun getJournalById(id: Long): Journal {
+        return journalRepository.findById(id).orElseThrow { throw EntityNotFoundException("Journal") }
     }
 
-    @Override
-    public Journal updateJournal(Long id, Journal updatedJournal) {
-        Journal journal = getJournalById(id);
-        journal.setBookPresence(updatedJournal.getBookPresence());
-        journal.setUser(updatedJournal.getUser());
-        journal.setDateOfBorrowing(updatedJournal.getDateOfBorrowing());
-        journal.setDateOfReturning(updatedJournal.getDateOfReturning());
-        return journalRepository.save(journal);
+    override fun updateJournal(id: Long, updatedJournal: Journal): Journal {
+        val journal = getJournalById(id).apply { this.dateOfReturning = updatedJournal.dateOfReturning }
+        return journalRepository.save(journal)
     }
 
-    @Override
-    public Journal findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(Long bookPresenceId, Long userId) {
+    override fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: Long, userId: Long): Journal {
         return journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId, userId)
-                .orElseThrow(() -> new EntityNotFoundException("Journal"));
+            ?: throw EntityNotFoundException("Journal")
     }
 
-    @Override
-    public Journal getJournalById(Long id) {
-        return journalRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Journal"));
+    override fun getJournalByBookPresenceIdAndUserId(bookPresenceId: Long, userId: Long): List<Journal> {
+        return journalRepository.findByBookPresenceIdAndUserId(bookPresenceId, userId)
     }
 
-    @Override
-    public List<Journal> getJournalByBookPresenceIdAndUserId(Long bookPresenceId, Long userId) {
-        return journalRepository.findByBookPresenceIdAndUserId(bookPresenceId, userId);
-    }
+    override fun getJournalByUserId(userId: Long): List<Journal> = journalRepository.findAllByUserId(userId)
 
-    @Override
-    public List<Journal> getJournalByUserId(Long userId) {
-        return journalRepository.findAllByUserId(userId);
-    }
-
-    @Override
-    public void deleteJournal(Long id) {
-        journalRepository.findById(id).ifPresent(journalRepository::delete);
-    }
+    override fun deleteJournal(id: Long) = journalRepository.deleteById(id)
 }

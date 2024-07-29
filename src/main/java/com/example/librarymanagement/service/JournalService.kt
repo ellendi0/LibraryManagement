@@ -1,15 +1,13 @@
-package com.example.librarymanagement.service;
+package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Journal;
+import com.example.librarymanagement.model.entity.Journal
 
-import java.util.List;
-
-public interface JournalService {
-    Journal createJournal(Journal journal);
-    Journal getJournalById(Long id);
-    Journal updateJournal(Long id, Journal updatedJournal);
-    Journal findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(Long bookPresenceId, Long userId);
-    List<Journal> getJournalByBookPresenceIdAndUserId(Long bookPresenceId, Long userId);
-    List<Journal> getJournalByUserId(Long userId);
-    void deleteJournal(Long id);
+interface JournalService {
+    fun createJournal(journal: Journal): Journal
+    fun getJournalById(id: Long): Journal
+    fun updateJournal(id: Long, updatedJournal: Journal): Journal
+    fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: Long, userId: Long): Journal
+    fun getJournalByBookPresenceIdAndUserId(bookPresenceId: Long, userId: Long): List<Journal>
+    fun getJournalByUserId(userId: Long): List<Journal>
+    fun deleteJournal(id: Long)
 }

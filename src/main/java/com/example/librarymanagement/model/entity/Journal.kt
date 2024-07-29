@@ -1,42 +1,36 @@
-package com.example.librarymanagement.model.entity;
+package com.example.librarymanagement.model.entity
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDate;
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import lombok.EqualsAndHashCode
+import java.time.LocalDate
 
 @Entity
-@Data
-@NoArgsConstructor(force = true)
-@AllArgsConstructor
 @Table(name = "journal")
-public class Journal {
+@EqualsAndHashCode(exclude = ["journals", "reservations"])
+data class Journal(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    val id: Long ?= null,
 
-    @Column(nullable = false, name = "date_of_borrowing")
-    private LocalDate dateOfBorrowing;
+    @Column(name = "date_of_borrowing")
+    var dateOfBorrowing: LocalDate,
 
     @Column(name = "date_of_returning")
-    private LocalDate dateOfReturning;
+    var dateOfReturning: LocalDate ?= null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User ?= null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bookPresence_id")
-    private BookPresence bookPresence;
-}
+    @JoinColumn(name = "bookPresence_id", nullable = false)
+    var bookPresence: BookPresence ?= null,
+)

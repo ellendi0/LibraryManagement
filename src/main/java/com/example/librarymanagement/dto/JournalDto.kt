@@ -1,22 +1,13 @@
-package com.example.librarymanagement.dto;
+package com.example.librarymanagement.dto
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.time.LocalDate
 
-import java.time.LocalDate;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class JournalDto {
-    private Long id;
-    private LocalDate dateOfBorrowing;
-    private LocalDate dateOfReturning;
-    private String title;
-    private String authorName;
-    private String user;
-    private String nameOfLibrary;
-}
+class JournalDto (
+    val id: Long,
+    val dateOfBorrowing: LocalDate,
+    val dateOfReturning: LocalDate ?= null,
+    val title: String,
+    val author: String,
+    val user: String,
+    val nameOfLibrary: String,
+)
