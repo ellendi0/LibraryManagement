@@ -1,16 +1,14 @@
-package com.example.librarymanagement.converter;
+package com.example.librarymanagement.converter
 
-import com.example.librarymanagement.model.enums.Genre;
-import org.springframework.core.convert.converter.Converter;
+import com.example.librarymanagement.model.enums.Genre
+import org.springframework.core.convert.converter.Converter
 
-public class StringToEnumGenreConverter implements Converter<String, Genre> {
-
-    @Override
-    public Genre convert(String source) {
-        if(source != null) {
-            return Genre.valueOf(source.trim().toUpperCase());
+class StringToEnumGenreConverter : Converter<String, Genre> {
+    override fun convert(source: String): Genre {
+        if (source.isNotBlank()) {
+            return Genre.valueOf(source.uppercase())
         } else {
-            throw new IllegalArgumentException("Invalid value for enum " + Genre.class.getSimpleName() + ": " + source);
+            throw IllegalArgumentException("Invalid value for enum ${Genre::class.simpleName}: $source")
         }
     }
 }
