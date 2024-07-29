@@ -1,12 +1,10 @@
-package com.example.librarymanagement.service;
+package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Author;
+import com.example.librarymanagement.model.entity.Author
 
-import java.util.List;
-
-public interface AuthorService {
-    Author createAuthor(Author author);
-    Author updateAuthor(Long id, Author updatedAuthor);
-    Author getAuthorById(Long id);
-    List<Author> getAllAuthors();
+interface AuthorService {
+    fun createAuthor(author: Author): Author
+    fun updateAuthor(id: Long, updatedAuthor: Author): Author
+    fun getAuthorById(id: Long): Author
+    fun getAllAuthors(): List<Author>
 }

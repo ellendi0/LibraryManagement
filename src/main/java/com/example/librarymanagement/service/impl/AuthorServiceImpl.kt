@@ -1,41 +1,26 @@
-package com.example.librarymanagement.service.impl;
+package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.EntityNotFoundException;
-import com.example.librarymanagement.model.entity.Author;
-import com.example.librarymanagement.repository.AuthorRepository;
-import com.example.librarymanagement.service.AuthorService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.example.librarymanagement.exception.EntityNotFoundException
+import com.example.librarymanagement.model.entity.Author
+import com.example.librarymanagement.repository.AuthorRepository
+import com.example.librarymanagement.service.AuthorService
+import org.springframework.stereotype.Service
 
 @Service
-@RequiredArgsConstructor
-public class AuthorServiceImpl implements AuthorService {
-    private final AuthorRepository authorRepository;
+class AuthorServiceImpl(private val authorRepository: AuthorRepository) : AuthorService {
+    override fun createAuthor(author: Author): Author = authorRepository.save(author)
 
-    @Override
-    public Author createAuthor(Author author) {
-        return authorRepository.save(author);
+    override fun updateAuthor(id: Long, updatedAuthor: Author): Author {
+        val author = getAuthorById(id).apply {
+            this.firstName = updatedAuthor.firstName
+            this.lastName = updatedAuthor.lastName
+        }
+        return authorRepository.save(author)
     }
 
-    @Override
-    public Author updateAuthor(Long id, Author updatedAuthor) {
-        Author author = getAuthorById(id);
-
-        author.setFirstName(updatedAuthor.getFirstName());
-        author.setLastName(updatedAuthor.getLastName());
-
-        return authorRepository.save(author);
+    override fun getAuthorById(id: Long): Author {
+        return authorRepository.findById(id).orElseThrow { throw EntityNotFoundException("Author") }
     }
 
-    @Override
-    public Author getAuthorById(Long id) {
-        return authorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Author"));
-    }
-
-    @Override
-    public List<Author> getAllAuthors() {
-        return authorRepository.findAll();
-    }
+    override fun getAllAuthors(): List<Author> = authorRepository.findAll()
 }

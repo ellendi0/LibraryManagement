@@ -1,36 +1,23 @@
-package com.example.librarymanagement.dto.mapper;
+package com.example.librarymanagement.dto.mapper
 
-import com.example.librarymanagement.dto.AuthorDto;
-import com.example.librarymanagement.model.entity.Author;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.example.librarymanagement.dto.AuthorDto
+import com.example.librarymanagement.model.entity.Author
+import org.springframework.stereotype.Component
 
 @Component
-public class AuthorMapper {
-    public Author toAuthor(AuthorDto authorDto) {
-        Author author = new Author();
-        author.setFirstName(authorDto.getFirstName());
-        author.setLastName(authorDto.getLastName());
-        return author;
+class AuthorMapper {
+    fun toAuthor(authorDto: AuthorDto): Author {
+        return Author(
+            firstName = authorDto.firstName,
+            lastName = authorDto.lastName,
+        )
     }
 
-    public AuthorDto toAuthorDto(Author author) {
-        AuthorDto authorDto = new AuthorDto();
-        authorDto.setId(author.getId());
-        authorDto.setFirstName(author.getFirstName());
-        authorDto.setLastName(author.getLastName());
-        return authorDto;
+    fun toAuthorDto(author: Author): AuthorDto {
+        return AuthorDto(author.id, author.firstName, author.lastName)
     }
 
-    public List<AuthorDto> toAuthorDto(List<Author> authors) {
-        if(CollectionUtils.isEmpty(authors)) return Collections.emptyList();
-
-        return authors.stream()
-                .map(this::toAuthorDto)
-                .toList();
+    fun toAuthorDto(authors: List<Author>): List<AuthorDto> {
+        return authors.map { toAuthorDto(it) }
     }
 }
