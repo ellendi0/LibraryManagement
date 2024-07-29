@@ -168,10 +168,9 @@ public class BookPresenceControllerTest {
 
     @Test
     void removeBookFromLibrary() throws Exception {
-        willDoNothing().given(bookPresenceService).deleteBookPresenceByIdAndLibraryId(anyLong(), anyLong());
+        willDoNothing().given(bookPresenceService).deleteBookPresenceById(anyLong());
 
-        mockMvc.perform(delete("/api/v1/library/{libraryId}/book/{bookId}/presence", 1L, 1L)
-                        .param("bookId", "1")
+        mockMvc.perform(delete("/api/v1/library/presence/{presenceId}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
