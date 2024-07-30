@@ -71,14 +71,14 @@ class AuthorControllerTest {
 
     @Test
     fun shouldNotCreateAuthorWithInvalidData() {
-        authorDto.lastName = ""
+        val authorDtoNew = authorDto.copy(lastName = "")
 
         every { authorService.createAuthor(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
 
         val result = mockMvc.perform(post("/api/v1/author")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+            .content(objectMapper.writeValueAsString(authorDtoNew)))
             .andExpect(status().isBadRequest())
             .andReturn().response.contentAsString
 
@@ -103,14 +103,14 @@ class AuthorControllerTest {
 
     @Test
     fun shouldNotUpdateAuthorWithInvalidData() {
-        authorDto.lastName = ""
+        val authorDtoNew = authorDto.copy(lastName = "")
 
         every { authorService.updateAuthor(any(), any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
 
         val result = mockMvc.perform(put("/api/v1/author/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+            .content(objectMapper.writeValueAsString(authorDtoNew)))
             .andExpect(status().isBadRequest())
             .andReturn().response.contentAsString
 
