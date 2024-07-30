@@ -73,27 +73,27 @@ class BookControllerTest {
 
     @Test
     fun shouldNotCreateBookWithInvalidData() {
-        bookRequestDto.title = ""
+        val bookRequestDtoNew = bookRequestDto.copy(title = "")
 
         every { bookService.createBook(any(), any(), any()) } throws (IllegalArgumentException("Invalid"))
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/book")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .content(objectMapper.writeValueAsString(bookRequestDtoNew)))
             .andExpect(status().isBadRequest())
     }
 
     @Test
     fun shouldNotCreateBookWithInvalidData2() {
-        bookRequestDto.authorId = 0
+        val bookRequestDtoNew = bookRequestDto.copy(authorId = 0)
 
         every { bookService.createBook(any(), any(), any()) } throws (IllegalArgumentException("Invalid"))
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
-        val result = mockMvc.perform(post("/api/v1/book")
+        mockMvc.perform(post("/api/v1/book")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .content(objectMapper.writeValueAsString(bookRequestDtoNew)))
             .andExpect(status().isBadRequest())
     }
 
@@ -115,14 +115,14 @@ class BookControllerTest {
 
     @Test
     fun shouldNotUpdateBookWithInvalidData() {
-        bookRequestDto.title = ""
+        val bookRequestDtoNew = bookRequestDto.copy(title = "")
 
         every { bookService.updateBook(any(), any()) } throws (IllegalArgumentException("Invalid"))
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(put("/api/v1/book/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(bookRequestDto)))
+            .content(objectMapper.writeValueAsString(bookRequestDtoNew)))
             .andExpect(status().isBadRequest())
     }
 

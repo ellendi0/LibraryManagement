@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 
-class BookRequestDto(
+data class BookRequestDto(
     @field:Size(max = 100, message = "Title must contain no more than 100 characters")
     @field:NotBlank(message = "Title can't be blank")
-    var title: String,
+    val title: String,
 
     @field:Digits(integer = 4, fraction = 0, message = "Year of publish must be in YYYY format")
     val publishedYear: Int,
