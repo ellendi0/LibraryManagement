@@ -22,7 +22,7 @@ class BookRequestDto(
     val genre: Genre,
 
     @field:NotNull(message = "Author can't be empty")
-    var authorId: Long,
+    val authorId: Long,
 
     @field:NotNull(message = "Publisher can't be empty")
     val publisherId: Long
