@@ -98,131 +98,131 @@ class UserControllerTest {
 
     @Test
     fun shouldNotCreateWithInvalidEmail() {
-        userRequestDto.email = "invalid"
+        val userRequestNew = userRequestDto.copy(email = "first")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithInvalidFirstName() {
-        userRequestDto.firstName = "first"
+        val userRequestNew = userRequestDto.copy(firstName = "first")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithInvalidLastName() {
-        userRequestDto.lastName = "first"
+        val userRequestNew = userRequestDto.copy(lastName = "first")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithInvalidPassword() {
-        userRequestDto.password = "first"
+        val userRequestNew = userRequestDto.copy(password = "first")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithInvalidPhone() {
-        userRequestDto.phoneNumber = "first"
+        val userRequestNew = userRequestDto.copy(phoneNumber = "first")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithEmptyEmail() {
-        userRequestDto.email = ""
+        val userRequestNew = userRequestDto.copy(email = "")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithEmptyFirstName() {
-        userRequestDto.firstName = ""
+        val userRequestNew = userRequestDto.copy(firstName = "")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithEmptyLastName() {
-        userRequestDto.lastName = ""
+        val userRequestNew = userRequestDto.copy(lastName = "")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithEmptyPassword() {
-        userRequestDto.password = ""
+        val userRequestNew = userRequestDto.copy(password = "")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
     fun shouldNotCreateWithEmptyPhone() {
-        userRequestDto.phoneNumber = ""
+        val userRequestNew = userRequestDto.copy(phoneNumber = "")
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
 
         mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(objectMapper.writeValueAsString(userRequestNew)))
             .andExpect(status().isBadRequest)
     }
 
@@ -266,8 +266,6 @@ class UserControllerTest {
 
     @Test
     fun shouldNotUpdateWithDuplicateEmail() {
-        userRequestDto.email = "first@email.com"
-
         every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "email")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
@@ -279,8 +277,6 @@ class UserControllerTest {
 
     @Test
     fun shouldNotUpdateWithDuplicatePhone() {
-        userRequestDto.phoneNumber = "1234567890"
-
         every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "phone")
         every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
 
