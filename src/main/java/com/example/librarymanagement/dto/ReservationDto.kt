@@ -1,6 +1,6 @@
 package com.example.librarymanagement.dto
 
-class ReservationDto(
+data class ReservationDto(
     var id: Long,
     val bookTitle: String,
     val author: String,
