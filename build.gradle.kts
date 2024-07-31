@@ -94,7 +94,7 @@ tasks.withType<JacocoReport> {
     reports {
         xml.required = true
         html.required = true
-        csv.required = false
+        csv.required = true
         html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
     }
 
