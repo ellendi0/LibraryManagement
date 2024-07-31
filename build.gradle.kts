@@ -5,6 +5,8 @@ plugins {
     kotlin("plugin.spring") version "1.9.10"
     kotlin("plugin.noarg") version "1.9.10"
     kotlin("plugin.allopen") version "1.9.10"
+    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("jacoco")
 }
 
 noArg {
@@ -65,5 +67,48 @@ kotlin {
 configurations {
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())
+    }
+}
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin") {
+            useVersion(io.gitlab.arturbosch.detekt.getSupportedKotlinVersion())
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+    reportsDirectory = layout.buildDirectory.dir("reports/jacoco")
+}
+
+tasks.withType<JacocoReport> {
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.map {
+            fileTree(it).apply {
+                exclude(
+                    "com/example/librarymanagement/exception/**",
+                    "com/example/librarymanagement/model/**",
+                    "com/example/librarymanagement/converter/**",
+                    "com/example/librarymanagement/configuration/**",
+                    "com/example/librarymanagement/repository/**",
+                )
+            }
+        }))
     }
 }
