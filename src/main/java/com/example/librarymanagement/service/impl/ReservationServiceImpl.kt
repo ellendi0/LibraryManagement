@@ -23,7 +23,9 @@ class ReservationServiceImpl(
         return reservationRepository.findAllByLibraryId(libraryId)
     }
 
-    override fun getReservationsByUserId(userId: Long): List<Reservation> = reservationRepository.findAllByUserId(userId)
+    override fun getReservationsByUserId(userId: Long): List<Reservation> {
+        return reservationRepository.findAllByUserId(userId)
+    }
 
     override fun getReservationsByBookIdAndUser(bookId: Long, user: User): List<Reservation> {
         return reservationRepository.findAllByBookIdAndUserId(bookId, user.id!!)
@@ -32,11 +34,14 @@ class ReservationServiceImpl(
     @Transactional
     override fun reserveBook(user: User, libraryId: Long?, bookId: Long): List<Reservation> {
         val book = bookRepository.findById(bookId).orElseThrow { throw EntityNotFoundException("Book") }
-        if (reservationRepository.existsByBookIdAndUser(bookId, user)) { throw ExistingReservationException(bookId, user.id!!) }
+        if (reservationRepository.existsByBookIdAndUser(bookId, user)) {
+            throw ExistingReservationException(bookId, user.id!!)
+        }
 
         val bookPresenceList = libraryId?.let {
-            bookPresenceService.getAllBookByLibraryIdAndAvailability(it, Availability.AVAILABLE)
-        } ?: bookPresenceService.getByBookId(bookId)
+            bookPresenceService.getAllBookByLibraryIdAndBookId(it, bookId)
+                .ifEmpty { throw EntityNotFoundException("Presence of book") }
+        } ?: bookPresenceService.getByBookId(bookId).ifEmpty { throw EntityNotFoundException("Presence of book") }
 
         val bookPresence = bookPresenceList.firstOrNull { it.availability == Availability.AVAILABLE }
 
