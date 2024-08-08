@@ -30,16 +30,26 @@ class BookPresenceServiceImpl(
         return bookPresenceRepository.save(bookPresence)
     }
 
-    override fun updateBookPresence(id:Long, bookPresence: BookPresence): BookPresence {
-        val bookPresenceToUpdate = bookPresenceRepository.findByIdOrNull(id) ?: throw EntityNotFoundException("Presence")
-        bookPresenceToUpdate.availability = bookPresence.availability
-        return bookPresenceRepository.save(bookPresenceToUpdate)
+    override fun updateBookPresence(id:Long, bookPresenceToUpdate: BookPresence): BookPresence {
+        val bookPresence = bookPresenceRepository.findByIdOrNull(id) ?: throw EntityNotFoundException("Presence")
+        bookPresence.availability = bookPresenceToUpdate.availability
+        return bookPresenceRepository.save(bookPresence)
     }
 
     @Transactional
     override fun addUserToBook(user: User, libraryId: Long, bookId: Long): BookPresence {
         val bookPresence = findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, Availability.AVAILABLE)
             .firstOrNull() ?: throw BookNotAvailableException(libraryId, bookId)
+
+        val reservation = reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId, libraryId)
+
+        reservation?.let {
+            if (it.user?.id == user.id) {
+                reservationRepository.delete(it)
+            }else{
+                throw BookNotAvailableException(libraryId, bookId)
+            }
+        }
 
         val journal = Journal(user = user, bookPresence = bookPresence, dateOfBorrowing = LocalDate.now())
 
@@ -68,18 +78,12 @@ class BookPresenceServiceImpl(
         val journal = journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!)
         journal.dateOfReturning = LocalDate.now()
 
-        journalService.createJournal(journal)
+        journalService.updateJournal(journal.id!!, journal)
         updateBookPresence(bookPresence.id!!, bookPresence.apply { availability = Availability.AVAILABLE })
 
-        val reservation = reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId, libraryId)
+        bookPresence.availability = Availability.AVAILABLE
+        bookPresence.user = null
 
-        reservation?.let {
-            addUserToBook(it.user!!, libraryId, bookId)
-            reservationRepository.delete(reservation)
-        } ?: run {
-            bookPresence.availability = Availability.AVAILABLE
-            bookPresence.user = null
-        }
         return bookPresenceRepository.save(bookPresence)
     }
 
@@ -97,7 +101,9 @@ class BookPresenceServiceImpl(
         return bookPresenceRepository.findAllByLibraryIdAndAvailability(libraryId, availability)
     }
 
-    override fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long, bookId: Long, availability: Availability): List<BookPresence> {
+    override fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long,
+                                                            bookId: Long,
+                                                            availability: Availability): List<BookPresence> {
         return bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(libraryId, bookId, availability)
     }
 

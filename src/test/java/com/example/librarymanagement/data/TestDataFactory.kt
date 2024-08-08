@@ -35,6 +35,19 @@ object TestDataFactory {
             isbn = 1234567890123)
     }
 
+    fun createBookWithoutBookPresence(): Book {
+        val author = createAuthor()
+        val publisher = createPublisher()
+        return Book(
+            id = 1L,
+            title = "Book",
+            author = author,
+            publisher = publisher,
+            publishedYear = 2021,
+            genre = Genre.DRAMA,
+            isbn = 1234567890123)
+    }
+
     fun createUser(): User {
         return User(
             id = 1L,
@@ -54,6 +67,19 @@ object TestDataFactory {
             id = 1L,
             availability = Availability.AVAILABLE,
             book = book,
+            library = library,
+            user = user
+        )
+    }
+
+    fun createBookPresenceWithoutBook(): BookPresence {
+        val book = createBook()
+        val library = createLibrary()
+        val user = createUser()
+        return BookPresence(
+            id = 1L,
+            availability = Availability.AVAILABLE,
+            book = null,
             library = library,
             user = user
         )
