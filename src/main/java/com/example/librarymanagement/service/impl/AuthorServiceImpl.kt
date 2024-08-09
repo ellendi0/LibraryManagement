@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service
 class AuthorServiceImpl(private val authorRepository: AuthorRepository) : AuthorService {
     override fun createAuthor(author: Author): Author = authorRepository.save(author)
 
-    override fun updateAuthor(id: Long, updatedAuthor: Author): Author {
-        val author = getAuthorById(id).apply {
-            this.firstName = updatedAuthor.firstName
-            this.lastName = updatedAuthor.lastName
-        }
+    override fun updateAuthor(updatedAuthor: Author): Author {
+        val author = getAuthorById(updatedAuthor.id!!).copy(
+            firstName = updatedAuthor.firstName,
+            lastName = updatedAuthor.lastName
+        )
         return authorRepository.save(author)
     }
 

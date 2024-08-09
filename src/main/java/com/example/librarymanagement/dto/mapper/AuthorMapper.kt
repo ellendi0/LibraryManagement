@@ -6,18 +6,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthorMapper {
-    fun toAuthor(authorDto: AuthorDto): Author {
-        return Author(
-            firstName = authorDto.firstName,
-            lastName = authorDto.lastName,
-        )
+    fun toAuthor(authorDto: AuthorDto, id: Long? = null): Author {
+        return Author(id = id, firstName = authorDto.firstName, lastName = authorDto.lastName)
     }
 
-    fun toAuthorDto(author: Author): AuthorDto {
-        return AuthorDto(author.id, author.firstName, author.lastName)
-    }
+    fun toAuthorDto(author: Author): AuthorDto = AuthorDto(author.id!!, author.firstName, author.lastName)
 
-    fun toAuthorDto(authors: List<Author>): List<AuthorDto> {
-        return authors.map { toAuthorDto(it) }
-    }
+    fun toAuthorDto(authors: List<Author>): List<AuthorDto> = authors.map { toAuthorDto(it) }
 }

@@ -1,6 +1,6 @@
 package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.data.AuthorDataFactory
 import com.example.librarymanagement.repository.AuthorRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -12,41 +12,67 @@ import java.util.*
 class AuthorServiceImplTest {
     private val authorRepository: AuthorRepository = mockk()
     private val authorService = AuthorServiceImpl(authorRepository)
-    private val author = TestDataFactory.createAuthor()
+    private val author = AuthorDataFactory.createAuthor()
 
     @Test
     fun shouldFindAll(){
+        //GIVEN
+        val expected = listOf(author)
+
         every { authorRepository.findAll() } returns(listOf(author))
 
-        Assertions.assertEquals(listOf(author), authorService.getAllAuthors())
+        //WHEN
+        val actual = authorService.getAllAuthors()
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1){ authorRepository.findAll() }
     }
 
     @Test
     fun shouldFindById(){
+        //GIVEN
+        val expected = author
+
         every { authorRepository.findById(1) } returns Optional.of(author)
 
-        Assertions.assertEquals(author, authorService.getAuthorById(1))
+        //WHEN
+        val actual = authorService.getAuthorById(1)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1){ authorRepository.findById(1) }
     }
 
     @Test
     fun shouldCreateAuthor(){
+        //GIVEN
+        val expected = author
+
         every { authorRepository.save(author) } returns author
 
-        Assertions.assertEquals(author, authorService.createAuthor(author))
+        //WHEN
+        val actual = authorService.createAuthor(author)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1){ authorRepository.save(author) }
     }
 
     @Test
     fun shouldUpdateAuthor(){
-        val updatedAuthor = author.copy(firstName = "Updated")
+        //GIVEN
+        val expected = author.copy(firstName = "Updated")
+
         every { authorRepository.findById(1) } returns Optional.of(author)
-        every { authorRepository.save(updatedAuthor) } returns updatedAuthor
+        every { authorRepository.save(expected) } returns expected
 
-        Assertions.assertEquals(updatedAuthor, authorService.updateAuthor(1, updatedAuthor))
+        //WHEN
+        val actual = authorService.updateAuthor(expected)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1){ authorRepository.findById(1) }
-        verify(exactly = 1){ authorRepository.save(updatedAuthor) }
+        verify(exactly = 1){ authorRepository.save(expected) }
     }
-
 }

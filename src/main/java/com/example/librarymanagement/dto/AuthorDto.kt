@@ -4,16 +4,20 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
+const val regex = "[A-Z][a-z]+"
+
 data class AuthorDto(
-    val id: Long? = null,
+    val id: Long,
 
     @field:Size(max = 50, message = "First name must contain no more than 50 characters")
-    @field:Pattern(regexp = "[A-Z][a-z]+", message = "First name must start with a capital letter followed by one or more lowercase letters")
+    @field:Pattern(regexp = regex,
+        message = "First name must start with a capital letter followed by one or more lowercase letters")
     @field:NotBlank(message = "First name can't be empty")
     val firstName: String,
 
     @field:Size(max = 50, message = "Last name must contain no more than 50 characters")
-    @field:Pattern(regexp = "[A-Z][a-z]+", message = "Last name must start with a capital letter followed by one or more lowercase letters")
+    @field:Pattern(regexp = regex,
+        message = "Last name must start with a capital letter followed by one or more lowercase letters")
     @field:NotBlank(message = "Last name can't be empty")
-    val lastName: String
+    var lastName: String
 )
