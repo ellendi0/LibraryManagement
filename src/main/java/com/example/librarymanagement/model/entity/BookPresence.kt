@@ -27,16 +27,16 @@ data class BookPresence (
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    var book: Book,
+    val book: Book,
 
     @ManyToOne
     @JoinColumn(name = "library_id", nullable = false)
-    var library: Library,
+    val library: Library,
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     var user: User ?= null,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "bookPresence")
-    var journals: MutableList<Journal> = mutableListOf()
+    val journals: MutableList<Journal> = mutableListOf()
 )

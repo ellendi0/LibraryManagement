@@ -19,6 +19,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import java.util.*
 
 class BookPresenceImplTest {
@@ -41,11 +42,10 @@ class BookPresenceImplTest {
     private lateinit var journal: Journal
     private lateinit var library: Library
     private lateinit var reservation: Reservation
-    private lateinit var reservationWithUser: Reservation
 
     @BeforeEach
     fun setUp() {
-        var test = TestDataFactory.createTestDataRelForServices()
+        val test = TestDataFactory.createTestDataRelForServices()
         book = test.book
         user = test.user
         library = test.library
@@ -56,25 +56,42 @@ class BookPresenceImplTest {
 
     @Test
     fun shouldCreateBookPresence() {
+        //GIVEN
+        val expected = bookPresence
+
         every { bookPresenceRepository.save(bookPresence) } returns bookPresence
 
-        Assertions.assertEquals(bookPresence, bookPresenceService.createBookPresence(bookPresence))
+        //WHEN
+        val actual = bookPresenceService.createBookPresence(bookPresence)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { bookPresenceRepository.save(bookPresence) }
     }
 
     @Test
     fun shouldUpdateBookPresence() {
-        val updatedBookPresence = bookPresence.copy(availability = Availability.AVAILABLE)
-        every { bookPresenceRepository.findById(1) } returns Optional.of(bookPresence)
-        every { bookPresenceRepository.save(updatedBookPresence) } returns updatedBookPresence
+        //GIVEN
+        val expected = bookPresence.copy(availability = Availability.AVAILABLE)
 
-        Assertions.assertEquals(updatedBookPresence, bookPresenceService.updateBookPresence(1, updatedBookPresence))
+        every { bookPresenceRepository.findById(1) } returns Optional.of(bookPresence)
+        every { bookPresenceRepository.save(expected) } returns expected
+
+        //WHEN
+        val actual = bookPresenceService.updateBookPresence(1, expected)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { bookPresenceRepository.findById(1) }
-        verify(exactly = 1) { bookPresenceRepository.save(updatedBookPresence) }
+        verify(exactly = 1) { bookPresenceRepository.save(expected) }
     }
 
     @Test
-    fun shouldAddUserToBook() {
+    fun shouldAddUserToBookWithReservation() {
+        //GIVEN
+        val reservationTest = reservation.copy(user = user)
+        val expected = bookPresence
+
         every {
             bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
                 library.id!!,
@@ -83,10 +100,18 @@ class BookPresenceImplTest {
             )
         }
             .returns(listOf(bookPresence))
+
+        every { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id)}
+            .returns (reservationTest)
+        every { reservationRepository.delete(reservationTest) } returns Unit
         every { bookPresenceRepository.save(any()) } returns bookPresence
         every { journalService.createJournal(any()) } returns journal
 
-        Assertions.assertEquals(bookPresence, bookPresenceService.addUserToBook(user, library.id!!, book.id!!))
+        //WHEN
+        val actual = bookPresenceService.addUserToBook(user, library.id!!, book.id!!)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) {
             bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
                 library.id!!,
@@ -99,68 +124,201 @@ class BookPresenceImplTest {
     }
 
     @Test
+    fun shouldAddUserToBookWithoutReservation() {
+        //GIVEN
+        val expected = bookPresence
+
+        every {
+            bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
+                library.id!!,
+                book.id!!,
+                Availability.AVAILABLE
+            )
+        }
+            .returns(listOf(bookPresence))
+
+        every { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id)}
+            .returns (null)
+        every { bookPresenceRepository.save(any()) } returns bookPresence
+        every { journalService.createJournal(any()) } returns journal
+
+        //WHEN
+        val actual = bookPresenceService.addUserToBook(user, library.id!!, book.id!!)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+        verify(exactly = 1) {
+            bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
+                library.id!!,
+                book.id!!,
+                Availability.AVAILABLE
+            )
+        }
+        verify(exactly = 1) { bookPresenceRepository.save(any()) }
+        verify(exactly = 1) { journalService.createJournal(any()) }
+    }
+
+    @Test
+    fun shouldAddBookToLibrary(){
+        //GIVEN
+        val bookWithout = book.copy(bookPresence = mutableListOf(), reservations = mutableListOf())
+        val libraryTest = library.copy(bookPresence = mutableListOf())
+        val expected = BookPresence(book = bookWithout, library = libraryTest)
+
+        every { bookRepository.findByIdOrNull(bookWithout.id!!) } returns bookWithout
+        every { libraryRepository.findByIdOrNull(libraryTest.id!!) } returns libraryTest
+        every { bookPresenceRepository.save(expected) } returns expected
+
+        //WHEN
+        val actual = bookPresenceService.addBookToLibrary(libraryTest.id!!, bookWithout.id!!)
+
+        Assertions.assertEquals(expected, actual)
+        verify(exactly = 1) { bookRepository.findByIdOrNull(bookWithout.id!!) }
+        verify(exactly = 1) { libraryRepository.findByIdOrNull(library.id!!) }
+    }
+
+    @Test
+    fun shouldRemoveUserFromBookWithReservation(){
+        //GIVEN
+        val reservationTest = reservation.copy(user = user)
+        val journalTest = journal.copy(bookPresence = bookPresence)
+        val expected = bookPresence
+
+        every { bookPresenceRepository
+            .findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
+            .returns(listOf(bookPresence))
+        every { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
+            .returns(journalTest)
+        every { journalService.updateJournal(journal.id!!, journalTest) } returns journalTest
+        every { bookPresenceRepository.save(bookPresence) } returns bookPresence
+        every { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id!!) }
+            .returns(reservationTest)
+        every { bookPresenceRepository
+            .findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.AVAILABLE) }
+            .returns(listOf(bookPresence))
+        every { journalService.createJournal(any()) } returns journal
+        every { reservationRepository.delete(reservationTest) } returns Unit
+        every { bookPresenceRepository.findById(bookPresence.id!!) } returns Optional.of(bookPresence)
+
+        //WHEN
+        val actual = bookPresenceService.removeUserFromBook(user, library.id!!, book.id!!)
+
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
     fun shouldRemoveUserFromBookWithoutReservation() {
-        every { bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
+        //GIVEN
+        val expected = bookPresence
+
+        every { bookPresenceRepository
+            .findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
             .returns(listOf(bookPresence))
         every { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
             .returns(journal)
-        every { journalService.createJournal(journal) } returns journal
+        every { journalService.updateJournal(journal.id!!, journal) } returns journal
         every { bookPresenceRepository.save(bookPresence) } returns bookPresence
-        every { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id!!) }
-            .returns(null)
         every { bookPresenceRepository.findById(bookPresence.id!!) } returns Optional.of(bookPresence)
 
-        Assertions.assertEquals(bookPresence, bookPresenceService.removeUserFromBook(user, library.id!!, book.id!!))
+        //WHEN
+        val actual = bookPresenceService.removeUserFromBook(user, library.id!!, book.id!!)
 
-        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
-        verify(exactly = 1) { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
-        verify(exactly = 1) { journalService.createJournal(journal) }
+        //THEN
+        Assertions.assertEquals(expected, actual)
+
+        verify(exactly = 1) { bookPresenceRepository
+            .findAllByLibraryIdAndBookIdAndAvailability(library.id!!, book.id!!, Availability.UNAVAILABLE) }
+        verify(exactly = 1) { journalService
+            .findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresence.id!!, user.id!!) }
         verify(exactly = 2) { bookPresenceRepository.save(bookPresence) }
-        verify(exactly = 1) { reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(book.id!!, library.id!!) }
         verify(exactly = 1) { bookPresenceRepository.findById(bookPresence.id!!) }
     }
 
     @Test
     fun shouldGetBookPresenceByLibraryId(){
+        //GIVEN
+        val excepted = listOf(bookPresence)
+
         every { bookPresenceRepository.findAllByLibraryId(library.id!!) } returns listOf(bookPresence)
 
-        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getByLibraryId(library.id!!))
+        //WHEN
+        val actual = bookPresenceService.getByLibraryId(library.id!!)
+
+        //THEN
+        Assertions.assertEquals(excepted, actual)
         verify(exactly = 1) { bookPresenceRepository.findAllByLibraryId(library.id!!) }
     }
 
     @Test
     fun shouldGetBookPresenceByBookId(){
+        //GIVEN
+        val excepted = listOf(bookPresence)
+
         every { bookPresenceRepository.findAllByBookId(book.id!!) } returns listOf(bookPresence)
 
-        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getByBookId(book.id!!))
+        //WHEN
+        val actual = bookPresenceService.getByBookId(book.id!!)
+
+        Assertions.assertEquals(excepted, actual)
         verify(exactly = 1) { bookPresenceRepository.findAllByBookId(book.id!!) }
     }
 
     @Test
     fun shouldGetBookPresenceByLibraryIdAndBookId() {
+        //GIVEN
+        val expected = listOf(bookPresence)
+
         every { bookPresenceRepository.findAllByLibraryIdAndBookId(library.id!!, book.id!!) } returns listOf(
             bookPresence
         )
 
-        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getAllBookByLibraryIdAndBookId(library.id!!, book.id!!))
+        //WHEN
+        val actual = bookPresenceService.getAllBookByLibraryIdAndBookId(library.id!!, book.id!!)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndBookId(library.id!!, book.id!!) }
     }
 
     @Test
     fun shouldGetBookPresenceByLibraryIdAndAvailability() {
-        every { bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE) } returns listOf(
-            bookPresence
-        )
+        //GIVEN
+        val expected = listOf(bookPresence)
 
-        Assertions.assertEquals(listOf(bookPresence), bookPresenceService.getAllBookByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE))
-        verify(exactly = 1) { bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE) }
+        every { bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE) }
+            .returns( listOf(bookPresence))
+
+        //WHEN
+        val actual = bookPresenceService.getAllBookByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+        verify(exactly = 1) {
+            bookPresenceRepository.findAllByLibraryIdAndAvailability(library.id!!, Availability.AVAILABLE)
+        }
     }
 
     @Test
     fun shouldDeleteBookPresenceByIdAndLibraryId() {
+        //GIVEN
         every { bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(book.id!!, library.id!!) } returns Unit
 
+        //WHEN
         bookPresenceService.deleteBookPresenceByIdAndLibraryId(library.id!!, book.id!!)
+
+        //THEN
         verify(exactly = 1) { bookPresenceRepository.deleteBookPresenceByIdAndLibraryId(book.id!!, library.id!!) }
+    }
+
+    @Test
+    fun shouldDeleteBookPresenceById() {
+        //GIVEN
+        every { bookPresenceRepository.deleteById(bookPresence.id!!) } returns Unit
+
+        //WHEN
+        bookPresenceService.deleteBookPresenceById(bookPresence.id!!)
+
+        //THEN
+        verify(exactly = 1) { bookPresenceRepository.deleteById(bookPresence.id!!) }
     }
 }

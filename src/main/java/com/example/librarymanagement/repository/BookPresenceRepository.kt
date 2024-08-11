@@ -13,7 +13,6 @@ interface BookPresenceRepository : JpaRepository<BookPresence, Long> {
     fun findAllByLibraryId(libraryId: Long): List<BookPresence>
     fun findAllByUserId(userId: Long): List<BookPresence>
     fun findAllByLibraryIdAndBookId(libraryId: Long, bookId: Long): List<BookPresence>
-    fun findAllByLibraryIdAndBookIdAndUser(libraryId: Long, bookId: Long, user: User): Optional<BookPresence>
     fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long, bookId: Long, availability: Availability): List<BookPresence>
     fun findAllByLibraryIdAndAvailability(libraryId: Long, availability: Availability): List<BookPresence>
     fun deleteBookPresenceByIdAndLibraryId(bookId: Long, libraryId: Long)

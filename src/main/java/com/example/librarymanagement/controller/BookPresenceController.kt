@@ -38,8 +38,10 @@ class BookPresenceController (
 
     @GetMapping("/{libraryId}/book/{bookId}/presence")
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooksByLibraryIdAndBookId(@PathVariable libraryId: Long, @PathVariable bookId: Long): List<BookPresenceDto> {
-        return bookPresenceMapper.toBookPresenceDto(bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId))
+    fun getAllBooksByLibraryIdAndBookId(@PathVariable libraryId: Long,
+                                        @PathVariable bookId: Long): List<BookPresenceDto> {
+        return bookPresenceMapper
+            .toBookPresenceDto(bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId))
     }
 
     @DeleteMapping("/presence/{presenceId}")
