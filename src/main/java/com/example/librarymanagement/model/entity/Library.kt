@@ -16,11 +16,11 @@ data class Library (
     val id: Long ?= null,
 
     @Column(nullable = false)
-    var name: String,
+    val name: String,
 
     @Column(nullable = false)
-    var address: String,
+    val address: String,
 
     @OneToMany(mappedBy = "library")
-    var bookPresence: MutableList<BookPresence> = mutableListOf()
+    val bookPresence: MutableList<BookPresence> = mutableListOf()
 )

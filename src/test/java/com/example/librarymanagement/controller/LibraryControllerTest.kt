@@ -1,7 +1,7 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory
-import com.example.librarymanagement.dto.ErrorDto
+import com.example.librarymanagement.data.ErrorDataFactory
+import com.example.librarymanagement.data.LibraryDataFactory
 import com.example.librarymanagement.dto.mapper.ErrorMapper
 import com.example.librarymanagement.dto.mapper.LibraryMapper
 import com.example.librarymanagement.exception.GlobalExceptionHandler
@@ -13,7 +13,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -32,9 +31,9 @@ class LibraryControllerTest {
     private lateinit var globalExceptionHandler: GlobalExceptionHandler
     private val objectMapper: ObjectMapper = ObjectMapper()
 
-    private var library = TestDataFactory.createLibrary()
+    private var library = LibraryDataFactory.createLibrary()
     private var libraryDto = LibraryMapper().toLibraryDto(library)
-    private var errorDto = ErrorDto(HttpStatus.BAD_REQUEST.value(), listOf("Invalid"))
+    private var errorDtoBadRequest = ErrorDataFactory.createBadRequestError()
 
     @BeforeEach
     fun setUp() {
@@ -49,64 +48,97 @@ class LibraryControllerTest {
 
     @Test
     fun shouldCreateLibrary() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(libraryDto)
 
         every { libraryService.createLibrary(any()) } returns library
         every { libraryMapper.toLibraryDto(any<Library>()) } returns libraryDto
 
-        val result = mockMvc.perform(post("/api/v1/library")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/library")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(libraryDto)))
             .andExpect(status().isCreated())
             .andReturn().response.contentAsString;
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateLibraryWithInvalidData() {
-        every { libraryService.createLibrary(any()) } throws (IllegalArgumentException("Invalid"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
+        //GIVEN
+        val content = objectMapper.writeValueAsString(libraryDto.copy(name = ""))
+        val expected = objectMapper.writeValueAsString(errorDtoBadRequest)
 
-        mockMvc.perform(post("/api/v1/library")
+        every { libraryService.createLibrary(any()) } throws (IllegalArgumentException("Invalid"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDtoBadRequest
+
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/library")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(libraryDto)))
+            .content(content))
             .andExpect(status().isBadRequest())
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldUpdateLibrary() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(libraryDto)
+        val content = objectMapper.writeValueAsString(libraryDto)
 
-        every { libraryService.updateLibrary(any(), any()) } returns library
+        every { libraryService.updateLibrary(any()) } returns library
         every { libraryMapper.toLibraryDto(any<Library>()) } returns libraryDto
 
-        val result = mockMvc.perform(put("/api/v1/library/{id}", 1L)
+        //WHEN
+        val actual = mockMvc.perform(put("/api/v1/library/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(libraryDto)))
+            .content(content))
             .andExpect(status().isOk())
             .andReturn().response.contentAsString;
 
-        Assertions.assertEquals(expected, result)
+        //GIVEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotUpdateLibraryWithInvalidData() {
-        every { libraryService.updateLibrary(any(), any()) } throws (IllegalArgumentException("Invalid"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
+        //GIVEN
+        val content = objectMapper.writeValueAsString(libraryDto.copy(name = ""))
+        val expected = objectMapper.writeValueAsString(errorDtoBadRequest)
 
-        mockMvc.perform(put("/api/v1/library/{id}", 1L)
+        every { libraryService.updateLibrary(any()) } throws (IllegalArgumentException("Invalid"))
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDtoBadRequest
+
+        //WHEN
+        val actual = mockMvc.perform(put("/api/v1/library/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(libraryDto)))
+            .content(content))
             .andExpect(status().isBadRequest())
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldDeleteLibrary() {
+        //GIVEN
+        val expected = 204
+
         every { libraryService.deleteLibrary(any()) } returns Unit
         every { libraryMapper.toLibraryDto(any<Library>()) } returns libraryDto
 
-        mockMvc.perform(delete("/api/v1/library/{id}", 1L))
+        //WHEN
+        val actual = mockMvc.perform(delete("/api/v1/library/{id}", 1L))
             .andExpect(status().isNoContent())
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 }

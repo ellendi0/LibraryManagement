@@ -26,15 +26,16 @@ class LibraryServiceImpl(
 
     override fun createLibrary(library: Library): Library = libraryRepository.save(library)
 
-    override fun updateLibrary(id: Long, updatedLibrary: Library): Library {
-        val library = getLibraryById(id).apply {
-            this.name = updatedLibrary.name
-            this.address = updatedLibrary.address
-        }
+    override fun updateLibrary(updatedLibrary: Library): Library {
+        val library = getLibraryById(updatedLibrary.id!!).copy(
+            name = updatedLibrary.name,
+            address = updatedLibrary.address
+        )
         return libraryRepository.save(library)
     }
 
-    override fun getAllBooksByLibraryIdAndAvailability(libraryId: Long, availability: Availability): List<BookPresence> {
+    override fun getAllBooksByLibraryIdAndAvailability(libraryId: Long,
+                                                       availability: Availability): List<BookPresence> {
         return bookPresenceService.getAllBookByLibraryIdAndAvailability(libraryId, availability)
     }
 

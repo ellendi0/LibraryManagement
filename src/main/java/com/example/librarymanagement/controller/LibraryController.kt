@@ -40,7 +40,7 @@ class LibraryController(
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     fun updateLibrary(@PathVariable id: Long, @RequestBody @Valid libraryDto: LibraryDto): LibraryDto {
-        return libraryMapper.toLibraryDto(libraryService.updateLibrary(id, libraryMapper.toLibrary(libraryDto)))
+        return libraryMapper.toLibraryDto(libraryService.updateLibrary(libraryMapper.toLibrary(libraryDto, id)))
     }
 
     @DeleteMapping("/{id}")
