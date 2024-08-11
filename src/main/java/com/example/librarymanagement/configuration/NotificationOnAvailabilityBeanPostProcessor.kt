@@ -39,13 +39,11 @@ class NotificationOnAvailabilityBeanPostProcessor(
                 val args = invocation.arguments
                 val result = invocation.proceed()
 
-                if (annotatedMethods.contains(method)) {
+                if (annotatedMethods.contains(method) && result != null) {
                     val bookId = args[2] as Long
                     val libraryId = args[1] as Long?
                     availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId)
                 }
-
-                result
             })
             return proxyFactory.proxy
         }
