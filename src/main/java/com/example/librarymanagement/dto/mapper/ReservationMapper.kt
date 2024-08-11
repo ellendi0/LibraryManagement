@@ -18,5 +18,7 @@ class ReservationMapper {
         )
     }
 
-    fun toReservationDto(reservations: List<Reservation>): List<ReservationDto> = reservations.map { toReservationDto(it) }
+    fun toReservationDto(reservations: List<Reservation>): List<ReservationDto> {
+        return reservations.map { toReservationDto(it) }
+    }
 }

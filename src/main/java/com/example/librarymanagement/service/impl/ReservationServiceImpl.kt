@@ -39,9 +39,8 @@ class ReservationServiceImpl(
         }
 
         val bookPresenceList = libraryId?.let {
-            bookPresenceService.getAllBookByLibraryIdAndBookId(it, bookId)
-                .ifEmpty { throw EntityNotFoundException("Presence of book") }
-        } ?: bookPresenceService.getByBookId(bookId).ifEmpty { throw EntityNotFoundException("Presence of book") }
+            bookPresenceService.getAllBookByLibraryIdAndAvailability(it, Availability.AVAILABLE)
+        } ?: bookPresenceService.getByBookId(bookId)
 
         val bookPresence = bookPresenceList.firstOrNull { it.availability == Availability.AVAILABLE }
 

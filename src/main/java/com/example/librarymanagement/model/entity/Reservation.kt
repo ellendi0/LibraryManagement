@@ -17,13 +17,13 @@ data class Reservation (
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User ?= null,
+    val user: User ?= null,
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    var book: Book ?= null,
+    val book: Book ?= null,
 
     @ManyToOne
     @JoinColumn(name = "library_id")
-    var library: Library ?= null,
+    val library: Library ?= null,
 )

@@ -28,31 +28,51 @@ class ReservationServiceImplTest {
 
     @Test
     fun shouldGetReservationByLibraryId() {
+        //GIVEN
+        val expected = listOf(reservation)
         every { reservationRepository.findAllByLibraryId(1) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), reservationService.getReservationsByLibraryId(1))
+        //WHEN
+        val actual = reservationService.getReservationsByLibraryId(1)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { reservationRepository.findAllByLibraryId(1) }
     }
 
     @Test
     fun shouldGetReservationByUserId() {
+        //GIVEN
+        val expected = listOf(reservation)
         every { reservationRepository.findAllByUserId(1) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), reservationService.getReservationsByUserId(1))
+        //WHEN
+        val actual = reservationService.getReservationsByUserId(1)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { reservationRepository.findAllByUserId(1) }
     }
 
     @Test
     fun shouldGetReservationByBookIdAndUser() {
+        //GIVEN
+        val expected = listOf(reservation)
         val user  = TestDataFactory.createTestDataRelForServices().user
         every { reservationRepository.findAllByBookIdAndUserId(1, 1) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), reservationService.getReservationsByBookIdAndUser(1, user))
+        //WHEN
+        val actual = reservationService.getReservationsByBookIdAndUser(1,user)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { reservationRepository.findAllByBookIdAndUserId(1, 1) }
     }
 
     @Test
     fun shouldBorrowIfBookIsAvailable() {
+        //GIVEN
+        val expected = listOf(reservation)
         val user = TestDataFactory.createTestDataRelForServices().user
         val bookPresence = TestDataFactory.createTestDataRelForServices().bookPresence
         val book = TestDataFactory.createTestDataRelForServices().book
@@ -64,11 +84,17 @@ class ReservationServiceImplTest {
         every { reservationRepository.save(reservation) } returns reservation
         every { reservationRepository.findAllByUserId(1) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), reservationService.reserveBook(user, 1, 1))
+        //WHEN
+        val actual = reservationService.reserveBook(user, 1, 1)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldReserveIfBookIsUnavailable() {
+        //GIVEN
+        val expected = listOf(reservation)
         val user = TestDataFactory.createTestDataRelForServices().user
         val book = TestDataFactory.createTestDataRelForServices().book
         val bookPresence = TestDataFactory.createTestDataRelForServices()
@@ -80,41 +106,54 @@ class ReservationServiceImplTest {
         every { reservationRepository.save(any()) } returns reservation
         every { reservationRepository.findAllByUserId(1) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), reservationService.reserveBook(user, 1, 1))
+        //WHEN
+        val actual = reservationService.reserveBook(user, 1, 1)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotReserveBook() {
+        //GIVEN
+        val expected = ExistingReservationException::class.java
         val user = TestDataFactory.createTestDataRelForServices().user
         val book = TestDataFactory.createTestDataRelForServices().book
 
         every { bookRepository.findById(1) } returns Optional.of(book)
         every { reservationRepository.existsByBookIdAndUser(1, user) } returns true
 
-        Assertions.assertThrows(ExistingReservationException::class.java) {
+        //THEN
+        Assertions.assertThrows(expected) {
             reservationService.reserveBook(user, 1, 1)
         }
     }
 
     @Test
     fun shouldRemoveReservation() {
+        //GIVEN
         every { reservationRepository
             .findAllByBookIdAndUserId(1, TestDataFactory.createTestDataRelForServices().user.id!!) }
             .returns(listOf(reservation))
         every { reservationRepository.deleteAll(listOf(reservation)) } returns Unit
 
+        //WHEN
         reservationService.removeReservation(TestDataFactory.createTestDataRelForServices().user, 1)
 
+        //THEN
         verify(exactly = 1) { reservationRepository.deleteAll(listOf(reservation)) }
     }
 
     @Test
     fun  shouldDeleteReservationById() {
+        //GIVEN
         every { reservationRepository.findById(1) } returns Optional.of(reservation)
         every { reservationRepository.delete(reservation) } returns Unit
 
+        //WHEN
         reservationService.deleteReservationById(1)
 
+        //THEN
         verify(exactly = 1) { reservationRepository.delete(reservation) }
     }
 }
