@@ -1,6 +1,6 @@
 package com.example.librarymanagement.dto
 
-class ErrorDto (
+data class ErrorDto (
     val status: Int,
     val messages: List<String>
 )
