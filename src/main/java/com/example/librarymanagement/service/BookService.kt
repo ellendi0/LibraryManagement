@@ -7,6 +7,6 @@ interface BookService {
     fun getBookById(id: Long): Book
     fun getBookByTitleAndAuthor(title: String, authorId: Long): Book
     fun createBook(authorId: Long, publisherId: Long, book: Book): Book
-    fun updateBook(id: Long, updatedBook: Book): Book
+    fun updateBook(updatedBook: Book): Book
     fun deleteBook(id: Long)
 }

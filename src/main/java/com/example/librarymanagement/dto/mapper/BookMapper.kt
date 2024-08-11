@@ -7,8 +7,9 @@ import org.springframework.stereotype.Component
 
 @Component
 class BookMapper {
-    fun toBook(bookRequestDto: BookRequestDto): Book {
+    fun toBook(bookRequestDto: BookRequestDto, id: Long? = null): Book {
         return Book(
+            id = id,
             title = bookRequestDto.title,
             isbn = bookRequestDto.isbn,
             publishedYear = bookRequestDto.publishedYear,

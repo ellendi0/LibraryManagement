@@ -38,13 +38,13 @@ class BookServiceImpl(
         return bookRepository.save(book)
     }
 
-    override fun updateBook(id: Long, updatedBook: Book): Book {
-        val book = getBookById(id).apply {
-            this.title = updatedBook.title
-            this.isbn = updatedBook.isbn
-            this.publishedYear = updatedBook.publishedYear
-            this.genre = updatedBook.genre
-        }
+    override fun updateBook(updatedBook: Book): Book {
+        val book = getBookById(updatedBook.id!!).copy(
+            title = updatedBook.title,
+            isbn = updatedBook.isbn,
+            publishedYear = updatedBook.publishedYear,
+            genre = updatedBook.genre
+        )
         return bookRepository.save(book)
     }
 

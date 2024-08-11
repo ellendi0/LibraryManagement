@@ -24,7 +24,7 @@ data class Book (
     val id: Long? = null,
 
     @Column(nullable = false)
-    var title: String,
+    val title: String,
 
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
@@ -35,18 +35,18 @@ data class Book (
     var publisher: Publisher ?= null,
 
     @Column(nullable = false)
-    var publishedYear: Int,
+    val publishedYear: Int,
 
     @Column(nullable = false)
-    var isbn: Long,
+    val isbn: Long,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var genre: Genre,
+    val genre: Genre,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
-    var bookPresence: MutableList<BookPresence> = mutableListOf(),
+    val bookPresence: MutableList<BookPresence> = mutableListOf(),
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
-    var reservations: MutableList<Reservation> = mutableListOf()
+    val reservations: MutableList<Reservation> = mutableListOf()
 )

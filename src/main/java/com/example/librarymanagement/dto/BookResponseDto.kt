@@ -2,7 +2,7 @@ package com.example.librarymanagement.dto
 
 import com.example.librarymanagement.model.enums.Genre
 
-class BookResponseDto (
+data class BookResponseDto (
     val id: Long,
     val title: String,
     val author: String,

@@ -32,13 +32,14 @@ class BookController(private val bookService: BookService, private val bookMappe
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createBook(@RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
-        return bookMapper.toBookDto(bookService.createBook(bookDto.authorId, bookDto.publisherId, bookMapper.toBook(bookDto)))
+        return bookMapper
+            .toBookDto(bookService.createBook(bookDto.authorId, bookDto.publisherId, bookMapper.toBook(bookDto)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     fun updateBook(@PathVariable id: Long, @RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
-        return bookMapper.toBookDto(bookService.updateBook(id, bookMapper.toBook(bookDto)))
+        return bookMapper.toBookDto(bookService.updateBook(bookMapper.toBook(bookDto, id)))
     }
 
     @DeleteMapping("/{id}")

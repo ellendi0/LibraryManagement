@@ -40,7 +40,7 @@ class BookServiceImplTest {
 
     @BeforeEach
     fun setUp() {
-        var test = TestDataFactory.createTestDataRelForServices()
+        val test = TestDataFactory.createTestDataRelForServices()
         book = test.book
         user = test.user
         library = test.library
@@ -50,51 +50,79 @@ class BookServiceImplTest {
 
     @Test
     fun shouldCreateBook() {
+        //GIVEN
+        val expected = book
+
         every { bookRepository.existsByIsbn(book.isbn) } returns false
         every { authorService.getAuthorById(1L) } returns book.author!!
         every { publisherService.getPublisherById(1L) } returns book.publisher!!
         every { bookRepository.save(book) } returns book
 
-        Assertions.assertEquals(book, bookService.createBook(1L, 1L, book))
+        //WHEN
+        val actual = bookService.createBook(1L, 1L, book)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify (exactly = 1) { bookRepository.save(book) }
     }
 
     @Test
     fun shouldGetBookById() {
+        //GIVEN
+        val expected = book
         every { bookRepository.findById(1L) } returns Optional.of(book)
 
-        Assertions.assertEquals(book, bookService.getBookById(1L))
+        //WHEN
+        val actual = bookService.getBookById(1L)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify (exactly = 1) { bookRepository.findById(1L) }
     }
 
     @Test
     fun shouldGetAllBooks() {
-        val books = listOf(book)
-        every { bookRepository.findAll() } returns books
+        //GIVEN
+        val expected = listOf(book)
+        every { bookRepository.findAll() } returns expected
 
-        Assertions.assertEquals(books, bookService.findAll())
+        //WHEN
+        val actual = bookService.findAll()
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify (exactly = 1) { bookRepository.findAll() }
     }
 
     @Test
     fun shouldUpdateBook() {
-        val updatedBook = book.copy(title = "Updated Book")
-        every { bookRepository.findById(1L) } returns Optional.of(book)
-        every { bookRepository.save(updatedBook) } returns updatedBook
+        //GIVEN
+        val expected = book.copy(title = "Updated Book")
 
-        Assertions.assertEquals(updatedBook, bookService.updateBook(1L, updatedBook))
+        every { bookRepository.findById(1L) } returns Optional.of(book)
+        every { bookRepository.save(expected) } returns expected
+
+        //WHEN
+        val actual = bookService.updateBook(expected)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify (exactly = 1) { bookRepository.findById(1L) }
-        verify (exactly = 1) { bookRepository.save(updatedBook) }
+        verify (exactly = 1) { bookRepository.save(expected) }
     }
 
     @Test
     fun shouldDeleteBook() {
+        //GIVEN
         every { bookRepository.findById(1L) } returns Optional.of(book)
         every { bookPresenceService.deleteBookPresenceById(1L) } returns Unit
         every { reservationService.deleteReservationById(1L) } returns Unit
         every { bookRepository.deleteById(1L) } returns Unit
 
+        //WHEN
         bookService.deleteBook(1L)
+
+        //THEN
         verify (exactly = 1) { bookRepository.findById(1L) }
         verify (exactly = 1) { bookPresenceService.deleteBookPresenceById(1L) }
         verify (exactly = 1) { reservationService.deleteReservationById(1L) }
