@@ -53,7 +53,7 @@ class UserServiceImplTest {
         every { userRepository.findById(1) } returns Optional.of(user)
         every { userRepository.save(updatedUser) } returns updatedUser
 
-        Assertions.assertEquals(updatedUser, userService.updateUser(1, updatedUser))
+        Assertions.assertEquals(updatedUser, userService.updateUser(updatedUser))
         verify(exactly = 1) { userRepository.findById(1) }
         verify(exactly = 1) { userRepository.save(updatedUser) }
     }
@@ -70,7 +70,8 @@ class UserServiceImplTest {
     fun shouldGetUserByPhoneNumberOrEmail() {
         every { userRepository.findByEmailOrPhoneNumber("email", "phoneNumber") } returns user
 
-        Assertions.assertEquals(user, userService.getUserByPhoneNumberOrEmail("email", "phoneNumber"))
+        Assertions.assertEquals(user,
+            userService.getUserByPhoneNumberOrEmail("email", "phoneNumber"))
         verify(exactly = 1) { userRepository.findByEmailOrPhoneNumber("email", "phoneNumber") }
     }
 
@@ -103,7 +104,8 @@ class UserServiceImplTest {
         every { userRepository.findById(1) } returns Optional.of(user)
         every { bookPresenceService.addUserToBook(user, library.id!!, bookPresence.id!!) } returns bookPresence
 
-        Assertions.assertEquals(listOf(journal), userService.borrowBookFromLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        Assertions.assertEquals(listOf(journal),
+            userService.borrowBookFromLibrary(user.id!!, library.id!!, bookPresence.id!!))
         verify(exactly = 1) { bookPresenceService.addUserToBook(user, library.id!!, bookPresence.id!!) }
     }
 
@@ -112,7 +114,8 @@ class UserServiceImplTest {
         every { userRepository.findById(1) } returns Optional.of(user)
         every { bookPresenceService.removeUserFromBook(user, library.id!!, bookPresence.id!!) } returns bookPresence
 
-        Assertions.assertEquals(listOf(journal), userService.returnBookToLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        Assertions.assertEquals(listOf(journal),
+            userService.returnBookToLibrary(user.id!!, library.id!!, bookPresence.id!!))
         verify(exactly = 1) { bookPresenceService.removeUserFromBook(user, library.id!!, bookPresence.id!!) }
     }
 
@@ -121,7 +124,8 @@ class UserServiceImplTest {
         every { userRepository.findById(1) } returns Optional.of(user)
         every { reservationService.reserveBook(user, library.id!!, bookPresence.id!!) } returns listOf(reservation)
 
-        Assertions.assertEquals(listOf(reservation), userService.reserveBookInLibrary(user.id!!, library.id!!, bookPresence.id!!))
+        Assertions.assertEquals(listOf(reservation),
+            userService.reserveBookInLibrary(user.id!!, library.id!!, bookPresence.id!!))
         verify(exactly = 1) { reservationService.reserveBook(user, library.id!!, bookPresence.id!!) }
     }
 

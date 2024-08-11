@@ -1,18 +1,13 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.data.ErrorDataFactory
 import com.example.librarymanagement.data.TestDataFactory.TestDataRel
 import com.example.librarymanagement.data.TestDataFactory.createTestDataRelForController
-import com.example.librarymanagement.dto.JournalDto
-import com.example.librarymanagement.dto.ReservationDto
-import com.example.librarymanagement.dto.UserRequestDto
-import com.example.librarymanagement.dto.UserResponseDto
+import com.example.librarymanagement.data.UserDataFactory
 import com.example.librarymanagement.dto.mapper.ErrorMapper
 import com.example.librarymanagement.dto.mapper.JournalMapper
 import com.example.librarymanagement.dto.mapper.ReservationMapper
 import com.example.librarymanagement.dto.mapper.UserMapper
-import com.example.librarymanagement.exception.DuplicateKeyException
-import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.exception.GlobalExceptionHandler
 import com.example.librarymanagement.model.entity.Journal
 import com.example.librarymanagement.model.entity.Reservation
@@ -25,7 +20,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -50,14 +44,12 @@ class UserControllerTest {
     private var user = testData.user
     private var reservation = testData.reservation
     private var journal = testData.journal
-    private lateinit var userRequestDto: UserRequestDto
-    private lateinit var userResponseDto: UserResponseDto
-    private lateinit var reservationDto: ReservationDto
-    private lateinit var journalDto: JournalDto
+    private var userRequestDto = UserDataFactory.createUserRequestDto()
+    private var userResponseDto = UserMapper().toUserResponseDto(user)
+    private var reservationDto = ReservationMapper().toReservationDto(reservation)
+    private var journalDto = JournalMapper().toJournalDto(journal)
 
-    private var errorDto1 = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
-    private var errorDto2 = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "User")
-    private var errorDto3 = ErrorMapper().toErrorDto(HttpStatus.CONFLICT, listOf("User", "email"))
+    private var errorBadRequest = ErrorDataFactory.createBadRequestError()
 
     @BeforeEach
     fun setUp() {
@@ -70,11 +62,6 @@ class UserControllerTest {
         globalExceptionHandler = GlobalExceptionHandler(errorMapper)
         userController = UserController(userService, userMapper, journalMapper, reservationMapper)
 
-        userRequestDto = TestDataFactory.createUserRequestDto()
-        userResponseDto = UserMapper().toUserResponseDto(user)
-        reservationDto = ReservationMapper().toReservationDto(reservation)
-        journalDto = JournalMapper().toJournalDto(journal)
-
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
             .setControllerAdvice(globalExceptionHandler)
             .build()
@@ -82,463 +69,396 @@ class UserControllerTest {
 
     @Test
     fun shouldCreateUser() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(userResponseDto)
+        val content = objectMapper.writeValueAsString(userRequestDto)
 
         every { userService.createUser(any()) } returns user
         every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
 
-        val result = mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(content))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithInvalidEmail() {
-        val userRequestNew = userRequestDto.copy(email = "first")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(email = "first"))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithInvalidFirstName() {
-        val userRequestNew = userRequestDto.copy(firstName = "first")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(firstName = "first"))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual =  mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithInvalidLastName() {
-        val userRequestNew = userRequestDto.copy(lastName = "first")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(lastName = "first"))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithInvalidPassword() {
-        val userRequestNew = userRequestDto.copy(password = "first")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(password = "first"))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithInvalidPhone() {
-        val userRequestNew = userRequestDto.copy(phoneNumber = "first")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(phoneNumber = "123456789"))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithEmptyEmail() {
-        val userRequestNew = userRequestDto.copy(email = "")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(email = ""))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithEmptyFirstName() {
-        val userRequestNew = userRequestDto.copy(firstName = "")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(firstName = ""))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithEmptyLastName() {
-        val userRequestNew = userRequestDto.copy(lastName = "")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(lastName = ""))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithEmptyPassword() {
-        val userRequestNew = userRequestDto.copy(password = "")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(password = ""))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateWithEmptyPhone() {
-        val userRequestNew = userRequestDto.copy(phoneNumber = "")
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto.copy(phoneNumber = ""))
+        val expected = objectMapper.writeValueAsString(errorBadRequest)
 
         every { userService.createUser(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorBadRequest
 
-        mockMvc.perform(post("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestNew)))
+            .content(content))
             .andExpect(status().isBadRequest)
-    }
+            .andReturn().response.contentAsString
 
-    @Test
-    fun shouldNotCreateWithDuplicateEmail() {
-        every { userService.createUser(any()) } throws DuplicateKeyException("User", "email")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
-
-        mockMvc.perform(post("/api/v1/user")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isConflict)
-    }
-
-    @Test
-    fun shouldNotCreateWithDuplicatePhone() {
-        every { userService.createUser(any()) } throws DuplicateKeyException("User", "phone")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
-
-        mockMvc.perform(post("/api/v1/user")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isConflict)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldUpdateUser() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(userResponseDto)
+        val content = objectMapper.writeValueAsString(userRequestDto)
 
-        every { userService.updateUser(any(), any()) } returns user
+        every { userService.updateUser(any()) } returns user
         every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
 
-        val result = mockMvc.perform(put("/api/v1/user/{id}", 1L)
+        //WHEN
+        val actual = mockMvc.perform(put("/api/v1/user/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(content))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotUpdateWithDuplicateEmail() {
-        every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "email")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isConflict)
-    }
-
-    @Test
-    fun shouldNotUpdateWithDuplicatePhone() {
-        every { userService.updateUser(any(), any()) } throws DuplicateKeyException("User", "phone")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto3
-
-        mockMvc.perform(put("/api/v1/user/{id}", 1L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isConflict)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetUserById() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(userResponseDto)
+        val content = objectMapper.writeValueAsString(userRequestDto)
 
         every { userService.getUserById(any()) } returns user
         every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
 
-        val result = mockMvc.perform(put("/api/v1/user/{id}", 1L)
+        //WHEN
+        val actual = mockMvc.perform(put("/api/v1/user/{id}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(content))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetNotExistingUserById() {
-        every { userService.getUserById(any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
-
-        mockMvc.perform(get("/api/v1/user/{id}", 0L)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isNotFound)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetReservationsByUserId() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(reservationDto))
+        val content = objectMapper.writeValueAsString(userRequestDto)
 
         every { userService.findReservationsByUser(any()) } returns listOf(reservation)
         every { reservationMapper.toReservationDto(any<List<Reservation>>()) } returns listOf(reservationDto)
 
-        val result = mockMvc.perform(get("/api/v1/user/{id}/reservations", 1L)
+        val actual = mockMvc.perform(get("/api/v1/user/{id}/reservations", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(content))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetReservationsByUserId() {
-        every { userService.findReservationsByUser(any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/user/{id}/reservations", 0L)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isNotFound)
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetJournalsByUserId() {
+        //GIVEN
+        val content = objectMapper.writeValueAsString(userRequestDto)
         val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
         every { userService.findJournalsByUser(any()) } returns listOf(journal)
         every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        val result = mockMvc.perform(get("/api/v1/user/{id}/journals", 1L)
+        //WHEN
+        val actual = mockMvc.perform(get("/api/v1/user/{id}/journals", 1L)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
+            .content(content))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetJournalsByUserId() {
-        every { userService.findJournalsByUser(any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/user/{id}/journals", 0L)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isNotFound)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetUserByPhoneNumberOrEmail() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(userResponseDto)
 
         every { userService.getUserByPhoneNumberOrEmail(any(), any()) } returns user
         every { userMapper.toUserResponseDto(any<User>()) } returns userResponseDto
 
-        val result = mockMvc.perform(get("/api/v1/user")
+        //WHEN
+        val actual = mockMvc.perform(get("/api/v1/user")
             .param("phoneNumber", "1234567890")
             .param("email", "first@example.com")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetUserByPhoneNumberOrEmailWithInvalidData() {
-        every { userService.getUserByPhoneNumberOrEmail(any(), any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto1
-
-        mockMvc.perform(get("/api/v1/user")
-            .param("phoneNumber", "123456789")
-            .param("email", "first")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequestDto)))
-            .andExpect(status().isBadRequest)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldBorrowBookFromLibrary(){
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
         every { userService.borrowBookFromLibrary(any(), any(), any()) } returns listOf(journal)
         every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        val result = mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
             .param("libraryId", "1")
             .param("bookId", "1")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotBorrowBookFromLibraryWithNonExistingUser(){
-        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/borrowings", 0L)
-            .param("libraryId", "1")
-            .param("bookId", "1")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
-    }
-
-    @Test
-    fun shouldNotBorrowBookFromLibraryWithNonExistingLibrary(){
-        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("Library")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
-            .param("libraryId", "0")
-            .param("bookId", "1")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
-    }
-
-    @Test
-    fun shouldNotBorrowBookFromLibraryWithNonExistingBook(){
-        every { userService.borrowBookFromLibrary(any(), any(), any()) } throws EntityNotFoundException("Book")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/borrowings", 1L)
-            .param("libraryId", "1")
-            .param("bookId", "0")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldReturnBookToLibrary(){
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(journalDto))
 
         every { userService.returnBookToLibrary(any(), any(), any()) } returns listOf(journal)
         every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
 
-        val result = mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 1L)
+        //WHEN
+        val actual = mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 1L)
             .param("libraryId", "1")
             .param("bookId", "1")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotReturnBookToLibraryWithNonExistingUser(){
-        every { userService.returnBookToLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(delete("/api/v1/user/{id}/borrowings", 0L)
-            .param("libraryId", "1")
-            .param("bookId", "1")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldReserveBookInLibrary(){
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(reservationDto))
 
         every { userService.reserveBookInLibrary(any(), any(), any()) } returns listOf(reservation)
         every { reservationMapper.toReservationDto(any<List<Reservation>>()) } returns listOf(reservationDto)
 
-        val result = mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
+        //WHEN
+        val actual = mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
             .param("libraryId", "1")
             .param("bookId", "1")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotReserveBookInLibraryWithNonExistingUser(){
-        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("User")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/reservations", 0L)
-            .param("libraryId", "1")
-            .param("bookId", "1")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
-    }
-
-    @Test
-    fun shouldNotReserveBookInLibraryWithNonExistingLibrary(){
-        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("Library")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
-            .param("libraryId", "0")
-            .param("bookId", "1")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
-    }
-
-    @Test
-    fun shouldNotReserveBookInLibraryWithNonExistingBook(){
-        every { userService.reserveBookInLibrary(any(), any(), any()) } throws EntityNotFoundException("Book")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/user/{id}/reservations", 1L)
-            .param("libraryId", "1")
-            .param("bookId", "0")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldCancelReservation(){
+        //GIVEN
+        val expected = 204
+
         every { userService.cancelReservationInLibrary(any(), any()) } returns Unit
 
-        mockMvc.perform(delete("/api/v1/user/{id}/reservations", 1L)
+        //WHEN
+        val actual = mockMvc.perform(delete("/api/v1/user/{id}/reservations", 1L)
             .param("id", "1")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent)
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 }

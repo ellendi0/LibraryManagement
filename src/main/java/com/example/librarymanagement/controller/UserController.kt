@@ -35,21 +35,21 @@ class UserController(
 
     @GetMapping(params = ["email", "phoneNumber"])
     @ResponseStatus(HttpStatus.OK)
-    fun getUserByPhoneNumberOrEmail(@RequestParam(name = "email", required = false) email: String, 
-                                    @RequestParam(name = "phoneNumber", required = false) phoneNumber: String): UserResponseDto {
+    fun getUserByPhoneNumberOrEmail(@RequestParam(required = false) email: String,
+                                    @RequestParam(required = false) phoneNumber: String): UserResponseDto {
         return userMapper.toUserResponseDto(userService.getUserByPhoneNumberOrEmail(email, phoneNumber))
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createUser(@RequestBody user: @Valid UserRequestDto): UserResponseDto {
+    fun createUser(@RequestBody @Valid user: UserRequestDto): UserResponseDto {
         return userMapper.toUserResponseDto(userService.createUser(userMapper.toUser(user)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateUser(@PathVariable id: Long, @RequestBody userRequestDto: @Valid UserRequestDto): UserResponseDto {
-        return userMapper.toUserResponseDto(userService.updateUser(id, userMapper.toUser(userRequestDto)))
+    fun updateUser(@PathVariable id: Long, @RequestBody @Valid userRequestDto: UserRequestDto): UserResponseDto {
+        return userMapper.toUserResponseDto(userService.updateUser(userMapper.toUser(userRequestDto, id)))
     }
 
     @DeleteMapping("/{id}")

@@ -10,8 +10,9 @@ import org.springframework.stereotype.Component
 class UserMapper {
     private val salt = BCrypt.gensalt()
 
-    fun toUser(userRequestDto: UserRequestDto) : User {
+    fun toUser(userRequestDto: UserRequestDto, id: Long? = null) : User {
         return User(
+            id = id,
             firstName = userRequestDto.firstName,
             lastName = userRequestDto.lastName,
             email = userRequestDto.email,

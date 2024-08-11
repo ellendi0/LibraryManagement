@@ -8,7 +8,7 @@ interface UserService {
     fun getUserByPhoneNumberOrEmail(email: String?, phoneNumber: String?): User
     fun getUserById(id: Long): User
     fun createUser(user: User): User
-    fun updateUser(id: Long, updatedUser: User): User
+    fun updateUser(updatedUser: User): User
     fun findAll(): List<User>
     fun findReservationsByUser(userId: Long): List<Reservation>
     fun findJournalsByUser(userId: Long): List<Journal>

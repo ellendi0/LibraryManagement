@@ -36,15 +36,17 @@ class UserServiceImpl(
         return userRepository.save(user)
     }
 
-    override fun updateUser(id: Long, updatedUser: User): User {
+    override fun updateUser(updatedUser: User): User {
         if (userRepository.existsByEmail(updatedUser.email)) throw DuplicateKeyException("User", "email")
-        if (userRepository.existsByPhoneNumber(updatedUser.phoneNumber)) throw DuplicateKeyException("User", "phoneNumber")
-        val user = getUserById(id).apply {
-            this.email = updatedUser.email
-            this.phoneNumber = updatedUser.phoneNumber
-            this.firstName = updatedUser.firstName
-            this.lastName = updatedUser.lastName
-        }
+        if (userRepository.existsByPhoneNumber(updatedUser.phoneNumber))
+            throw DuplicateKeyException("User", "phoneNumber")
+
+        val user = getUserById(updatedUser.id!!).copy(
+            firstName = updatedUser.firstName,
+            lastName = updatedUser.lastName,
+            email = updatedUser.email,
+            phoneNumber = updatedUser.phoneNumber
+        )
         return userRepository.save(user)
     }
 
