@@ -11,8 +11,8 @@ class PublisherServiceImpl(private val publisherRepository: PublisherRepository)
 
     override fun createPublisher(publisher: Publisher): Publisher = publisherRepository.save(publisher)
 
-    override fun updatePublisher(id: Long, updatedPublisher: Publisher): Publisher {
-        val publisher = getPublisherById(id).apply { this.name = updatedPublisher.name }
+    override fun updatePublisher(updatedPublisher: Publisher): Publisher {
+        val publisher = getPublisherById(updatedPublisher.id!!).copy(name = updatedPublisher.name)
         return publisherRepository.save(publisher)
     }
 

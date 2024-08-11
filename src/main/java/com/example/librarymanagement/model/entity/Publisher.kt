@@ -17,8 +17,5 @@ data class Publisher (
     val id: Long ?= null,
 
     @Column(nullable = false)
-    var name: String,
-
-    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "publisher")
-    var books: MutableList<Book> = mutableListOf()
+    val name: String,
 )
