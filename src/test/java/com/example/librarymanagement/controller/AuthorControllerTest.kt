@@ -1,6 +1,7 @@
 package com.example.librarymanagement.controller
 
 import com.example.librarymanagement.data.AuthorDataFactory
+import com.example.librarymanagement.data.ErrorDataFactory
 import com.example.librarymanagement.dto.AuthorDto
 import com.example.librarymanagement.dto.mapper.AuthorMapper
 import com.example.librarymanagement.dto.mapper.ErrorMapper
@@ -14,7 +15,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -35,8 +35,8 @@ class AuthorControllerTest {
 
     private var author = AuthorDataFactory.createAuthor()
     private var authorDto: AuthorDto = AuthorMapper().toAuthorDto(author)
-    private var errorDtoBadRequest = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
-    private val errorDtoNotFound = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Author")
+    private var errorDtoBadRequest = ErrorDataFactory.createBadRequestError()
+    private val errorDtoNotFound = ErrorDataFactory.createNotFoundError()
 
     @BeforeEach
     fun setUp() {
