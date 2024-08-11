@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface JournalRepository : JpaRepository<Journal, Long> {
     fun findByBookPresenceIdAndUserId(bookPresenceId: Long, userId: Long): List<Journal>
-    fun findByBookPresenceId(bookPresenceId: Long): List<Journal>
     fun findAllByUserId(userId: Long): List<Journal>
     fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: Long, userId: Long): Journal?
 }

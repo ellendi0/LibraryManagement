@@ -32,5 +32,5 @@ data class Journal(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookPresence_id", nullable = false)
-    var bookPresence: BookPresence ?= null,
+    val bookPresence: BookPresence ?= null,
 )
