@@ -46,7 +46,6 @@ dependencies {
 
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.10")
     testImplementation("io.mockk:mockk:1.9")
 }
 
@@ -111,4 +110,12 @@ tasks.withType<JacocoReport> {
             }
         }))
     }
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    archiveClassifier.set("boot")
+}
+
+tasks.named<Jar>("jar") {
+    archiveClassifier.set("")
 }
