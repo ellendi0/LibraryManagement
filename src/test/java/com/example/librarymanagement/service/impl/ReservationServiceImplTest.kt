@@ -79,7 +79,8 @@ class ReservationServiceImplTest {
 
         every { bookRepository.findById(1) } returns Optional.of(book)
         every { reservationRepository.existsByBookIdAndUser(1, user) } returns false
-        every { bookPresenceService.getAllBookByLibraryIdAndBookId(1, 1) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(1, Availability.AVAILABLE) }
+            .returns (listOf(bookPresence))
         every { bookPresenceService.addUserToBook(user, 1, 1) } returns bookPresence
         every { reservationRepository.save(reservation) } returns reservation
         every { reservationRepository.findAllByUserId(1) } returns listOf(reservation)
@@ -99,10 +100,12 @@ class ReservationServiceImplTest {
         val book = TestDataFactory.createTestDataRelForServices().book
         val bookPresence = TestDataFactory.createTestDataRelForServices()
             .bookPresence.copy(availability = Availability.UNAVAILABLE)
-
+        
         every { bookRepository.findById(1) } returns Optional.of(book)
         every { reservationRepository.existsByBookIdAndUser(1, user) } returns false
-        every { bookPresenceService.getAllBookByLibraryIdAndBookId(1, 1) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(1, Availability.AVAILABLE) }
+            .returns (emptyList())
+        every { bookPresenceService.getByBookId(1) } returns listOf(bookPresence)
         every { reservationRepository.save(any()) } returns reservation
         every { reservationRepository.findAllByUserId(1) } returns listOf(reservation)
 
