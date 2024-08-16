@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import com.example.librarymanagement.model.enums.Genre
 import jakarta.persistence.CascadeType
@@ -18,35 +18,35 @@ import lombok.ToString
 @Entity
 @Table(name = "book")
 @ToString(exclude = ["bookPresence", "reservations"])
-data class Book (
+data class JpaBook (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
     @Column(nullable = false)
-    var title: String,
+    val title: String,
 
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
-    var author: Author ?= null,
+    var author: JpaAuthor?= null,
 
     @ManyToOne
     @JoinColumn(name = "publisher_id", nullable = false)
-    var publisher: Publisher ?= null,
+    var publisher: JpaPublisher?= null,
 
     @Column(nullable = false)
-    var publishedYear: Int,
+    val publishedYear: Int,
 
     @Column(nullable = false)
-    var isbn: Long,
+    val isbn: Long,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var genre: Genre,
+    val genre: Genre,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
-    var bookPresence: MutableList<BookPresence> = mutableListOf(),
+    val bookPresence: MutableList<JpaBookPresence> = mutableListOf(),
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
-    var reservations: MutableList<Reservation> = mutableListOf()
+    val reservations: MutableList<JpaReservation> = mutableListOf()
 )

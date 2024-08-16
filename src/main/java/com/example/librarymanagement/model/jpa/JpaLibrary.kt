@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -10,17 +10,17 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "library")
-data class Library (
+data class JpaLibrary (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
 
     @Column(nullable = false)
-    var name: String,
+    val name: String,
 
     @Column(nullable = false)
-    var address: String,
+    val address: String,
 
     @OneToMany(mappedBy = "library")
-    var bookPresence: MutableList<BookPresence> = mutableListOf()
+    val bookPresence: MutableList<JpaBookPresence> = mutableListOf()
 )

@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import com.example.librarymanagement.model.enums.Availability
 import jakarta.persistence.CascadeType
@@ -17,7 +17,7 @@ import lombok.ToString
 @Entity
 @Table(name = "presence_of_book")
 @ToString(exclude = ["journals"])
-data class BookPresence (
+data class JpaBookPresence (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
@@ -27,16 +27,16 @@ data class BookPresence (
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    var book: Book,
+    val book: JpaBook,
 
     @ManyToOne
     @JoinColumn(name = "library_id", nullable = false)
-    var library: Library,
+    val library: JpaLibrary,
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    var user: User ?= null,
+    var user: JpaUser?= null,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "bookPresence")
-    var journals: MutableList<Journal> = mutableListOf()
+    val journals: MutableList<JpaJournal> = mutableListOf()
 )

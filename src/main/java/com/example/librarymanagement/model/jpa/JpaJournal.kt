@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -15,7 +15,7 @@ import java.time.LocalDate
 @Entity
 @Table(name = "journal")
 @EqualsAndHashCode(exclude = ["journals", "reservations"])
-data class Journal(
+data class JpaJournal(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
@@ -28,9 +28,9 @@ data class Journal(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User ?= null,
+    var user: JpaUser?= null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookPresence_id", nullable = false)
-    var bookPresence: BookPresence ?= null,
+    val bookPresence: JpaBookPresence?= null,
 )

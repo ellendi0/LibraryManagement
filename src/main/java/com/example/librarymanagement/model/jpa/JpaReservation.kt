@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -10,20 +10,20 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "reservation")
-data class Reservation (
+data class JpaReservation (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User ?= null,
+    val user: JpaUser?= null,
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    var book: Book ?= null,
+    val book: JpaBook?= null,
 
     @ManyToOne
     @JoinColumn(name = "library_id")
-    var library: Library ?= null,
+    val library: JpaLibrary?= null,
 )

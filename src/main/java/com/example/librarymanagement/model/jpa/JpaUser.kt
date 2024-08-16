@@ -1,4 +1,4 @@
-package com.example.librarymanagement.model.entity
+package com.example.librarymanagement.model.jpa
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -15,28 +15,29 @@ import lombok.ToString
 @Table(name = "user")
 @ToString(exclude = ["journals", "reservations"])
 @EqualsAndHashCode(exclude = ["journals", "reservations"])
-data class User(
+data class JpaUser(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
 
     @Column(name = "first_name", nullable = false)
-    var firstName: String,
+    val firstName: String,
+
     @Column(name = "last_name", nullable = false)
-    var lastName: String,
+    val lastName: String,
 
     @Column(unique = true, nullable = false)
-    var email: String,
+    val email: String,
 
     @Column(nullable = false)
-    var password: String,
+    val password: String,
 
     @Column(unique = true, length = 10, nullable = false)
-    var phoneNumber: String,
+    val phoneNumber: String,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "user", orphanRemoval = true)
-    var journals: MutableList<Journal> = mutableListOf(),
+    val journals: MutableList<JpaJournal> = mutableListOf(),
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "user", orphanRemoval = true)
-    var reservations: MutableList<Reservation> = mutableListOf(),
+    val reservations: MutableList<JpaReservation> = mutableListOf(),
 )
