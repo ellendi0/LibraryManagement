@@ -3,7 +3,6 @@ package com.example.librarymanagement.dto.mapper
 import com.example.librarymanagement.dto.BookRequestDto
 import com.example.librarymanagement.dto.BookResponseDto
 import com.example.librarymanagement.model.domain.Book
-import com.example.librarymanagement.model.jpa.JpaBook
 import org.springframework.stereotype.Component
 
 @Component
