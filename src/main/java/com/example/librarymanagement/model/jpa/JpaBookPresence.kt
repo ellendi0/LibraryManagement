@@ -16,7 +16,6 @@ import lombok.ToString
 
 @Entity
 @Table(name = "presence_of_book")
-@ToString(exclude = ["journals"])
 data class JpaBookPresence (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +34,7 @@ data class JpaBookPresence (
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    var user: JpaUser?= null,
+    var user: JpaUser? = null,
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "bookPresence")
     val journals: MutableList<JpaJournal> = mutableListOf()

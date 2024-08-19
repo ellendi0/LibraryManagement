@@ -22,13 +22,13 @@ class BookPresenceController (
 ) {
     @PostMapping("/{libraryId}/book/{bookId}/presence")
     @ResponseStatus(HttpStatus.CREATED)
-    fun addBookToLibrary(@PathVariable libraryId: Long, @PathVariable bookId: Long): BookPresenceDto {
+    fun addBookToLibrary(@PathVariable libraryId: String, @PathVariable bookId: String): BookPresenceDto {
         return bookPresenceMapper.toBookPresenceDto(bookPresenceService.addBookToLibrary(libraryId, bookId))
     }
 
     @GetMapping("/{libraryId}/book")
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooksByLibraryId(@PathVariable libraryId: Long,
+    fun getAllBooksByLibraryId(@PathVariable libraryId: String,
                                @RequestParam(required = false) availability: Availability?): List<BookPresenceDto> {
         return bookPresenceMapper.toBookPresenceDto(
             availability
@@ -38,13 +38,15 @@ class BookPresenceController (
 
     @GetMapping("/{libraryId}/book/{bookId}/presence")
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooksByLibraryIdAndBookId(@PathVariable libraryId: Long, @PathVariable bookId: Long): List<BookPresenceDto> {
-        return bookPresenceMapper.toBookPresenceDto(bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId))
+    fun getAllBooksByLibraryIdAndBookId(@PathVariable libraryId: String,
+                                        @PathVariable bookId: String): List<BookPresenceDto> {
+        return bookPresenceMapper
+            .toBookPresenceDto(bookPresenceService.getAllBookByLibraryIdAndBookId(libraryId, bookId))
     }
 
     @DeleteMapping("/presence/{presenceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun removeBookFromLibrary(@PathVariable presenceId: Long) {
+    fun removeBookFromLibrary(@PathVariable presenceId: String) {
         bookPresenceService.deleteBookPresenceById(presenceId)
     }
 }
