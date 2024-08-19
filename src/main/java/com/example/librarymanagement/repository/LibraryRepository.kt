@@ -1,8 +1,10 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.Library
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.example.librarymanagement.model.domain.Library
 
-@Repository
-interface LibraryRepository: JpaRepository<Library, Long>
+interface LibraryRepository{
+    fun save(library: Library): Library
+    fun findById(libraryId: String): Library?
+    fun findAll(): List<Library>
+    fun delete(libraryId: String)
+}
