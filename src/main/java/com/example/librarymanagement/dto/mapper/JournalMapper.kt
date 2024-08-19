@@ -1,16 +1,17 @@
 package com.example.librarymanagement.dto.mapper
 
 import com.example.librarymanagement.dto.JournalDto
-import com.example.librarymanagement.model.entity.Journal
+import com.example.librarymanagement.model.domain.Journal
+import com.example.librarymanagement.model.jpa.JpaJournal
 import org.springframework.stereotype.Component
 
 @Component
 class JournalMapper {
     fun toJournalDto(journal: Journal) : JournalDto {
-        val book = journal.bookPresence?.book
-        val author = book?.author!!
+        val book = journal.bookPresence.book
+        val author = book.author!!
         val user = journal.user
-        val library = journal.bookPresence!!.library
+        val library = journal.bookPresence.library
 
         return JournalDto(
             id = journal.id!!,
@@ -18,7 +19,7 @@ class JournalMapper {
             dateOfReturning = journal.dateOfReturning,
             title = book.title,
             author = "${author.firstName} ${author.lastName}",
-            user = "${user?.firstName} ${user?.lastName}",
+            user = "${user.firstName} ${user.lastName}",
             nameOfLibrary = library.name
         )
     }

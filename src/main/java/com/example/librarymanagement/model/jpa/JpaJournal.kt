@@ -14,7 +14,6 @@ import java.time.LocalDate
 
 @Entity
 @Table(name = "journal")
-@EqualsAndHashCode(exclude = ["journals", "reservations"])
 data class JpaJournal(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,9 +27,9 @@ data class JpaJournal(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: JpaUser?= null,
+    var user: JpaUser,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookPresence_id", nullable = false)
-    val bookPresence: JpaBookPresence?= null,
+    val bookPresence: JpaBookPresence,
 )
