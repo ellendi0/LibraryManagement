@@ -1,12 +1,10 @@
 package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.model.domain.BookPresence
 import com.example.librarymanagement.model.domain.User
 import com.example.librarymanagement.model.enums.Availability
 import com.example.librarymanagement.repository.BookPresenceRepository
 import com.example.librarymanagement.service.BookPresenceService
-import com.example.librarymanagement.service.JournalService
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 

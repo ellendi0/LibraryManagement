@@ -12,7 +12,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import lombok.ToString
 
 @Entity
 @Table(name = "presence_of_book")

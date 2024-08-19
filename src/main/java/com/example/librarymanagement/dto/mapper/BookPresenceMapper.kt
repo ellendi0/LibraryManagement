@@ -2,7 +2,6 @@ package com.example.librarymanagement.dto.mapper
 
 import com.example.librarymanagement.dto.BookPresenceDto
 import com.example.librarymanagement.model.domain.BookPresence
-import com.example.librarymanagement.model.jpa.JpaBookPresence
 import org.springframework.stereotype.Component
 
 @Component
