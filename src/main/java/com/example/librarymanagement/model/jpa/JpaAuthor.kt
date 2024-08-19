@@ -8,12 +8,15 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "publisher")
-data class JpaPublisher (
+@Table(name = "author")
+data class JpaAuthor (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long ?= null,
 
-    @Column(nullable = false)
-    val name: String,
+    @Column(name = "first_name", nullable = false)
+    val firstName: String,
+
+    @Column(name = "last_name", nullable = false)
+    val lastName: String,
 )
