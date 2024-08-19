@@ -2,7 +2,6 @@ package com.example.librarymanagement.repository.jpa
 
 import com.example.librarymanagement.model.domain.Book
 import com.example.librarymanagement.model.jpa.JpaBook
-import com.example.librarymanagement.repository.BookPresenceRepository
 import com.example.librarymanagement.repository.BookRepository
 import com.example.librarymanagement.repository.jpa.mapper.JpaBookMapper
 import jakarta.transaction.Transactional
