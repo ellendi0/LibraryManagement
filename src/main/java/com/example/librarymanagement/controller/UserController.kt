@@ -91,7 +91,6 @@ class UserController(
     fun returnBookToLibrary(@PathVariable(name = "id") userId: String,
                             @RequestParam libraryId: String,
                             @RequestParam bookId: String) {
-        throw RuntimeException()
         userService.returnBookToLibrary(userId, libraryId, bookId)
     }
 

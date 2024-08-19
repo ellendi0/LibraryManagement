@@ -2,7 +2,6 @@ package com.example.librarymanagement.dto.mapper
 
 import com.example.librarymanagement.dto.JournalDto
 import com.example.librarymanagement.model.domain.Journal
-import com.example.librarymanagement.model.jpa.JpaJournal
 import org.springframework.stereotype.Component
 
 @Component
