@@ -1,12 +1,12 @@
 package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.jpa.JpaBook
+import com.example.librarymanagement.model.domain.Book
 
 interface BookService {
-    fun findAll(): List<JpaBook>
-    fun getBookById(id: Long): JpaBook
-    fun getBookByTitleAndAuthor(title: String, authorId: Long): JpaBook
-    fun createBook(authorId: Long, publisherId: Long, book: JpaBook): JpaBook
-    fun updateBook(updatedBook: JpaBook): JpaBook
-    fun deleteBook(id: Long)
+    fun findAll(): List<Book>
+    fun getBookById(id: String): Book
+    fun getBookByTitleAndAuthor(title: String, authorId: String): Book
+    fun createBook(authorId: String, publisherId: String, book: Book): Book
+    fun updateBook(updatedBook: Book): Book
+    fun deleteBook(id: String)
 }

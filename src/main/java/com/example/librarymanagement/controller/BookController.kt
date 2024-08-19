@@ -27,27 +27,28 @@ class BookController(private val bookService: BookService, private val bookMappe
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getBookById(@PathVariable id: Long): BookResponseDto = bookMapper.toBookDto(bookService.getBookById(id))
+    fun getBookById(@PathVariable id: String): BookResponseDto = bookMapper.toBookDto(bookService.getBookById(id))
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createBook(@RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
-        return bookMapper.toBookDto(bookService.createBook(bookDto.authorId, bookDto.publisherId, bookMapper.toBook(bookDto)))
+        return bookMapper
+            .toBookDto(bookService.createBook(bookDto.authorId, bookDto.publisherId, bookMapper.toBook(bookDto)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateBook(@PathVariable id: Long, @RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
-        return bookMapper.toBookDto(bookService.updateBook(id, bookMapper.toBook(bookDto)))
+    fun updateBook(@PathVariable id: String, @RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
+        return bookMapper.toBookDto(bookService.updateBook(bookMapper.toBook(bookDto, id)))
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteBook(@PathVariable id: Long) { bookService.deleteBook(id) }
+    fun deleteBook(@PathVariable id: String) { bookService.deleteBook(id) }
 
     @GetMapping(params = ["title", "author"])
     @ResponseStatus(HttpStatus.OK)
-    fun getBookByTitleAndAuthor(@RequestParam title: String, @RequestParam author: Long): BookResponseDto {
-        return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, author))
+    fun getBookByTitleAndAuthor(@RequestParam title: String, @RequestParam authorId: String): BookResponseDto {
+        return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, authorId))
     }
 }

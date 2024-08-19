@@ -1,11 +1,12 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.Book
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.example.librarymanagement.model.domain.Book
 
-@Repository
-interface BookRepository: JpaRepository<Book, Long>{
+interface BookRepository{
+    fun save(book: Book): Book
+    fun findById(bookId: String): Book?
+    fun findAll(): List<Book>
+    fun delete(bookId: String)
     fun existsByIsbn(isbn: Long): Boolean
-    fun findBookByTitleAndAuthorId(title: String, id: Long): Book?
+    fun findBookByTitleAndAuthorId(title: String, authorId: String): Book?
 }
