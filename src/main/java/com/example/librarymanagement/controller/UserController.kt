@@ -32,7 +32,7 @@ class UserController(
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun findById(@PathVariable id: Long): UserResponseDto = userMapper.toUserResponseDto(userService.getUserById(id))
+    fun findById(@PathVariable id: String): UserResponseDto = userMapper.toUserResponseDto(userService.getUserById(id))
 
     @GetMapping(params = ["email", "phoneNumber"])
     @ResponseStatus(HttpStatus.OK)
@@ -43,60 +43,61 @@ class UserController(
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createUser(@RequestBody user: @Valid UserRequestDto): UserResponseDto {
+    fun createUser(@RequestBody @Valid user: UserRequestDto): UserResponseDto {
         return userMapper.toUserResponseDto(userService.createUser(userMapper.toUser(user)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateUser(@PathVariable id: Long, @RequestBody userRequestDto: @Valid UserRequestDto): UserResponseDto {
-        return userMapper.toUserResponseDto(userService.updateUser(id, userMapper.toUser(userRequestDto)))
+    fun updateUser(@PathVariable id: String, @RequestBody @Valid userRequestDto: UserRequestDto): UserResponseDto {
+        return userMapper.toUserResponseDto(userService.updateUser(userMapper.toUser(userRequestDto, id)))
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteUser(@PathVariable id: Long) = userService.deleteUser(id)
+    fun deleteUser(@PathVariable id: String) = userService.deleteUser(id)
 
     @GetMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.OK)
-    fun findReservationsByUser(@PathVariable id: Long): List<ReservationDto> {
+    fun findReservationsByUser(@PathVariable id: String): List<ReservationDto> {
         return reservationMapper.toReservationDto(userService.findReservationsByUser(id))
     }
 
     @GetMapping("/{id}/journals")
     @ResponseStatus(HttpStatus.OK)
-    fun findJournalsByUser(@PathVariable id: Long): List<JournalDto> {
+    fun findJournalsByUser(@PathVariable id: String): List<JournalDto> {
         return journalMapper.toJournalDto(userService.findJournalsByUser(id))
     }
 
     @PostMapping("/{id}/borrowings")
     @ResponseStatus(HttpStatus.CREATED)
-    fun borrowBookFromLibrary(@PathVariable(name = "id") userId: Long,
-                              @RequestParam libraryId: Long,
-                              @RequestParam bookId: Long): List<JournalDto> {
+    fun borrowBookFromLibrary(@PathVariable(name = "id") userId: String,
+                              @RequestParam libraryId: String,
+                              @RequestParam bookId: String): List<JournalDto> {
         return journalMapper.toJournalDto(userService.borrowBookFromLibrary(userId, libraryId, bookId))
     }
 
     @PostMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.CREATED)
-    fun reserveBookInLibrary(@PathVariable(name = "id") userId: Long,
-                             @RequestParam(required = false) libraryId: Long,
-                             @RequestParam bookId: Long): List<ReservationDto> {
+    fun reserveBookInLibrary(@PathVariable(name = "id") userId: String,
+                             @RequestParam(required = false) libraryId: String,
+                             @RequestParam bookId: String): List<ReservationDto> {
         return reservationMapper.toReservationDto(userService.reserveBookInLibrary(userId, libraryId, bookId))
     }
 
     @DeleteMapping("/{id}/borrowings")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @NotificationOnAvailability
-    fun returnBookToLibrary(@PathVariable(name = "id") userId: Long,
-                            @RequestParam libraryId: Long,
-                            @RequestParam bookId: Long): List<JournalDto> {
-        return journalMapper.toJournalDto(userService.returnBookToLibrary(userId, libraryId, bookId))
+    fun returnBookToLibrary(@PathVariable(name = "id") userId: String,
+                            @RequestParam libraryId: String,
+                            @RequestParam bookId: String) {
+        throw RuntimeException()
+        userService.returnBookToLibrary(userId, libraryId, bookId)
     }
 
     @DeleteMapping("/{userId}/reservations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun cancelBookInLibrary(@PathVariable userId: Long, @RequestParam(name = "id") bookId: Long) {
+    fun cancelBookInLibrary(@PathVariable userId: String, @RequestParam(name = "id") bookId: String) {
         userService.cancelReservationInLibrary(userId, bookId)
     }
 

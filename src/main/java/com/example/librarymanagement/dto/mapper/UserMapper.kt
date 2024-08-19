@@ -2,7 +2,7 @@ package com.example.librarymanagement.dto.mapper
 
 import com.example.librarymanagement.dto.UserRequestDto
 import com.example.librarymanagement.dto.UserResponseDto
-import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.domain.User
 import org.mindrot.jbcrypt.BCrypt
 import org.springframework.stereotype.Component
 
@@ -10,8 +10,9 @@ import org.springframework.stereotype.Component
 class UserMapper {
     private val salt = BCrypt.gensalt()
 
-    fun toUser(userRequestDto: UserRequestDto) : User {
+    fun toUser(userRequestDto: UserRequestDto, id: String? = null) : User {
         return User(
+            id = id,
             firstName = userRequestDto.firstName,
             lastName = userRequestDto.lastName,
             email = userRequestDto.email,

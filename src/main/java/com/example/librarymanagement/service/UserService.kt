@@ -1,20 +1,20 @@
 package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Journal
-import com.example.librarymanagement.model.entity.Reservation
-import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.domain.Journal
+import com.example.librarymanagement.model.domain.Reservation
+import com.example.librarymanagement.model.domain.User
 
 interface UserService {
     fun getUserByPhoneNumberOrEmail(email: String?, phoneNumber: String?): User
-    fun getUserById(id: Long): User
+    fun getUserById(id: String): User
     fun createUser(user: User): User
-    fun updateUser(id: Long, updatedUser: User): User
+    fun updateUser(updatedUser: User): User
     fun findAll(): List<User>
-    fun findReservationsByUser(userId: Long): List<Reservation>
-    fun findJournalsByUser(userId: Long): List<Journal>
-    fun borrowBookFromLibrary(userId: Long, libraryId: Long, bookId: Long): List<Journal>
-    fun reserveBookInLibrary(userId: Long, libraryId: Long, bookId: Long): List<Reservation>
-    fun cancelReservationInLibrary(userId: Long, bookId: Long)
-    fun returnBookToLibrary(userId: Long, libraryId: Long, bookId: Long): List<Journal>
-    fun deleteUser(id: Long)
+    fun findReservationsByUser(userId: String): List<Reservation>
+    fun findJournalsByUser(userId: String): List<Journal>
+    fun borrowBookFromLibrary(userId: String, libraryId: String, bookId: String): List<Journal>
+    fun reserveBookInLibrary(userId: String, libraryId: String, bookId: String): List<Reservation>
+    fun cancelReservationInLibrary(userId: String, bookId: String)
+    fun returnBookToLibrary(userId: String, libraryId: String, bookId: String)
+    fun deleteUser(id: String)
 }

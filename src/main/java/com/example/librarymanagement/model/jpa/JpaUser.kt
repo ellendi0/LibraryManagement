@@ -8,13 +8,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import lombok.EqualsAndHashCode
-import lombok.ToString
 
 @Entity
 @Table(name = "user")
-@ToString(exclude = ["journals", "reservations"])
-@EqualsAndHashCode(exclude = ["journals", "reservations"])
 data class JpaUser(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
