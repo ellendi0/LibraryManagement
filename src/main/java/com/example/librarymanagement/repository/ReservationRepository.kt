@@ -1,15 +1,17 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.Reservation
-import com.example.librarymanagement.model.entity.User
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.example.librarymanagement.model.domain.Reservation
+import com.example.librarymanagement.model.domain.User
 
-@Repository
-interface ReservationRepository : JpaRepository<Reservation, Long> {
-    fun findAllByBookIdAndUserId(bookId: Long, userId: Long): List<Reservation>
-    fun findAllByLibraryId(libraryId: Long): List<Reservation>
-    fun findAllByUserId(userId: Long): List<Reservation>
-    fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: Long, libraryId: Long?): Reservation?
-    fun existsByBookIdAndUser(bookId: Long, user: User): Boolean
+interface ReservationRepository {
+    fun save(reservation: Reservation): Reservation
+    fun findById(reservationId: String): Reservation?
+    fun deleteById(reservationId: String)
+    fun delete(reservation: Reservation)
+    fun reserveBook(user: User, libraryId: String?, bookId: String): List<Reservation>
+    fun findAllByBookIdAndUserId(bookId: String, userId: String): List<Reservation>
+    fun findAllByLibraryId(libraryId: String): List<Reservation>
+    fun findAllByUserId(userId: String): List<Reservation>
+    fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: String, libraryId: String?): Reservation?
+    fun existsByBookIdAndUser(bookId: String, user: User): Boolean
 }

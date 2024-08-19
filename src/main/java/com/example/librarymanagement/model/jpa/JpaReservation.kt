@@ -17,11 +17,11 @@ data class JpaReservation (
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    val user: JpaUser?= null,
+    val user: JpaUser,
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    val book: JpaBook?= null,
+    val book: JpaBook,
 
     @ManyToOne
     @JoinColumn(name = "library_id")
