@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/publisher")
-class PublisherController (private val publisherService: PublisherService, private val publisherMapper: PublisherMapper) {
+class PublisherController(
+    private val publisherService: PublisherService,
+    private val publisherMapper: PublisherMapper
+) {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -24,19 +27,23 @@ class PublisherController (private val publisherService: PublisherService, priva
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getPublisherById(@PathVariable id: Long): PublisherDto{
+    fun getPublisherById(@PathVariable id: String): PublisherDto {
         return publisherMapper.toPublisherDto(publisherService.getPublisherById(id))
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createPublisher(@RequestBody publisherDto: @Valid PublisherDto): PublisherDto {
-        return publisherMapper.toPublisherDto(publisherService.createPublisher(publisherMapper.toPublisher(publisherDto)))
+    fun createPublisher(@RequestBody @Valid publisherDto: PublisherDto): PublisherDto {
+        return publisherMapper
+            .toPublisherDto(publisherService.createPublisher(publisherMapper.toPublisher(publisherDto)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updatePublisher(@PathVariable id: Long, @RequestBody publisherDto: @Valid PublisherDto): PublisherDto {
-        return publisherMapper.toPublisherDto(publisherService.updatePublisher(id, publisherMapper.toPublisher(publisherDto)))
+    fun updatePublisher(@PathVariable id: String, @RequestBody @Valid publisherDto: PublisherDto): PublisherDto {
+        return publisherMapper.toPublisherDto(
+            publisherService.updatePublisher(publisherMapper.toPublisher(publisherDto, id)
+            )
+        )
     }
 }

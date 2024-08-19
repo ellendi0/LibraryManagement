@@ -1,8 +1,9 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.Publisher
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.example.librarymanagement.model.domain.Publisher
 
-@Repository
-interface PublisherRepository: JpaRepository<Publisher, Long>
+interface PublisherRepository{
+    fun save(publisher: Publisher): Publisher
+    fun findById(publisherId: String): Publisher?
+    fun findAll(): List<Publisher>
+}
