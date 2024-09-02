@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthorServiceImpl(
-        private val authorRepository: AuthorRepository) : AuthorService {
+    private val authorRepository: AuthorRepository
+) : AuthorService {
+
     override fun createAuthor(author: Author): Author = authorRepository.save(author)
 
     override fun updateAuthor(updatedAuthor: Author): Author {

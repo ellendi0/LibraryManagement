@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 class BookServiceImpl(
     private val bookRepository: BookRepository,
     private val authorService: AuthorService,
-    private val publisherService: PublisherService,
+    private val publisherService: PublisherService
 ) : BookService {
 
     override fun findAll(): List<Book> = bookRepository.findAll()
@@ -25,24 +25,35 @@ class BookServiceImpl(
         return bookRepository.findBookByTitleAndAuthorId(title, authorId) ?: throw EntityNotFoundException("Book")
     }
 
-    override fun createBook(authorId: String, publisherId: String, book: Book): Book {
+    override fun createBook(book: Book): Book {
         if (bookRepository.existsByIsbn(book.isbn)) throw DuplicateKeyException("Book", "ISBN")
-        book.author = authorService.getAuthorById(authorId)
-        book.publisher = publisherService.getPublisherById(publisherId)
+        authorService.getAuthorById(book.authorId)
+        publisherService.getPublisherById(book.publisherId)
+
         return bookRepository.save(book)
     }
 
     override fun updateBook(updatedBook: Book): Book {
-        val book = getBookById(updatedBook.id!!).copy(
-            title = updatedBook.title,
-            isbn = updatedBook.isbn,
-            publishedYear = updatedBook.publishedYear,
-            genre = updatedBook.genre
+        authorService.getAuthorById(updatedBook.authorId)
+        publisherService.getPublisherById(updatedBook.publisherId)
+
+        val book = getBookById(updatedBook.id!!)
+        if (bookRepository.existsByIsbn(updatedBook.isbn) && updatedBook.isbn != book.isbn)
+            throw DuplicateKeyException("Book", "ISBN")
+
+        return bookRepository.save(
+            book.copy(
+                title = updatedBook.title,
+                authorId = updatedBook.authorId,
+                publisherId = updatedBook.publisherId,
+                isbn = updatedBook.isbn,
+                publishedYear = updatedBook.publishedYear,
+                genre = updatedBook.genre
+            )
         )
-        return bookRepository.save(book)
     }
 
-    override fun deleteBook(id: String) {
-        return bookRepository.delete(id)
+    override fun deleteBookById(id: String) {
+        return bookRepository.deleteById(id)
     }
 }

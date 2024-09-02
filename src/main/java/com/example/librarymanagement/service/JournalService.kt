@@ -8,4 +8,5 @@ interface JournalService {
     fun updateJournal(id: String, updatedJournal: Journal): Journal
     fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: String, userId: String): Journal
     fun getJournalByUserId(userId: String): List<Journal>
+    fun deleteJournalById(journalId: String)
 }

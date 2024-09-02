@@ -10,11 +10,6 @@ interface UserService {
     fun createUser(user: User): User
     fun updateUser(updatedUser: User): User
     fun findAll(): List<User>
-    fun findReservationsByUser(userId: String): List<Reservation>
     fun findJournalsByUser(userId: String): List<Journal>
-    fun borrowBookFromLibrary(userId: String, libraryId: String, bookId: String): List<Journal>
-    fun reserveBookInLibrary(userId: String, libraryId: String, bookId: String): List<Reservation>
-    fun cancelReservationInLibrary(userId: String, bookId: String)
-    fun returnBookToLibrary(userId: String, libraryId: String, bookId: String)
-    fun deleteUser(id: String)
+//    fun deleteUserById(id: String)
 }

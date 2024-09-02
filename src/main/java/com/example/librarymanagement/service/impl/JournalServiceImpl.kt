@@ -19,10 +19,15 @@ class JournalServiceImpl(private val journalRepository: JournalRepository) : Jou
         return journalRepository.save(journal)
     }
 
-    override fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: String, userId: String): Journal {
+    override fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
+        bookPresenceId: String,
+        userId: String
+    ): Journal {
         return journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId, userId)
             ?: throw EntityNotFoundException("Journal")
     }
 
     override fun getJournalByUserId(userId: String): List<Journal> = journalRepository.findAllByUserId(userId)
+
+    override fun deleteJournalById(journalId: String) = journalRepository.deleteById(journalId)
 }
