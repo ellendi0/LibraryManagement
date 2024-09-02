@@ -46,6 +46,6 @@ class LibraryController(
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteLibrary(@PathVariable id: String) {
-        libraryService.deleteLibrary(id)
+        libraryService.deleteLibraryById(id)
     }
 }

@@ -42,7 +42,8 @@ class PublisherController(
     @ResponseStatus(HttpStatus.OK)
     fun updatePublisher(@PathVariable id: String, @RequestBody @Valid publisherDto: PublisherDto): PublisherDto {
         return publisherMapper.toPublisherDto(
-            publisherService.updatePublisher(publisherMapper.toPublisher(publisherDto, id)
+            publisherService.updatePublisher(
+                publisherMapper.toPublisher(publisherDto, id)
             )
         )
     }

@@ -11,20 +11,20 @@ class BookMapper {
         return Book(
             id = id,
             title = bookRequestDto.title,
+            authorId = bookRequestDto.authorId,
+            publisherId = bookRequestDto.publisherId,
             isbn = bookRequestDto.isbn,
             publishedYear = bookRequestDto.publishedYear,
-            genre = bookRequestDto.genre
+            genre = bookRequestDto.genre,
         )
     }
 
     fun toBookDto(book: Book): BookResponseDto {
-        val author = book.author!!
-
         return BookResponseDto(
             id = book.id!!,
             title = book.title,
-            author = "${author.firstName} ${author.lastName}",
-            publisher = book.publisher!!.name,
+            authorId = book.authorId.toString(),
+            publisherId = book.publisherId.toString(),
             publishedYear = book.publishedYear,
             isbn = book.isbn,
             genre = book.genre

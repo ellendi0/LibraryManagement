@@ -7,14 +7,11 @@ import org.springframework.stereotype.Component
 @Component
 class ReservationMapper {
     fun toReservationDto(reservation: Reservation): ReservationDto {
-        val book = reservation.book
-        val author = book.author!!
-
         return ReservationDto(
             id = reservation.id!!,
-            bookTitle = book.title,
-            author = "${author.firstName} ${author.lastName}",
-            nameOfLibrary = reservation.library?.name
+            bookId = reservation.bookId,
+            userId = reservation.userId,
+            libraryId = reservation.libraryId
         )
     }
 

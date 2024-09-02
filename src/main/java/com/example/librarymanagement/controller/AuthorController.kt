@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/author")
 class AuthorController(
     private val authorService: AuthorService,
-    private val authorMapper: AuthorMapper) {
+    private val authorMapper: AuthorMapper
+) {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)

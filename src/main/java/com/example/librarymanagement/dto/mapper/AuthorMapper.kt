@@ -10,7 +10,8 @@ class AuthorMapper {
         return Author(
             id = id,
             firstName = authorDto.firstName,
-            lastName = authorDto.lastName )
+            lastName = authorDto.lastName
+        )
     }
 
     fun toAuthorDto(author: Author): AuthorDto = AuthorDto(author.id!!, author.firstName, author.lastName)

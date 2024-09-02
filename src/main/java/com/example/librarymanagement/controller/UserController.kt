@@ -1,6 +1,5 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.annotation.NotificationOnAvailability
 import com.example.librarymanagement.dto.JournalDto
 import com.example.librarymanagement.dto.ReservationDto
 import com.example.librarymanagement.dto.UserRequestDto
@@ -8,6 +7,8 @@ import com.example.librarymanagement.dto.UserResponseDto
 import com.example.librarymanagement.dto.mapper.JournalMapper
 import com.example.librarymanagement.dto.mapper.ReservationMapper
 import com.example.librarymanagement.dto.mapper.UserMapper
+import com.example.librarymanagement.model.domain.ReservationOutcome
+import com.example.librarymanagement.service.ReservationService
 import com.example.librarymanagement.service.UserService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -26,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/user")
 class UserController(
     private val userService: UserService,
+    private val reservationService: ReservationService,
     private val userMapper: UserMapper,
     private val journalMapper: JournalMapper,
-    private val reservationMapper: ReservationMapper){
+    private val reservationMapper: ReservationMapper
+) {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -36,15 +39,17 @@ class UserController(
 
     @GetMapping(params = ["email", "phoneNumber"])
     @ResponseStatus(HttpStatus.OK)
-    fun getUserByPhoneNumberOrEmail(@RequestParam(required = false) email: String,
-                                    @RequestParam(required = false) phoneNumber: String): UserResponseDto {
+    fun getUserByPhoneNumberOrEmail(
+        @RequestParam(required = false) email: String,
+        @RequestParam(required = false) phoneNumber: String
+    ): UserResponseDto {
         return userMapper.toUserResponseDto(userService.getUserByPhoneNumberOrEmail(email, phoneNumber))
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createUser(@RequestBody @Valid user: UserRequestDto): UserResponseDto {
-        return userMapper.toUserResponseDto(userService.createUser(userMapper.toUser(user)))
+    fun createUser(@RequestBody @Valid userRequestDto: UserRequestDto): UserResponseDto {
+        return userMapper.toUserResponseDto(userService.createUser(userMapper.toUser(userRequestDto)))
     }
 
     @PutMapping("/{id}")
@@ -53,14 +58,14 @@ class UserController(
         return userMapper.toUserResponseDto(userService.updateUser(userMapper.toUser(userRequestDto, id)))
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteUser(@PathVariable id: String) = userService.deleteUser(id)
+//    @DeleteMapping("/{id}")
+//    @ResponseStatus(HttpStatus.NO_CONTENT)
+//    fun deleteUser(@PathVariable id: String) = userService.deleteUserById(id)
 
     @GetMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.OK)
     fun findReservationsByUser(@PathVariable id: String): List<ReservationDto> {
-        return reservationMapper.toReservationDto(userService.findReservationsByUser(id))
+        return reservationMapper.toReservationDto(reservationService.getReservationsByUserId(id))
     }
 
     @GetMapping("/{id}/journals")
@@ -69,35 +74,26 @@ class UserController(
         return journalMapper.toJournalDto(userService.findJournalsByUser(id))
     }
 
-    @PostMapping("/{id}/borrowings")
-    @ResponseStatus(HttpStatus.CREATED)
-    fun borrowBookFromLibrary(@PathVariable(name = "id") userId: String,
-                              @RequestParam libraryId: String,
-                              @RequestParam bookId: String): List<JournalDto> {
-        return journalMapper.toJournalDto(userService.borrowBookFromLibrary(userId, libraryId, bookId))
-    }
-
     @PostMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.CREATED)
-    fun reserveBookInLibrary(@PathVariable(name = "id") userId: String,
-                             @RequestParam(required = false) libraryId: String,
-                             @RequestParam bookId: String): List<ReservationDto> {
-        return reservationMapper.toReservationDto(userService.reserveBookInLibrary(userId, libraryId, bookId))
-    }
+    fun reserveBookInLibrary(
+        @PathVariable(name = "id") userId: String,
+        @RequestParam(required = false) libraryId: String,
+        @RequestParam bookId: String
+    ): List<Any> {
+        return when (val outcome = reservationService.reserveBook(userId, libraryId, bookId)) {
+            is ReservationOutcome.Journals ->
+                journalMapper.toJournalDto(outcome.journals)
 
-    @DeleteMapping("/{id}/borrowings")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @NotificationOnAvailability
-    fun returnBookToLibrary(@PathVariable(name = "id") userId: String,
-                            @RequestParam libraryId: String,
-                            @RequestParam bookId: String) {
-        userService.returnBookToLibrary(userId, libraryId, bookId)
+            is ReservationOutcome.Reservations ->
+                reservationMapper.toReservationDto(outcome.reservations)
+        }
     }
 
     @DeleteMapping("/{userId}/reservations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun cancelBookInLibrary(@PathVariable userId: String, @RequestParam(name = "id") bookId: String) {
-        userService.cancelReservationInLibrary(userId, bookId)
+        reservationService.cancelReservation(userId, bookId)
     }
 
     @GetMapping
