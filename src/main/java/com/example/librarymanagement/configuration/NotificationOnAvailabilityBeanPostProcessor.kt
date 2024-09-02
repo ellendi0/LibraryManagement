@@ -44,7 +44,7 @@ class NotificationOnAvailabilityBeanPostProcessor(
                         val bookId = args.getOrNull(2) as? String
                         val libraryId = args.getOrNull(1) as? String
 
-                        if (bookId != null && libraryId != null) {
+                        if (bookId != null) {
                             availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId)
                         }
                     }
