@@ -1,5 +1,6 @@
 package com.example.librarymanagement.model.jpa
 
+import com.example.librarymanagement.model.jpa.JpaUser.Companion.TABLE_NAME
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -10,11 +11,11 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "user")
+@Table(name = TABLE_NAME)
 data class JpaUser(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long ?= null,
+    val id: Long? = null,
 
     @Column(name = "first_name", nullable = false)
     val firstName: String,
@@ -35,5 +36,9 @@ data class JpaUser(
     val journals: MutableList<JpaJournal> = mutableListOf(),
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "user", orphanRemoval = true)
-    val reservations: MutableList<JpaReservation> = mutableListOf(),
-)
+    val reservations: MutableList<JpaReservation> = mutableListOf()
+) {
+    companion object {
+        const val TABLE_NAME = "users"
+    }
+}

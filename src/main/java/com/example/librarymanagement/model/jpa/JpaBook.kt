@@ -1,6 +1,7 @@
 package com.example.librarymanagement.model.jpa
 
 import com.example.librarymanagement.model.enums.Genre
+import com.example.librarymanagement.model.jpa.JpaBook.Companion.TABLE_NAME
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -15,8 +16,8 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "book")
-data class JpaBook (
+@Table(name = TABLE_NAME)
+data class JpaBook(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -47,4 +48,8 @@ data class JpaBook (
 
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "book")
     val reservations: MutableList<JpaReservation> = mutableListOf()
-)
+) {
+    companion object {
+        const val TABLE_NAME = "book"
+    }
+}

@@ -5,11 +5,9 @@ import com.example.librarymanagement.model.enums.Genre
 data class Book (
     val id: String? = null,
     val title: String,
-    var author: Author? = null,
-    var publisher: Publisher? = null,
+    var authorId: String,
+    var publisherId: String,
     val publishedYear: Int,
     val isbn: Long,
     val genre: Genre,
-    val bookPresence: MutableList<BookPresence> = mutableListOf(),
-    val reservations: MutableList<Reservation> = mutableListOf()
 )

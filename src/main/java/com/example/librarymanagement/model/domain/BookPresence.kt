@@ -5,7 +5,7 @@ import com.example.librarymanagement.model.enums.Availability
 data class BookPresence (
     val id: String? = null,
     var availability: Availability = Availability.AVAILABLE,
-    val book: Book,
-    val library: Library,
-    var user: User? = null,
+    val bookId: String,
+    val libraryId: String,
+    var userId: String? = null,
 )
