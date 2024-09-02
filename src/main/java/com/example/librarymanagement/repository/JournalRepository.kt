@@ -6,7 +6,6 @@ interface JournalRepository {
     fun save(journal: Journal): Journal
     fun findById(journalId: String): Journal?
     fun deleteById(journalId: String)
-    fun findByBookPresenceIdAndUserId(bookPresenceId: String, userId: String): List<Journal>
     fun findAllByUserId(userId: String): List<Journal>
     fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: String, userId: String): Journal?
 }

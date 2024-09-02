@@ -4,17 +4,15 @@ import com.example.librarymanagement.model.domain.User
 import com.example.librarymanagement.model.jpa.JpaUser
 import com.example.librarymanagement.repository.UserRepository
 import com.example.librarymanagement.repository.jpa.mapper.JpaUserMapper
-import jakarta.transaction.Transactional
+import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("jpa")
 class JpaUserRepository(
-        private val userRepository: UserRepositorySpring,
-        private val bookPresenceRepository: JpaBookPresenceRepository,
-        private val journalRepository: JpaJournalRepository,
-        private val reservationRepository: JpaReservationRepository
+        private val userRepository: UserRepositorySpring
 ) : UserRepository{
     private fun User.toEntity() = JpaUserMapper.toEntity(this)
     private fun JpaUser.toDomain() = JpaUserMapper.toDomain(this)
@@ -31,30 +29,8 @@ class JpaUserRepository(
         return userRepository.findAll().map { it.toDomain() }
     }
 
-    @Transactional
-    override fun deleteUser(userId: String) {
-        userRepository.findByIdOrNull(userId.toLong())?.let { user ->
-
-            bookPresenceRepository.findAllByUserId(userId)
-                .takeIf { it.isNotEmpty() }
-                ?.forEach { bookPresence ->
-                    bookPresenceRepository.removeUserFromBook(
-                        JpaUserMapper.toDomain(user),
-                        bookPresence.library.id!!,
-                        bookPresence.book.id!!
-                    )
-                }
-
-            user.journals.forEach { journal ->
-                journalRepository.deleteById(journal.id.toString())
-            }
-
-            user.reservations.forEach { reservation ->
-                reservationRepository.deleteById(reservation.id.toString())
-            }
-
-            userRepository.delete(user)
-        }
+    override fun deleteById(userId: String) {
+        return userRepository.deleteById(userId.toLong())
     }
 
     override fun existsByEmail(email: String): Boolean {

@@ -4,23 +4,23 @@ import com.example.librarymanagement.model.domain.Journal
 import com.example.librarymanagement.model.jpa.JpaJournal
 
 object JpaJournalMapper {
-    fun toEntity(journal: Journal): JpaJournal{
+    fun toEntity(journal: Journal): JpaJournal {
         return JpaJournal(
-                id = journal.id?.toLong(),
-                dateOfBorrowing = journal.dateOfBorrowing,
-                dateOfReturning = journal.dateOfReturning,
-                user = JpaUserMapper.toEntity(journal.user),
-                bookPresence = JpaBookPresenceMapper.toEntity(journal.bookPresence)
+            id = journal.id?.toLong(),
+            dateOfBorrowing = journal.dateOfBorrowing,
+            dateOfReturning = journal.dateOfReturning,
+            user = null,
+            bookPresence = null
         )
     }
 
-    fun toDomain(jpaJournal: JpaJournal): Journal{
+    fun toDomain(jpaJournal: JpaJournal): Journal {
         return Journal(
-                id = jpaJournal.id.toString(),
-                dateOfBorrowing = jpaJournal.dateOfBorrowing,
-                dateOfReturning = jpaJournal.dateOfReturning,
-                user = JpaUserMapper.toDomain(jpaJournal.user),
-                bookPresence = JpaBookPresenceMapper.toDomain(jpaJournal.bookPresence)
+            id = jpaJournal.id.toString(),
+            dateOfBorrowing = jpaJournal.dateOfBorrowing,
+            dateOfReturning = jpaJournal.dateOfReturning,
+            userId = jpaJournal.user?.id.toString(),
+            bookPresenceId = jpaJournal.bookPresence?.id.toString()
         )
     }
 }

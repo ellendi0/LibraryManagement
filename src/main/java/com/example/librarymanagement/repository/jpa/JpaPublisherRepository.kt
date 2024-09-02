@@ -4,11 +4,13 @@ import com.example.librarymanagement.model.domain.Publisher
 import com.example.librarymanagement.model.jpa.JpaPublisher
 import com.example.librarymanagement.repository.PublisherRepository
 import com.example.librarymanagement.repository.jpa.mapper.JpaPublisherMapper
+import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("jpa")
 class JpaPublisherRepository(
         private val publisherRepository: PublisherRepositorySpring
 ) : PublisherRepository {

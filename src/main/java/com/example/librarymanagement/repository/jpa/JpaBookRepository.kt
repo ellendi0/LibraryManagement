@@ -3,23 +3,32 @@ package com.example.librarymanagement.repository.jpa
 import com.example.librarymanagement.model.domain.Book
 import com.example.librarymanagement.model.jpa.JpaBook
 import com.example.librarymanagement.repository.BookRepository
+import com.example.librarymanagement.repository.jpa.mapper.JpaAuthorMapper
 import com.example.librarymanagement.repository.jpa.mapper.JpaBookMapper
+import com.example.librarymanagement.repository.jpa.mapper.JpaPublisherMapper
 import jakarta.transaction.Transactional
+import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("jpa")
 class JpaBookRepository(
     private val bookRepository: BookRepositorySpring,
-    private val bookPresenceRepository: BookPresenceRepositorySpring,
-    private val reservationRepository: ReservationRepositorySpring
-): BookRepository{
+    private val authorRepository: JpaAuthorRepository,
+    private val publisherRepository: JpaPublisherRepository,
+) : BookRepository {
     private fun Book.toEntity() = JpaBookMapper.toEntity(this)
     private fun JpaBook.toDomain() = JpaBookMapper.toDomain(this)
 
     override fun save(book: Book): Book {
-        return bookRepository.save(book.toEntity()).toDomain()
+        return bookRepository.save(
+            book.toEntity().copy(
+                author = JpaAuthorMapper.toEntity(authorRepository.findById(book.authorId)!!),
+                publisher = JpaPublisherMapper.toEntity(publisherRepository.findById(book.publisherId)!!)
+            )
+        ).toDomain()
     }
 
     override fun findById(bookId: String): Book? {
@@ -31,23 +40,8 @@ class JpaBookRepository(
     }
 
     @Transactional
-    override fun delete(bookId: String) {
-        bookRepository.findByIdOrNull(bookId.toLong())?.let { book ->
-
-            book.bookPresence
-                .takeIf { it.isNotEmpty() }
-                ?.forEach { bookPresence ->
-                    bookPresence.id?.let { bookPresenceRepository.deleteById(it) }
-            }
-
-            book.reservations
-                .takeIf { it.isNotEmpty() }
-                ?.forEach { reservation ->
-                    reservation.id?.let { reservationRepository.deleteById(it) }
-            }
-
-            bookRepository.deleteById(bookId.toLong())
-        }
+    override fun deleteById(bookId: String) {
+        bookRepository.deleteById(bookId.toLong())
     }
 
     override fun existsByIsbn(isbn: Long): Boolean {
@@ -55,11 +49,11 @@ class JpaBookRepository(
     }
 
     override fun findBookByTitleAndAuthorId(title: String, authorId: String): Book? {
-        return bookRepository.findBookByTitleAndAuthorId(title, authorId.toLong())
+        return bookRepository.findBookByTitleAndAuthorId(title, authorId.toLong())?.toDomain()
     }
 }
 
 @Repository
-interface BookRepositorySpring: JpaRepository<JpaBook, Long>{
-    fun findBookByTitleAndAuthorId(title: String, id: Long): Book?
+interface BookRepositorySpring : JpaRepository<JpaBook, Long> {
+    fun findBookByTitleAndAuthorId(title: String, id: Long): JpaBook?
 }

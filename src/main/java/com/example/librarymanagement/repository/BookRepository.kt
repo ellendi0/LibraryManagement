@@ -6,7 +6,7 @@ interface BookRepository{
     fun save(book: Book): Book
     fun findById(bookId: String): Book?
     fun findAll(): List<Book>
-    fun delete(bookId: String)
+    fun deleteById(bookId: String)
     fun existsByIsbn(isbn: Long): Boolean
     fun findBookByTitleAndAuthorId(title: String, authorId: String): Book?
 }

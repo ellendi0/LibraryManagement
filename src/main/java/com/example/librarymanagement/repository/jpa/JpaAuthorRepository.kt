@@ -4,14 +4,16 @@ import com.example.librarymanagement.model.domain.Author
 import com.example.librarymanagement.model.jpa.JpaAuthor
 import com.example.librarymanagement.repository.AuthorRepository
 import com.example.librarymanagement.repository.jpa.mapper.JpaAuthorMapper
+import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
+@Profile("jpa")
 class JpaAuthorRepository(
-        private val authorRepositorySpring: AuthorRepositorySpring,
-): AuthorRepository {
+    private val authorRepositorySpring: AuthorRepositorySpring,
+) : AuthorRepository {
     private fun Author.toEntity() = JpaAuthorMapper.toEntity(this)
     private fun JpaAuthor.toDomain() = JpaAuthorMapper.toDomain(this)
 
@@ -29,4 +31,4 @@ class JpaAuthorRepository(
 }
 
 @Repository
-interface AuthorRepositorySpring: JpaRepository<JpaAuthor, Long>
+interface AuthorRepositorySpring : JpaRepository<JpaAuthor, Long>

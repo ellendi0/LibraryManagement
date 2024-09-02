@@ -6,5 +6,5 @@ interface LibraryRepository{
     fun save(library: Library): Library
     fun findById(libraryId: String): Library?
     fun findAll(): List<Library>
-    fun delete(libraryId: String)
+    fun deleteById(libraryId: String)
 }
