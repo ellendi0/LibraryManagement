@@ -1,30 +1,29 @@
 services:
-  library-management-app:
+  app:
     build:
       context: .
       target: final
     ports:
-      - 8080:8080
-    depends_on:
-      library-db:
-        condition: service_healthy
+      - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://library-db:3306/library
+      SPRING_PROFILES_ACTIVE: jpa
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/library
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 1111
+    depends_on:
+      - mysqldb
+      - mongodb
 
-  library-db:
+  mysqldb:
     image: mysql:8.0
-    restart: always
+    container_name: mysqldb
     environment:
-      MYSQL_ROOT_PASSWORD: 1111
       MYSQL_DATABASE: library
+      MYSQL_ROOT_PASSWORD: 1111
     ports:
       - "3306:3306"
-    volumes:
-      - library-db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -34,25 +33,12 @@ services:
     image: mongo
     container_name: mongodb
     ports:
-      - 27017:27017
-    volumes:
-      - mongo-db-data:/var/lib/mongo
+      - "27017:27017"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=1111
-
-  mongo-express:
-      image: mongo-express
-      container_name: mongo-express
-      restart: always
-      ports:
-        - 8081:8081
-      environment:
-        - ME_CONFIG_MONGODB_ADMINUSERNAME=root
-        - ME_CONFIG_MONGODB_ADMINPASSWORD=1111
-        - ME_CONFIG_MONGODB_SERVER=mongodb
-
-
-volumes:
-  library-db-data:
-  mongo-db-data:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1111
