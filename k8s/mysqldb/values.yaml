@@ -1,0 +1,32 @@
+replicas: 1
+
+name: mysqldb
+
+image:
+  name: mysql
+  tag: "8.0"
+
+ports:
+  port: 3306
+  targetPort: 3306
+  protocol: TCP
+
+environment:
+  MYSQL_DATABASE: "library"
+
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 5
+
+volumes:
+  name: mysql-volume
+  mouthPath: "/var/lib/mysql"
+  pvc:
+    name: mysql-pvc
+    accessMode: ReadWriteOnce
+    storage: 5Gi
+
+resources:
+  memory: "512Mi"
+  cpu: "1000m"

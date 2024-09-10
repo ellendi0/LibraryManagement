@@ -28,7 +28,6 @@ class NotificationOnAvailabilityBeanPostProcessor(
     }
 
     override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
-
         val targetClassName = bean::class.java.name
         val annotatedMethods = methods[targetClassName]
 
@@ -37,13 +36,20 @@ class NotificationOnAvailabilityBeanPostProcessor(
             proxyFactory.addAdvice(MethodInterceptor { invocation ->
                 val method = invocation.method
                 val args = invocation.arguments
+
                 val result = invocation.proceed()
 
-                if (annotatedMethods.contains(method) && result != null) {
-                    val bookId = args[2] as Long
-                    val libraryId = args[1] as Long?
-                    availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId)
+                if (annotatedMethods.contains(method)) {
+                    if (result !is Exception) {
+                        val bookId = args.getOrNull(2) as? String
+                        val libraryId = args.getOrNull(1) as? String
+
+                        if (bookId != null) {
+                            availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId)
+                        }
+                    }
                 }
+                result
             })
             return proxyFactory.proxy
         }

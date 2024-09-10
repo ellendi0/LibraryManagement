@@ -25,6 +25,7 @@ repositories {
 dependencies {
     // Spring Boot Starter Dependencies
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter")
@@ -36,9 +37,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.23")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation ("com.fasterxml.jackson.module:jackson-module-kotlin")
-    annotationProcessor("org.projectlombok:lombok")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("io.mongock:mongock-springboot-v3:5.4.4")
+    implementation("io.mongock:mongodb-springdata-v4-driver:5.4.4")
 
     // Other Dependencies
     implementation("org.mindrot:jbcrypt:0.4")
@@ -46,7 +48,9 @@ dependencies {
 
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("io.mockk:mockk:1.9")
+    testImplementation("org.testcontainers:testcontainers:1.20.1")
+    testImplementation("org.testcontainers:junit-jupiter:1.20.1")
+    testImplementation("io.mockk:mockk:1.13.12")
 }
 
 group = "com.example"
@@ -105,7 +109,6 @@ tasks.withType<JacocoReport> {
                     "com/example/librarymanagement/model/**",
                     "com/example/librarymanagement/converter/**",
                     "com/example/librarymanagement/configuration/**",
-                    "com/example/librarymanagement/repository/**",
                 )
             }
         }))

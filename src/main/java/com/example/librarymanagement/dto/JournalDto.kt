@@ -2,12 +2,10 @@ package com.example.librarymanagement.dto
 
 import java.time.LocalDate
 
-class JournalDto (
-    val id: Long,
-    val dateOfBorrowing: LocalDate,
-    val dateOfReturning: LocalDate ?= null,
-    val title: String,
-    val author: String,
-    val user: String,
-    val nameOfLibrary: String,
+data class JournalDto (
+    val id: String?,
+    val dateOfBorrowing: LocalDate?,
+    val dateOfReturning: LocalDate? = null,
+    val bookPresenceId: String,
+    val userId: String,
 )

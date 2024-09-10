@@ -1,18 +1,17 @@
 package com.example.librarymanagement.dto.mapper
 
 import com.example.librarymanagement.dto.BookPresenceDto
-import com.example.librarymanagement.model.entity.BookPresence
+import com.example.librarymanagement.model.domain.BookPresence
 import org.springframework.stereotype.Component
 
 @Component
-class BookPresenceMapper(private val userMapper: UserMapper) {
+class BookPresenceMapper {
     fun toBookPresenceDto(bookPresence: BookPresence): BookPresenceDto {
         return BookPresenceDto(
-            id = bookPresence.id!!,
-            bookTitle = bookPresence.book.title,
-            bookAuthorId = bookPresence.book.author!!.id!!,
-            libraryId = bookPresence.library.id!!,
-            user = bookPresence.user?.let { userMapper.toUserResponseDto(it) },
+            id = bookPresence.id,
+            bookId = bookPresence.bookId,
+            libraryId = bookPresence.libraryId,
+            userId = bookPresence.userId,
             availability = bookPresence.availability
         )
     }

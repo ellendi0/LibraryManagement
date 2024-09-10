@@ -1,7 +1,7 @@
 package com.example.librarymanagement.dto
 
-class UserResponseDto (
-    val id: Long,
+data class UserResponseDto (
+    val id: String? = null,
     val firstName: String,
     val lastName: String,
     val email: String,

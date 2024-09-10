@@ -27,7 +27,7 @@ class LibraryController(
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getById(@PathVariable id: Long): LibraryDto {
+    fun getById(@PathVariable id: String): LibraryDto {
         return libraryMapper.toLibraryDto(libraryService.getLibraryById(id))
     }
 
@@ -39,13 +39,13 @@ class LibraryController(
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateLibrary(@PathVariable id: Long, @RequestBody @Valid libraryDto: LibraryDto): LibraryDto {
-        return libraryMapper.toLibraryDto(libraryService.updateLibrary(id, libraryMapper.toLibrary(libraryDto)))
+    fun updateLibrary(@PathVariable id: String, @RequestBody @Valid libraryDto: LibraryDto): LibraryDto {
+        return libraryMapper.toLibraryDto(libraryService.updateLibrary(libraryMapper.toLibrary(libraryDto, id)))
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteLibrary(@PathVariable id: Long) {
-        libraryService.deleteLibrary(id)
+    fun deleteLibrary(@PathVariable id: String) {
+        libraryService.deleteLibraryById(id)
     }
 }

@@ -1,20 +1,30 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.BookPresence
-import com.example.librarymanagement.model.entity.User
+import com.example.librarymanagement.model.domain.BookPresence
+import com.example.librarymanagement.model.domain.User
 import com.example.librarymanagement.model.enums.Availability
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
-import java.util.*
 
-@Repository
-interface BookPresenceRepository : JpaRepository<BookPresence, Long> {
-    fun findAllByBookId(bookId: Long): List<BookPresence>
-    fun findAllByLibraryId(libraryId: Long): List<BookPresence>
-    fun findAllByUserId(userId: Long): List<BookPresence>
-    fun findAllByLibraryIdAndBookId(libraryId: Long, bookId: Long): List<BookPresence>
-    fun findAllByLibraryIdAndBookIdAndUser(libraryId: Long, bookId: Long, user: User): Optional<BookPresence>
-    fun findAllByLibraryIdAndBookIdAndAvailability(libraryId: Long, bookId: Long, availability: Availability): List<BookPresence>
-    fun findAllByLibraryIdAndAvailability(libraryId: Long, availability: Availability): List<BookPresence>
-    fun deleteBookPresenceByIdAndLibraryId(bookId: Long, libraryId: Long)
+interface BookPresenceRepository {
+    fun save(bookPresence: BookPresence): BookPresence
+    fun addBookToUser(user: User, libraryId: String, bookId: String): BookPresence?
+    fun removeBookFromUser(user: User, libraryId: String, bookId: String): BookPresence?
+    fun findById(bookPresenceId: String): BookPresence?
+    fun deleteById(bookPresenceId: String)
+    fun findAllByBookId(bookId: String): List<BookPresence>
+    fun findAllByLibraryId(libraryId: String): List<BookPresence>
+    fun findAllByUserId(userId: String): List<BookPresence>
+    fun findAllByLibraryIdAndBookId(
+        libraryId: String,
+        bookId: String
+    ): List<BookPresence>
+
+    fun findAllByLibraryIdAndBookIdAndAvailability(
+        libraryId: String,
+        bookId: String,
+        availability: Availability
+    ): List<BookPresence>
+
+    fun findAllByLibraryIdAndAvailability(libraryId: String, availability: Availability): List<BookPresence>
+    fun existsByBookIdAndLibraryId(bookId: String, libraryId: String): Boolean
+
 }

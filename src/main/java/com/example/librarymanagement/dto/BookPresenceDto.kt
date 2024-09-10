@@ -3,10 +3,9 @@ package com.example.librarymanagement.dto
 import com.example.librarymanagement.model.enums.Availability
 
 class BookPresenceDto (
-    val id: Long,
-    val user: UserResponseDto ?= null,
-    val bookTitle: String,
-    val bookAuthorId: Long,
-    val libraryId: Long,
+    val id: String? = null,
+    val userId: String? = null,
+    val bookId: String,
+    val libraryId: String,
     val availability: Availability,
 )

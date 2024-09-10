@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/author")
-class AuthorController(private val authorService: AuthorService, private val authorMapper: AuthorMapper){
+class AuthorController(
+    private val authorService: AuthorService,
+    private val authorMapper: AuthorMapper
+) {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -24,7 +27,7 @@ class AuthorController(private val authorService: AuthorService, private val aut
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getAuthorById(@PathVariable id: Long): AuthorDto = authorMapper.toAuthorDto(authorService.getAuthorById(id))
+    fun getAuthorById(@PathVariable id: String): AuthorDto = authorMapper.toAuthorDto(authorService.getAuthorById(id))
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -34,7 +37,7 @@ class AuthorController(private val authorService: AuthorService, private val aut
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateAuthor(@PathVariable id: Long, @RequestBody @Valid authorDto: AuthorDto): AuthorDto {
-        return authorMapper.toAuthorDto(authorService.updateAuthor(id, authorMapper.toAuthor(authorDto)))
+    fun updateAuthor(@PathVariable id: String, @RequestBody @Valid authorDto: AuthorDto): AuthorDto {
+        return authorMapper.toAuthorDto(authorService.updateAuthor(authorMapper.toAuthor(authorDto, id)))
     }
 }

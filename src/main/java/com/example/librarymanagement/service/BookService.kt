@@ -1,12 +1,12 @@
 package com.example.librarymanagement.service
 
-import com.example.librarymanagement.model.entity.Book
+import com.example.librarymanagement.model.domain.Book
 
 interface BookService {
     fun findAll(): List<Book>
-    fun getBookById(id: Long): Book
-    fun getBookByTitleAndAuthor(title: String, authorId: Long): Book
-    fun createBook(authorId: Long, publisherId: Long, book: Book): Book
-    fun updateBook(id: Long, updatedBook: Book): Book
-    fun deleteBook(id: Long)
+    fun getBookById(id: String): Book
+    fun getBookByTitleAndAuthor(title: String, authorId: String): Book
+    fun createBook(book: Book): Book
+    fun updateBook(updatedBook: Book): Book
+    fun deleteBookById(id: String)
 }

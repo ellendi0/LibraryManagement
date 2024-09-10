@@ -1,13 +1,11 @@
 package com.example.librarymanagement.repository
 
-import com.example.librarymanagement.model.entity.Journal
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.example.librarymanagement.model.domain.Journal
 
-@Repository
-interface JournalRepository : JpaRepository<Journal, Long> {
-    fun findByBookPresenceIdAndUserId(bookPresenceId: Long, userId: Long): List<Journal>
-    fun findByBookPresenceId(bookPresenceId: Long): List<Journal>
-    fun findAllByUserId(userId: Long): List<Journal>
-    fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: Long, userId: Long): Journal?
+interface JournalRepository {
+    fun save(journal: Journal): Journal
+    fun findById(journalId: String): Journal?
+    fun deleteById(journalId: String)
+    fun findAllByUserId(userId: String): List<Journal>
+    fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: String, userId: String): Journal?
 }
