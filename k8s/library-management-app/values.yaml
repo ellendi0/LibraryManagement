@@ -1,0 +1,30 @@
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: library-management.local
+
+replicas: 1
+
+name: library-management-app
+
+containers:
+  image:
+    repository: olenadobysh
+    name: librarymanagement-app
+    tag: "1.0.0"
+  containerPort: 8080
+
+ports:
+  port: 8080
+  targetPort: 8080
+
+type: ClusterIP
+
+SPRING_PROFILES_ACTIVE: "jpa"
+
+environments:
+  JPA_URL: "jdbc:mysql://mysqldb:3306/library"
+
+

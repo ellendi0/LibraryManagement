@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.containers.image.repository}}/{{ .Values.containers.image.name}}:{{ .Values.containers.image.tag}}"
+          ports:
+            - containerPort: {{ .Values.containers.containerPort }}
+              name: mysql
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.SPRING_PROFILES_ACTIVE }}"
+            - name: JPA_URL
+              value: "{{ .Values.environments.JPA_URL }}"
+            - name: JPA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: jpa-username
+            - name: JPA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: jpa-password

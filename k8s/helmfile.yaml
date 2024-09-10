@@ -1,0 +1,18 @@
+repositories:
+  - name: stable
+    url: https://charts.helm.sh/stable
+
+releases:
+  - name: mongodb
+    chart: ./mongodb
+
+  - name: mysqldb
+    chart: ./mysqldb
+
+  - name: library-management-app
+    chart: ./library-management-app
+
+hooks:
+  - events: ["prepare"]
+    command: "kubectl"
+    args: ["apply", "-f", "./secret.yaml"]
