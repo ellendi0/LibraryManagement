@@ -18,8 +18,8 @@ class MongoAuthorRepositoryTest {
     private val mongoId = AuthorDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val author = AuthorDataFactory.createAuthor(mongoId)
-    private val mongoAuthor = AuthorDataFactory.createMongoAuthor()
+    private val author = AuthorDataFactory.createAuthor(id)
+    private val mongoAuthor = AuthorDataFactory.createMongoAuthor(mongoId)
 
     @Test
     fun shouldFindAllAuthors() {

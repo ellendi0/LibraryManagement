@@ -1,21 +1,23 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory
-import com.example.librarymanagement.dto.BookPresenceDto
+import com.example.librarymanagement.data.BookPresenceDataFactory
+import com.example.librarymanagement.data.ErrorDataFactory
+import com.example.librarymanagement.data.JournalDataFactory
 import com.example.librarymanagement.dto.mapper.BookPresenceMapper
 import com.example.librarymanagement.dto.mapper.ErrorMapper
-import com.example.librarymanagement.dto.mapper.UserMapper
+import com.example.librarymanagement.dto.mapper.JournalMapper
 import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.exception.GlobalExceptionHandler
-import com.example.librarymanagement.model.entity.BookPresence
+import com.example.librarymanagement.model.domain.BookPresence
+import com.example.librarymanagement.model.domain.Journal
 import com.example.librarymanagement.service.BookPresenceService
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -26,169 +28,287 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 class BookPresenceControllerTest {
     private lateinit var mockMvc: MockMvc
-    private lateinit var bookPresenceService: BookPresenceService
-    private lateinit var bookPresenceController: BookPresenceController
-    private lateinit var bookPresenceMapper: BookPresenceMapper
-    private lateinit var globalExceptionHandler: GlobalExceptionHandler
-    private lateinit var errorMapper: ErrorMapper
-    private val objectMapper: ObjectMapper = ObjectMapper()
+    private val bookPresenceService: BookPresenceService = mockk(relaxed = true)
+    private val bookPresenceMapper: BookPresenceMapper = mockk(relaxed = true)
+    private val errorMapper: ErrorMapper = mockk()
+    private val globalExceptionHandler = GlobalExceptionHandler(errorMapper)
 
-    private var bookPresence = TestDataFactory.createBookPresence()
-    private lateinit var bookPresenceDto: BookPresenceDto
-    private var errorDto1 = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
-    private var errorDto2 = ErrorMapper().toErrorDto(HttpStatus.NOT_FOUND, "Book")
+    private val journalMapper: JournalMapper = mockk(relaxed = true)
+    private val objectMapper: ObjectMapper = ObjectMapper().registerModule(JavaTimeModule())
+    private val bookPresenceController = BookPresenceController(bookPresenceService, bookPresenceMapper, journalMapper)
+
+    private val bookPresence = BookPresenceDataFactory.createBookPresence(ID)
+    private val bookPresenceDto = BookPresenceMapper().toBookPresenceDto(bookPresence)
+    private val journal = JournalDataFactory.createJournal(ID)
+    private val journalDto = journalMapper.toJournalDto(journal)
+    private val errorNotFound = ErrorDataFactory.createNotFoundError()
 
     @BeforeEach
     fun setUp() {
-        bookPresenceService = mockk(relaxed = true)
-        bookPresenceController = mockk(relaxed = true)
-        bookPresenceMapper = mockk(relaxed = true)
-        errorMapper = mockk(relaxed = true)
-        globalExceptionHandler = GlobalExceptionHandler(errorMapper)
-        bookPresenceController = BookPresenceController(bookPresenceService, bookPresenceMapper)
-
-        bookPresenceDto = BookPresenceMapper(UserMapper()).toBookPresenceDto(bookPresence)
-
         mockMvc = MockMvcBuilders.standaloneSetup(bookPresenceController)
             .setControllerAdvice(globalExceptionHandler)
             .build()
     }
 
     @Test
+    fun shouldAddUserToBook() {
+        //GIVEN
+        val expected = objectMapper.writeValueAsString(listOf(journalDto))
+
+        every { bookPresenceService.addUserToBook(any(), any(), any()) } returns listOf(journal)
+        every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
+
+        //WHEN
+        val actual = mockMvc.perform(
+            post("$USER_URL{ID}/borrowings", ID)
+                .param("libraryId", ID)
+                .param("bookId", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldNotAddUserToBookWithNonExistingUser() {
+        //GIVEN
+        val expected = 404
+
+        every { bookPresenceService.addUserToBook(any(), any(), any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorNotFound
+
+        //WHEN
+        val actual = mockMvc.perform(
+            post("$USER_URL{ID}/borrowings", 0L)
+                .param("libraryId", ID)
+                .param("bookId", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound)
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldNotAddUserToBookWithNonExistingLibrary() {
+        //GIVEN
+        val expected = 404
+
+        every { bookPresenceService.addUserToBook(any(), any(), any()) } throws EntityNotFoundException("Library")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorNotFound
+
+        //WHEN
+        val actual = mockMvc.perform(
+            post("$USER_URL{ID}/borrowings", ID)
+                .param("libraryId", "0")
+                .param("bookId", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound)
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldNotAddUserToBookWithNonExistingBook() {
+        //GIVEN
+        val expected = 404
+        every { bookPresenceService.addUserToBook(any(), any(), any()) } throws EntityNotFoundException("Book")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorNotFound
+
+        //WHEN
+        val actual = mockMvc.perform(
+            post("$USER_URL{ID}/borrowings", ID)
+                .param("libraryId", ID)
+                .param("bookId", "0")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound)
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldReturnBookToLibrary() {
+        //GIVEN
+        val expected = objectMapper.writeValueAsString(listOf(journalDto))
+
+        every { bookPresenceService.removeUserFromBook(any(), any(), any()) } returns listOf(journal)
+        every { journalMapper.toJournalDto(any<List<Journal>>()) } returns listOf(journalDto)
+
+        //WHEN
+        val actual = mockMvc.perform(
+            delete("$USER_URL{ID}/borrowings", ID)
+                .param("libraryId", ID)
+                .param("bookId", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNoContent)
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldNotReturnBookToLibraryWithNonExistingUser() {
+        //GIVEN
+        val expected = 404
+
+        every { bookPresenceService.removeUserFromBook(any(), any(), any()) } throws EntityNotFoundException("User")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorNotFound
+
+        //WHEN
+        val actual = mockMvc.perform(
+            delete("$USER_URL{ID}/borrowings", 0L)
+                .param("libraryId", ID)
+                .param("bookId", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound)
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
     fun shouldAddBookToLibrary() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(bookPresenceDto)
 
         every { bookPresenceService.addBookToLibrary(any(), any()) } returns bookPresence
         every { bookPresenceMapper.toBookPresenceDto(any<BookPresence>()) } returns bookPresenceDto
 
-        val result = mockMvc.perform(post("/api/v1/library/{libraryId}/book/{bookId}/presence", 1L, 1L)
-                .contentType(MediaType.APPLICATION_JSON))
+        //WHEN
+        val actual = mockMvc.perform(
+            post("$LIBRARY_URL{libraryId}/book/{bookId}/presence", ID, ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isCreated())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotAddBookToLibraryWithInvalidData() {
-        every { bookPresenceService.addBookToLibrary(any(), any()) } throws (EntityNotFoundException("Book"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(post("/api/v1/library/{libraryId}/book/{bookId}/presence", 0L, 0L)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAllBooksByLibraryId() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(bookPresenceDto))
 
-        every { bookPresenceService.getByLibraryId(any()) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllByLibraryId(any()) } returns listOf(bookPresence)
         every { bookPresenceMapper.toBookPresenceDto(any<List<BookPresence>>()) } returns listOf(bookPresenceDto)
 
-        val result = mockMvc.perform(get("/api/v1/library/{libraryId}/book", 1L)
-                .contentType(MediaType.APPLICATION_JSON))
+        //WHEN
+        val actual = mockMvc.perform(
+            get("$LIBRARY_URL{libraryId}/book", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isOk())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetAllBooksByLibraryIdWithInvalidData() {
-        every { bookPresenceService.getByLibraryId(any()) } throws (EntityNotFoundException("Library"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/library/{libraryId}/book", 0L)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAllBooksByLibraryIdAndBookId() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(bookPresenceDto))
 
-        every { bookPresenceService.getAllBookByLibraryIdAndBookId(any(), any()) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllBookPresencesByLibraryIdAndBookId(any(), any()) } returns listOf(bookPresence)
         every { bookPresenceMapper.toBookPresenceDto(any<List<BookPresence>>()) } returns listOf(bookPresenceDto)
 
-        val result = mockMvc.perform(get("/api/v1/library/{libraryId}/book/{bookId}/presence", 1L, 1L)
-                .contentType(MediaType.APPLICATION_JSON))
+        //WHEN
+        val actual = mockMvc.perform(
+            get("$LIBRARY_URL{libraryId}/book/{bookId}/presence", ID, ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isOk())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetAllBooksByLibraryIdAndBookIdWithInvalidData() {
-        every { bookPresenceService.getAllBookByLibraryIdAndBookId(any(), any()) } throws (EntityNotFoundException("Book"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/library/{libraryId}/book/{bookId}/presence", 0L, 0L)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAllBooksByLibraryIdAndAvailability1() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(bookPresenceDto))
 
-        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(any(), any()) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllBookPresencesByLibraryIdAndAvailability(any(), any()) } returns listOf(
+            bookPresence
+        )
         every { bookPresenceMapper.toBookPresenceDto(any<List<BookPresence>>()) } returns listOf(bookPresenceDto)
 
-        val result = mockMvc.perform(get("/api/v1/library/{libraryId}/book", 1L)
+        //WHEN
+        val actual = mockMvc.perform(
+            get("$LIBRARY_URL{libraryId}/book", ID)
                 .param("availability", "AVAILABLE")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isOk())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAllBooksByLibraryIdAndAvailability2() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(bookPresenceDto))
 
-        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(any(), any()) } returns listOf(bookPresence)
+        every { bookPresenceService.getAllBookPresencesByLibraryIdAndAvailability(any(), any()) } returns listOf(
+            bookPresence
+        )
         every { bookPresenceMapper.toBookPresenceDto(any<List<BookPresence>>()) } returns listOf(bookPresenceDto)
 
-        val result = mockMvc.perform(get("/api/v1/library/{libraryId}/book", 1L)
+        //WHEN
+        val actual = mockMvc.perform(
+            get("$LIBRARY_URL{libraryId}/book", ID)
                 .param("availability", "UNAVAILABLE")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isOk())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
-    }
-
-    @Test
-    fun shouldNotGetAllBooksByLibraryIdAndStatusWithInvalidData() {
-        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(any(), any()) } throws (EntityNotFoundException("Library"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/library/{libraryId}/book", 0L)
-                .param("availability", "AVAILABLE")
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
-    }
-
-    @Test
-    fun shouldNotGetAllBooksByLibraryIdAndStatusWithInvalidStatus() {
-        every { bookPresenceService.getAllBookByLibraryIdAndAvailability(any(), any()) } throws (EntityNotFoundException("Library"))
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto2
-
-        mockMvc.perform(get("/api/v1/library/{libraryId}/book", 0L)
-                .param("availability", "INVALID")
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldRemoveBookFromLibrary() {
+        //GIVEN
+        val status = 204
+
         every { bookPresenceService.deleteBookPresenceById(any()) } returns Unit
 
-        mockMvc.perform(delete("/api/v1/presence/{presenceId}", 1L)
-                .contentType(MediaType.APPLICATION_JSON))
+        //WHEN
+        val actual = mockMvc.perform(
+            delete(LIBRARY_URL + "presence/{presenceId}", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isNoContent())
+            .andReturn().response.status
+
+        //THEN
+        Assertions.assertEquals(status, actual)
+    }
+
+    companion object {
+        const val ID = BookPresenceDataFactory.JPA_ID.toString()
+        const val LIBRARY_URL = "/api/v1/library/"
+        const val USER_URL = "/api/v1/user/"
     }
 }

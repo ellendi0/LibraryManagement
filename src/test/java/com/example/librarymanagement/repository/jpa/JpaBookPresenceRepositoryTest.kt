@@ -19,12 +19,11 @@ class JpaBookPresenceRepositoryTest {
     private val journalRepository: JpaJournalRepository = mockk()
     private val jpaBookPresenceRepository = JpaBookPresenceRepository(bookPresenceRepositorySpring, journalRepository)
 
-    private val jpaId = BookDataFactory.JPA_ID
-    private val id = jpaId.toString()
+    private val id = BookDataFactory.JPA_ID.toString()
 
     private val testDataFactory = TestDataFactory.createTestDataRelationsForJpaRepositories()
     private val jpaBookPresence = testDataFactory.bookPresence
-    private val bookPresence = BookPresenceDataFactory.createBookPresence(jpaId)
+    private val bookPresence = BookPresenceDataFactory.createBookPresence()
 
     @Test
     fun shouldSaveBookPresence() {
@@ -45,7 +44,7 @@ class JpaBookPresenceRepositoryTest {
         // GIVEN
         val jpaJournal = testDataFactory.journal
         val expected = bookPresence.copy(availability = Availability.UNAVAILABLE)
-        val user = UserDataFactory.createUser(jpaId)
+        val user = UserDataFactory.createUser()
 
         every {
             bookPresenceRepositorySpring.findAllByLibraryIdAndBookIdAndAvailability(
@@ -74,7 +73,7 @@ class JpaBookPresenceRepositoryTest {
         val unavailableJpaBookPresence = jpaBookPresence.copy(availability = Availability.UNAVAILABLE)
         val availableJpaBookPresence = unavailableJpaBookPresence.copy(availability = Availability.AVAILABLE)
         val expected = JpaBookPresenceMapper.toDomain(availableJpaBookPresence)
-        val user = UserDataFactory.createUser(jpaId)
+        val user = UserDataFactory.createUser()
 
         every {
             bookPresenceRepositorySpring.findAllByLibraryIdAndBookIdAndAvailability(

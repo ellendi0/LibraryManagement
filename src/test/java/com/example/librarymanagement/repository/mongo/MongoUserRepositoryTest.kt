@@ -17,8 +17,8 @@ class MongoUserRepositoryTest {
     private val mongoId = UserDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val user = UserDataFactory.createUser(mongoId)
-    private val mongoUser = UserDataFactory.createMongoUser()
+    private val user = UserDataFactory.createUser(id)
+    private val mongoUser = UserDataFactory.createMongoUser(mongoId)
 
     @Test
     fun `should find all users`() {

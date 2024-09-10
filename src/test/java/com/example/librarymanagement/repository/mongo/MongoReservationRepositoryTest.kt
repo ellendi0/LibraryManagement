@@ -18,7 +18,7 @@ class MongoReservationRepositoryTest {
     private val id = mongoId.toString()
 
     private val reservation = ReservationDataFactory.createReservation(id)
-    private val mongoReservation = ReservationDataFactory.createMongoReservation()
+    private val mongoReservation = ReservationDataFactory.createMongoReservation(mongoId)
 
     @Test
     fun `should save`() {

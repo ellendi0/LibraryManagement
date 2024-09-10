@@ -17,7 +17,7 @@ class MongoBookRepositoryTest {
     private val mongoId = BookDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val book = BookDataFactory.createBook(mongoId)
+    private val book = BookDataFactory.createBook(id)
 
     @Test
     fun `should save book`() {

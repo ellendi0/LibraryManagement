@@ -20,7 +20,7 @@ class JpaLibraryRepositoryTest {
     private val jpaId = JournalDataFactory.JPA_ID
     private val id = jpaId.toString()
 
-    private val library = LibraryDataFactory.createLibrary(jpaId)
+    private val library = LibraryDataFactory.createLibrary()
 
     @Test
     fun `should find all libraries`() {

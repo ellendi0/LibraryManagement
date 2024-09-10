@@ -1,12 +1,14 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.data.AuthorDataFactory
+import com.example.librarymanagement.data.ErrorDataFactory
 import com.example.librarymanagement.dto.AuthorDto
 import com.example.librarymanagement.dto.mapper.AuthorMapper
 import com.example.librarymanagement.dto.mapper.ErrorMapper
 import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.exception.GlobalExceptionHandler
-import com.example.librarymanagement.model.entity.Author
+import com.example.librarymanagement.integration.AbstractIntegrationTest
+import com.example.librarymanagement.model.domain.Author
 import com.example.librarymanagement.service.AuthorService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
@@ -14,7 +16,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -23,31 +24,22 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-class AuthorControllerTest {
-
+class AuthorControllerTest: AbstractIntegrationTest(){
     private lateinit var mockMvc: MockMvc
-    private lateinit var authorService: AuthorService
-    private lateinit var authorController: AuthorController
-    private lateinit var authorMapper: AuthorMapper
-    private lateinit var globalExceptionHandler: GlobalExceptionHandler
-    private lateinit var errorMapper: ErrorMapper
+    private val authorService: AuthorService = mockk()
+    private val authorMapper: AuthorMapper = mockk(relaxed = true)
+    private val errorMapper: ErrorMapper = mockk()
+    private val globalExceptionHandler = GlobalExceptionHandler(errorMapper)
     private val objectMapper: ObjectMapper = ObjectMapper()
+    private val authorController = AuthorController(authorService, authorMapper)
 
-    private var author = TestDataFactory.createAuthor()
-    private lateinit var authorDto: AuthorDto
-    private var errorDto = ErrorMapper().toErrorDto(HttpStatus.BAD_REQUEST, "Invalid")
+    private var author = AuthorDataFactory.createAuthor(ID)
+    private var authorDto: AuthorDto = AuthorMapper().toAuthorDto(author)
+    private var errorDtoBadRequest = ErrorDataFactory.createBadRequestError()
+    private val errorDtoNotFound = ErrorDataFactory.createNotFoundError()
 
     @BeforeEach
     fun setUp() {
-        authorService = mockk(relaxed = true)
-        authorController = mockk(relaxed = true)
-        authorMapper = mockk(relaxed = true)
-        errorMapper = mockk(relaxed = true)
-        globalExceptionHandler = GlobalExceptionHandler(errorMapper)
-        authorController = AuthorController(authorService, authorMapper)
-
-        authorDto = AuthorMapper().toAuthorDto(author)
-
         mockMvc = MockMvcBuilders.standaloneSetup(authorController)
             .setControllerAdvice(globalExceptionHandler)
             .build()
@@ -55,102 +47,143 @@ class AuthorControllerTest {
 
     @Test
     fun shouldCreateAuthor() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(authorDto)
 
         every { authorService.createAuthor(any()) } returns author
         every { authorMapper.toAuthorDto(any<Author>()) } returns authorDto
 
-        val result = mockMvc.perform(post("/api/v1/author")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+        //WHEN
+        val actual = mockMvc.perform(
+            post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(expected)
+        )
             .andExpect(status().isCreated())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotCreateAuthorWithInvalidData() {
-        authorDto.lastName = ""
+        //GIVEN
+        val expected = objectMapper.writeValueAsString(errorDtoBadRequest)
+        val content = objectMapper.writeValueAsString(authorDto.copy(lastName = ""))
 
         every { authorService.createAuthor(any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDtoBadRequest
 
-        val result = mockMvc.perform(post("/api/v1/author")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+        //WHEN
+        val actual = mockMvc.perform(
+            post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
+        )
             .andExpect(status().isBadRequest())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(objectMapper.writeValueAsString(errorDto), result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldUpdateAuthor() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(authorDto)
 
-        every { authorService.updateAuthor(any(), any()) } returns author
+        every { authorService.updateAuthor(any()) } returns author
         every { authorMapper.toAuthorDto(any<Author>()) } returns authorDto
 
-        val result = mockMvc.perform(put("/api/v1/author/{id}", 1L)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+        //WHEN
+        val actual = mockMvc.perform(
+            put("$URL/{id}", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(expected)
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotUpdateAuthorWithInvalidData() {
-        authorDto.lastName = ""
+        //GIVEN
+        val expected = objectMapper.writeValueAsString(errorDtoBadRequest)
+        val content = objectMapper.writeValueAsString(authorDto.copy(firstName = ""))
 
-        every { authorService.updateAuthor(any(), any()) } throws IllegalArgumentException("Invalid")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
+        every { authorService.updateAuthor(any()) } throws IllegalArgumentException("Invalid")
+        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDtoBadRequest
 
-        val result = mockMvc.perform(put("/api/v1/author/{id}", 1L)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(authorDto)))
+        //WHEN
+        val actual = mockMvc.perform(
+            put("$URL/{id}", ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
+        )
             .andExpect(status().isBadRequest())
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(objectMapper.writeValueAsString(errorDto), result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAllAuthors() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(listOf(authorDto))
 
         every { authorService.getAllAuthors() } returns listOf(author)
         every { authorMapper.toAuthorDto(any<List<Author>>()) } returns listOf(authorDto)
 
-        val result = mockMvc.perform(get("/api/v1/author"))
+        //WHEN
+        val actual = mockMvc.perform(get(URL))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldGetAuthorById() {
+        //GIVEN
         val expected = objectMapper.writeValueAsString(authorDto)
 
         every { authorService.getAuthorById(any()) } returns author
         every { authorMapper.toAuthorDto(any<Author>()) } returns authorDto
 
-        val result = mockMvc.perform(get("/api/v1/author/{id}", 1L))
+        //WHEN
+        val actual = mockMvc.perform(get("$URL/{id}", ID))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        Assertions.assertEquals(expected, result)
+        //THEN
+        Assertions.assertEquals(expected, actual)
     }
 
     @Test
     fun shouldNotGetAuthorById() {
-        every { authorService.getAuthorById(any()) } throws EntityNotFoundException("Author")
-        every { errorMapper.toErrorDto(any(), any<List<String>>()) } returns errorDto
+        //GIVEN
+        val expected = objectMapper.writeValueAsString(errorDtoNotFound)
 
-        mockMvc.perform(get("/api/v1/author/{id}", 1L))
-            .andExpect(status().isNotFound)
+        every { authorService.getAuthorById(any()) } throws EntityNotFoundException("Author")
+        every { errorMapper.toErrorDto(any(), any<String>()) } returns errorDtoNotFound
+
+        //WHEN
+        val actual = mockMvc.perform(get("$URL/{id}", ID))
+            .andExpect(status().isNotFound())
+            .andReturn().response.contentAsString
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+    }
+
+    companion object {
+        const val ID = AuthorDataFactory.JPA_ID.toString()
+        const val URL = "/api/v1/author"
     }
 }
