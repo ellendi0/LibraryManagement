@@ -1,7 +1,6 @@
 package com.example.librarymanagement.controller
 
-import com.example.librarymanagement.dto.BookRequestDto
-import com.example.librarymanagement.dto.BookResponseDto
+import com.example.librarymanagement.dto.BookDto
 import com.example.librarymanagement.dto.mapper.BookMapper
 import com.example.librarymanagement.service.BookService
 import jakarta.validation.Valid
@@ -23,22 +22,22 @@ class BookController(private val bookService: BookService, private val bookMappe
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooks(): List<BookResponseDto> = bookMapper.toBookDto(bookService.findAll())
+    fun getAllBooks(): List<BookDto> = bookMapper.toBookDto(bookService.findAll())
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getBookById(@PathVariable id: String): BookResponseDto = bookMapper.toBookDto(bookService.getBookById(id))
+    fun getBookById(@PathVariable id: String): BookDto = bookMapper.toBookDto(bookService.getBookById(id))
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createBook(@RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
+    fun createBook(@RequestBody @Valid bookDto: BookDto): BookDto {
         return bookMapper
             .toBookDto(bookService.createBook(bookMapper.toBook(bookDto)))
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateBook(@PathVariable id: String, @RequestBody @Valid bookDto: BookRequestDto): BookResponseDto {
+    fun updateBook(@PathVariable id: String, @RequestBody @Valid bookDto: BookDto): BookDto {
         return bookMapper
             .toBookDto(bookService.updateBook(bookMapper.toBook(bookDto, id)))
     }
@@ -48,7 +47,7 @@ class BookController(private val bookService: BookService, private val bookMappe
     fun getBookByTitleAndAuthor(
         @RequestParam title: String,
         @RequestParam(name = "author") authorId: String
-    ): BookResponseDto {
+    ): BookDto {
         return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, authorId))
     }
 
