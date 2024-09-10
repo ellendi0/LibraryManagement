@@ -17,7 +17,7 @@ class JpaJournalRepositoryTest {
     private val jpaId = JournalDataFactory.JPA_ID
     private val id = jpaId.toString()
 
-    private val journal = JournalDataFactory.createJournal(jpaId)
+    private val journal = JournalDataFactory.createJournal()
 
     @Test
     fun `should save journal`() {

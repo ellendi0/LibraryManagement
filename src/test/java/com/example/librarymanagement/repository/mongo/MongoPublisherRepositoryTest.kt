@@ -19,8 +19,8 @@ class MongoPublisherRepositoryTest {
     private val mongoId = PublisherDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val publisher = PublisherDataFactory.createPublisher(mongoId)
-    private val mongoPublisher = PublisherDataFactory.createMongoPublisher()
+    private val publisher = PublisherDataFactory.createPublisher(id)
+    private val mongoPublisher = PublisherDataFactory.createMongoPublisher(mongoId)
 
     @Test
     fun shouldFindAllPublishers() {
@@ -65,50 +65,4 @@ class MongoPublisherRepositoryTest {
         Assertions.assertEquals(expected, actual)
     }
 }
-    
-//    @Autowired
-//    lateinit var mongoPublisherRepository: MongoPublisherRepository
-//
-//    private val publisher = PublisherDataFactory.createPublisher().copy(id = null)
-//
-//    @Test
-//    fun shouldSavePublisher() {
-//        //given
-//        val expected = publisher
-//
-//        //when
-//        val actual = mongoPublisherRepository.save(publisher)
-//
-//        //then
-//        Assertions.assertEquals(expected.name, actual.name)
-//        Assertions.assertNotNull(actual.id)
-//    }
-//
-//    @Test
-//    fun shouldById() {
-//        //given
-//        val saved = mongoPublisherRepository.save(publisher)
-//        val expectedId = saved.id
-//
-//        //when
-//        val actual = mongoPublisherRepository.findById(expectedId!!)
-//
-//        //then
-//        Assertions.assertNotNull(actual)
-//        Assertions.assertEquals(publisher.name, actual?.name)
-//    }
-//
-//    @Test
-//    fun shouldFindAllPublishers() {
-//        //given
-//        val savedPublisher = mongoPublisherRepository.save(publisher)
-//
-//        //when
-//        val allPublishers = mongoPublisherRepository.findAll()
-//
-//        //then
-//        Assertions.assertTrue(allPublishers.isNotEmpty())
-//        val foundPublisher = allPublishers.firstOrNull()
-//        Assertions.assertNotNull(foundPublisher)
-//        Assertions.assertEquals(publisher.name, foundPublisher?.name)
-//    }
+

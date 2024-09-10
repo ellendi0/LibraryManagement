@@ -8,21 +8,22 @@ import org.bson.types.ObjectId
 
 object BookPresenceDataFactory {
     const val JPA_ID = 1L
+    const val ID = "1"
     val MONGO_ID = ObjectId("111111111111111111111111")
 
-    fun createBookPresence(id: Any): BookPresence {
+    fun createBookPresence(id: String = ID): BookPresence {
         return BookPresence(
-            id = id.toString(),
+            id = id,
             availability = Availability.UNAVAILABLE,
-            bookId = id.toString(),
-            libraryId = id.toString(),
-            userId = id.toString()
+            bookId = id,
+            libraryId = id,
+            userId = id
         )
     }
 
-    fun createJpaBookPresence(): JpaBookPresence {
+    fun createJpaBookPresence(id: Long = JPA_ID): JpaBookPresence {
         return JpaBookPresence(
-            id = JPA_ID,
+            id = id,
             availability = Availability.UNAVAILABLE,
             book = null,
             library = null,
@@ -30,13 +31,13 @@ object BookPresenceDataFactory {
         )
     }
 
-    fun createMongoBookPresence(): MongoBookPresence {
+    fun createMongoBookPresence(id: ObjectId = MONGO_ID): MongoBookPresence {
         return MongoBookPresence(
-            id = MONGO_ID,
+            id = id,
             availability = Availability.UNAVAILABLE,
-            bookId = MONGO_ID,
-            libraryId = MONGO_ID,
-            userId = MONGO_ID
+            bookId = id,
+            libraryId = id,
+            userId = id
         )
     }
 }

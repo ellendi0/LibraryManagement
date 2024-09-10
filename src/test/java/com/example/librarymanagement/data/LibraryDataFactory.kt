@@ -7,11 +7,12 @@ import org.bson.types.ObjectId
 
 object LibraryDataFactory {
     const val JPA_ID = 1L
+    const val ID = "1"
     val MONGO_ID = ObjectId("111111111111111111111111")
     private const val NAME = "Test"
     private const val ADDRESS = "Test"
 
-    fun createLibrary(id: Any) = Library(id.toString(), NAME, ADDRESS)
-    fun createJpaLibrary() = JpaLibrary(JPA_ID, NAME, ADDRESS)
-    fun createMongoLibrary() = MongoLibrary(MONGO_ID, NAME, ADDRESS)
+    fun createLibrary(id: String = ID) = Library(id, NAME, ADDRESS)
+    fun createJpaLibrary(id: Long = JPA_ID) = JpaLibrary(id, NAME, ADDRESS)
+    fun createMongoLibrary(id: ObjectId = MONGO_ID) = MongoLibrary(id, NAME, ADDRESS)
 }

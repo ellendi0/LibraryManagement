@@ -7,32 +7,33 @@ import org.bson.types.ObjectId
 
 object ReservationDataFactory {
     const val JPA_ID = 1L
+    const val ID = "1"
     val MONGO_ID = ObjectId("111111111111111111111111")
 
-    fun createReservation(id: Any): Reservation {
+    fun createReservation(id: String = ID): Reservation {
         return Reservation(
-            id = id.toString(),
-            bookId = id.toString(),
-            libraryId = id.toString(),
-            userId = id.toString()
+            id = id,
+            bookId = id,
+            libraryId = id,
+            userId = id
         )
     }
 
-    fun createJpaReservation(): JpaReservation {
+    fun createJpaReservation(id: Long = JPA_ID): JpaReservation {
         return JpaReservation(
-            id = JPA_ID,
+            id = id,
             user = null,
             book = null,
             library = null
         )
     }
-    //id
-    fun createMongoReservation(/*id: String = Rand*/): MongoReservation {
+
+    fun createMongoReservation(id: ObjectId = MONGO_ID): MongoReservation {
         return MongoReservation(
-            id = MONGO_ID,
-            bookId = MONGO_ID,
-            libraryId = MONGO_ID,
-            userId = MONGO_ID
+            id = id,
+            bookId = id,
+            libraryId = id,
+            userId = id
         )
     }
 }

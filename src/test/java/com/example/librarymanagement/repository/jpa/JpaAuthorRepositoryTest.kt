@@ -13,7 +13,7 @@ class JpaAuthorRepositoryTest {
     private val jpaAuthorRepository = JpaAuthorRepository(authorRepositorySpring)
     private val jpaAuthor = AuthorDataFactory.createJpaAuthor()
 
-    private val author = AuthorDataFactory.createAuthor(ID)
+    private val author = AuthorDataFactory.createAuthor()
 
     @Test
     fun shouldFindAllAuthors() {

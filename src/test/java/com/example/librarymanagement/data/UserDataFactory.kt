@@ -10,6 +10,7 @@ import org.bson.types.ObjectId
 
 object UserDataFactory {
     const val JPA_ID = 1L
+    const val ID = "1"
     val MONGO_ID = ObjectId("111111111111111111111111")
     private const val FIRST_NAME = "Test"
     private const val LAST_NAME = "Test"
@@ -18,9 +19,9 @@ object UserDataFactory {
     private const val PASSWORD = "Password1"
 
 
-    fun createUser(id: Any): User {
+    fun createUser(id: String = ID): User {
         return User(
-            id = id.toString(),
+            id = id,
             firstName = FIRST_NAME,
             lastName = LAST_NAME,
             email = EMAIL,
@@ -29,17 +30,9 @@ object UserDataFactory {
         )
     }
 
-    fun createUserRequestDto(): UserRequestDto {
+    fun createUserRequestDto(id: String = ID): UserRequestDto {
         return UserRequestDto(
-            firstName = FIRST_NAME, lastName = LAST_NAME, email = EMAIL, phoneNumber = PHONE_NUMBER, password = PASSWORD
-        )
-    }
-
-    fun createUserPresenceDto(): UserResponseDto = UserMapper().toUserResponseDto(createUser(1))
-
-    fun createJpaUser(): JpaUser {
-        return JpaUser(
-            id = JPA_ID,
+            id = id,
             firstName = FIRST_NAME,
             lastName = LAST_NAME,
             email = EMAIL,
@@ -48,9 +41,22 @@ object UserDataFactory {
         )
     }
 
-    fun createMongoUser(): MongoUser {
+    fun createUserResponseDto(): UserResponseDto = UserMapper().toUserResponseDto(createUser())
+
+    fun createJpaUser(id: Long = JPA_ID): JpaUser {
+        return JpaUser(
+            id = id,
+            firstName = FIRST_NAME,
+            lastName = LAST_NAME,
+            email = EMAIL,
+            phoneNumber = PHONE_NUMBER,
+            password = PASSWORD
+        )
+    }
+
+    fun createMongoUser(id: ObjectId = MONGO_ID): MongoUser {
         return MongoUser(
-            id = MONGO_ID,
+            id = id,
             firstName = FIRST_NAME,
             lastName = LAST_NAME,
             email = EMAIL,
