@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class BookPresenceMapper {
     fun toBookPresenceDto(bookPresence: BookPresence): BookPresenceDto {
         return BookPresenceDto(
-            id = bookPresence.id!!,
+            id = bookPresence.id,
             bookId = bookPresence.bookId,
             libraryId = bookPresence.libraryId,
             userId = bookPresence.userId,

@@ -20,7 +20,7 @@ class BookMapper {
 
     fun toBookDto(book: Book): BookDto {
         return BookDto(
-            id = book.id!!,
+            id = book.id,
             title = book.title,
             authorId = book.authorId,
             publisherId = book.publisherId,
