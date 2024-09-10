@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      volumes:
+        - name: {{ .Values.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.pvc.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.name }}:{{.Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.ports.port }}
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .Values.environment.MYSQL_DATABASE }}
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: jpa-password
+          volumeMounts:
+            - name: {{ .Values.volumes.name }}
+              mountPath: {{ .Values.volumes.mouthPath }}
+          resources:
+            limits:
+              memory: {{ .Values.resources.memory }}
+              cpu: {{ .Values.resources.cpu }}
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds | default 120 }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 10 }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 5 }}

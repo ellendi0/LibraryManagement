@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{.Values.replicas}}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      volumes:
+        - name: {{ .Values.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.pvc.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.containers.image.name}}
+          ports:
+            - containerPort: {{ .Values.containers.ports.containerPort }}
+              protocol: {{ .Values.containers.ports.protocol }}
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: mongo-username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: mongo-password
+          volumeMounts:
+            - name: {{ .Values.volumes.name }}
+              mountPath: {{ .Values.volumes.mouthPath }}
+          resources:
+            limits:
+              memory: {{ .Values.resources.memory }}
+              cpu: {{ .Values.resources.cpu }}
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - db.adminCommand('ping')
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold| default 5 }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 10 }}

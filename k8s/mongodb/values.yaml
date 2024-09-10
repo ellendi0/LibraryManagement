@@ -1,0 +1,32 @@
+name: mongodb
+
+replicas: 1
+
+containers:
+  image:
+    name: mongo
+  ports:
+    containerPort: 27017
+    protocol: TCP
+
+ports:
+  targetPort: 27017
+  port: 27017
+  protocol: TCP
+
+livenessProbe:
+  failureThreshold: 5
+  periodSeconds: 10
+  timeoutSeconds: 10
+
+volumes:
+  name: mongo-volume
+  mouthPath: "/var/lib/mongo/data"
+  pvc:
+    name: mongo-pvc
+    accessMode: ReadWriteOnce
+    storage: 5Gi
+
+resources:
+  memory: "256Mi"
+  cpu: "500m"
