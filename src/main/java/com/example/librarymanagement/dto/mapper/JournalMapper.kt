@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class JournalMapper {
     fun toJournalDto(journal: Journal) : JournalDto {
         return JournalDto(
-            id = journal.id!!,
+            id = journal.id,
             dateOfBorrowing = journal.dateOfBorrowing,
             dateOfReturning = journal.dateOfReturning,
             bookPresenceId = journal.bookPresenceId,

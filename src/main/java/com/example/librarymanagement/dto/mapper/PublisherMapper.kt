@@ -10,7 +10,7 @@ class PublisherMapper {
         return Publisher(id = publisherDto.id ?: id, name = publisherDto.name)
     }
 
-    fun toPublisherDto(publisher: Publisher): PublisherDto = PublisherDto(publisher.id!!, publisher.name)
+    fun toPublisherDto(publisher: Publisher): PublisherDto = PublisherDto(publisher.id, publisher.name)
 
     fun toPublisherDto(publishers: List<Publisher>): List<PublisherDto> = publishers.map { toPublisherDto(it) }
 }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class ReservationMapper {
     fun toReservationDto(reservation: Reservation): ReservationDto {
         return ReservationDto(
-            id = reservation.id!!,
+            id = reservation.id,
             bookId = reservation.bookId,
             userId = reservation.userId,
             libraryId = reservation.libraryId

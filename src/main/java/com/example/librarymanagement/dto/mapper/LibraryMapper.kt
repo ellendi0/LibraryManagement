@@ -10,7 +10,7 @@ class LibraryMapper {
         return Library(id = libraryDto.id ?: id, libraryDto.name, address = libraryDto.address)
     }
 
-    fun toLibraryDto(library: Library): LibraryDto = LibraryDto(library.id!!, library.name, library.address)
+    fun toLibraryDto(library: Library): LibraryDto = LibraryDto(library.id, library.name, library.address)
 
     fun toLibraryDto(libraries: List<Library>): List<LibraryDto> = libraries.map { toLibraryDto(it) }
 }

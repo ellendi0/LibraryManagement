@@ -14,7 +14,7 @@ class AuthorMapper {
         )
     }
 
-    fun toAuthorDto(author: Author): AuthorDto = AuthorDto(author.id!!, author.firstName, author.lastName)
+    fun toAuthorDto(author: Author): AuthorDto = AuthorDto(author.id, author.firstName, author.lastName)
 
     fun toAuthorDto(authors: List<Author>): List<AuthorDto> = authors.map { toAuthorDto(it) }
 }
