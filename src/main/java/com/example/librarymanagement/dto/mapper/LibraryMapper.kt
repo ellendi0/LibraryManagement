@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class LibraryMapper {
     fun toLibrary(libraryDto: LibraryDto, id: String? = null): Library {
-        return Library(id = id, libraryDto.name, address = libraryDto.address)
+        return Library(id = libraryDto.id ?: id, libraryDto.name, address = libraryDto.address)
     }
 
     fun toLibraryDto(library: Library): LibraryDto = LibraryDto(library.id!!, library.name, library.address)

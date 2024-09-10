@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class PublisherMapper {
     fun toPublisher(publisherDto: PublisherDto, id: String? = null): Publisher {
-        return Publisher(id = id, name = publisherDto.name)
+        return Publisher(id = publisherDto.id ?: id, name = publisherDto.name)
     }
 
     fun toPublisherDto(publisher: Publisher): PublisherDto = PublisherDto(publisher.id!!, publisher.name)

@@ -36,7 +36,7 @@ data class JpaBook(
     @Column(nullable = false)
     val publishedYear: Int,
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     val isbn: Long,
 
     @Column(nullable = false)

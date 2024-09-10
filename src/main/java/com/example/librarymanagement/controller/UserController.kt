@@ -58,10 +58,6 @@ class UserController(
         return userMapper.toUserResponseDto(userService.updateUser(userMapper.toUser(userRequestDto, id)))
     }
 
-//    @DeleteMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    fun deleteUser(@PathVariable id: String) = userService.deleteUserById(id)
-
     @GetMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.OK)
     fun findReservationsByUser(@PathVariable id: String): List<ReservationDto> {

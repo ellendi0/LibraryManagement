@@ -6,7 +6,9 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 
-data class BookRequestDto(
+data class BookDto(
+    val id: String? = null,
+
     @field:Size(max = 100, message = "Title must contain no more than 100 characters")
     @field:NotBlank(message = "Title can't be blank")
     val title: String,

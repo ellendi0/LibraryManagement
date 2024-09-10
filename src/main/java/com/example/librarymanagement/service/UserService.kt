@@ -11,5 +11,4 @@ interface UserService {
     fun updateUser(updatedUser: User): User
     fun findAll(): List<User>
     fun findJournalsByUser(userId: String): List<Journal>
-//    fun deleteUserById(id: String)
 }

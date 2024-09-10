@@ -30,14 +30,7 @@ class UserServiceImpl(
     }
 
     override fun updateUser(updatedUser: User): User {
-        if (userRepository.existsByEmail(updatedUser.email)) throw DuplicateKeyException("User", "email")
-        if (userRepository.existsByPhoneNumber(updatedUser.phoneNumber)) throw DuplicateKeyException(
-            "User",
-            "phoneNumber"
-        )
         val user = getUserById(updatedUser.id!!).copy(
-            email = updatedUser.email,
-            phoneNumber = updatedUser.phoneNumber,
             firstName = updatedUser.firstName,
             lastName = updatedUser.lastName
         )

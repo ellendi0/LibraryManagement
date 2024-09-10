@@ -12,7 +12,7 @@ class UserMapper {
 
     fun toUser(userRequestDto: UserRequestDto, id: String? = null) : User {
         return User(
-            id = id,
+            id = userRequestDto.id ?: id,
             firstName = userRequestDto.firstName,
             lastName = userRequestDto.lastName,
             email = userRequestDto.email,
