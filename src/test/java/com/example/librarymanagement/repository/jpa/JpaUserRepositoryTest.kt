@@ -16,7 +16,7 @@ class JpaUserRepositoryTest {
     private val jpaId = UserDataFactory.JPA_ID
     private val id = jpaId.toString()
 
-    private val user = UserDataFactory.createUser(jpaId)
+    private val user = UserDataFactory.createUser()
 
     @Test
     fun `should find all users`() {

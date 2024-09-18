@@ -1,6 +1,6 @@
 package com.example.librarymanagement.data
 
-import com.example.librarymanagement.dto.BookRequestDto
+import com.example.librarymanagement.dto.BookDto
 import com.example.librarymanagement.model.domain.Book
 import com.example.librarymanagement.model.enums.Genre
 import com.example.librarymanagement.model.jpa.JpaBook
@@ -9,38 +9,40 @@ import org.bson.types.ObjectId
 
 object BookDataFactory {
     const val JPA_ID = 1L
+    const val ID = "1"
     val MONGO_ID = ObjectId("111111111111111111111111")
     private const val TITLE = "Test"
     private const val PUBLISHED_YEAR = 2020
     private val GENRE = Genre.DRAMA
     private const val ISBN = 1234567890123L
 
-    fun createBook(id: Any): Book {
+    fun createBook(id: String = ID): Book {
         return Book(
-            id = id.toString(),
+            id = id,
             title = TITLE,
-            authorId = id.toString(),
-            publisherId = id.toString(),
+            authorId = id,
+            publisherId = id,
             publishedYear = PUBLISHED_YEAR,
             genre = GENRE,
             isbn = ISBN
         )
     }
 
-    fun createBookRequestDto(id: Any): BookRequestDto {
-        return BookRequestDto(
+    fun createBookRequestDto(id: String = ID): BookDto {
+        return BookDto(
+            id = id,
             title = TITLE,
-            authorId = id.toString(),
-            publisherId = id.toString(),
+            authorId = id,
+            publisherId = id,
             publishedYear = PUBLISHED_YEAR,
             genre = GENRE,
             isbn = ISBN
         )
     }
 
-    fun createJpaBook(): JpaBook {
+    fun createJpaBook(id: Long = JPA_ID): JpaBook {
         return JpaBook(
-            id = JPA_ID,
+            id = id,
             title = TITLE,
             publisher = null,
             author = null,
@@ -50,12 +52,12 @@ object BookDataFactory {
         )
     }
 
-    fun createMongoBook(): MongoBook {
+    fun createMongoBook(id: ObjectId = MONGO_ID): MongoBook {
         return MongoBook(
-            id = MONGO_ID,
+            id = id,
             title = TITLE,
-            authorId = MONGO_ID,
-            publisherId = MONGO_ID,
+            authorId = id,
+            publisherId = id,
             publishedYear = PUBLISHED_YEAR,
             genre = GENRE,
             isbn = ISBN

@@ -5,25 +5,27 @@ import com.example.librarymanagement.model.domain.Author
 import com.example.librarymanagement.repository.AuthorRepository
 import com.example.librarymanagement.service.AuthorService
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Service
 class AuthorServiceImpl(
     private val authorRepository: AuthorRepository
 ) : AuthorService {
 
-    override fun createAuthor(author: Author): Author = authorRepository.save(author)
+    override fun createAuthor(author: Author): Mono<Author> = authorRepository.save(author)
 
-    override fun updateAuthor(updatedAuthor: Author): Author {
-        val author = getAuthorById(updatedAuthor.id!!).copy(
-            firstName = updatedAuthor.firstName,
-            lastName = updatedAuthor.lastName
-        )
-        return authorRepository.save(author)
+    override fun updateAuthor(updatedAuthor: Author): Mono<Author> {
+        return getAuthorById(updatedAuthor.id!!)
+            .map { it.copy( firstName = updatedAuthor.firstName, lastName = updatedAuthor.lastName ) }
+            .flatMap { authorRepository.save(it) }
     }
 
-    override fun getAuthorById(id: String): Author {
-        return authorRepository.findById(id) ?: throw EntityNotFoundException("Author")
+    override fun getAuthorById(id: String): Mono<Author> {
+        return authorRepository
+            .findById(id)
+            .switchIfEmpty(Mono.error(EntityNotFoundException("Author")))
     }
 
-    override fun getAllAuthors(): List<Author> = authorRepository.findAll()
+    override fun getAllAuthors(): Flux<Author> = authorRepository.findAll()
 }

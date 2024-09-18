@@ -10,7 +10,7 @@ object MongoReservationMapper {
                 id = reservation.id?.let { ObjectId(it) },
                 userId = ObjectId(reservation.userId),
                 bookId = ObjectId(reservation.bookId),
-                libraryId = reservation.libraryId?.let { ObjectId(it) },
+                libraryId = ObjectId(reservation.libraryId)
         )
     }
 

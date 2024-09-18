@@ -16,8 +16,8 @@ class MongoLibraryRepositoryTest {
     private val mongoId = LibraryDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val library = LibraryDataFactory.createLibrary(mongoId)
-    private val mongoLibrary = LibraryDataFactory.createMongoLibrary()
+    private val library = LibraryDataFactory.createLibrary(id)
+    private val mongoLibrary = LibraryDataFactory.createMongoLibrary(mongoId)
 
     @Test
     fun `should find all libraries`() {

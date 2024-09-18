@@ -1,35 +1,34 @@
 package com.example.librarymanagement.dto.mapper
 
-import com.example.librarymanagement.dto.BookRequestDto
-import com.example.librarymanagement.dto.BookResponseDto
+import com.example.librarymanagement.dto.BookDto
 import com.example.librarymanagement.model.domain.Book
 import org.springframework.stereotype.Component
 
 @Component
 class BookMapper {
-    fun toBook(bookRequestDto: BookRequestDto, id: String? = null): Book {
+    fun toBook(bookDto: BookDto, id: String? = null): Book {
         return Book(
-            id = id,
-            title = bookRequestDto.title,
-            authorId = bookRequestDto.authorId,
-            publisherId = bookRequestDto.publisherId,
-            isbn = bookRequestDto.isbn,
-            publishedYear = bookRequestDto.publishedYear,
-            genre = bookRequestDto.genre,
+            id = bookDto.id ?: id,
+            title = bookDto.title,
+            authorId = bookDto.authorId,
+            publisherId = bookDto.publisherId,
+            isbn = bookDto.isbn,
+            publishedYear = bookDto.publishedYear,
+            genre = bookDto.genre,
         )
     }
 
-    fun toBookDto(book: Book): BookResponseDto {
-        return BookResponseDto(
-            id = book.id!!,
+    fun toBookDto(book: Book): BookDto {
+        return BookDto(
+            id = book.id,
             title = book.title,
-            authorId = book.authorId.toString(),
-            publisherId = book.publisherId.toString(),
+            authorId = book.authorId,
+            publisherId = book.publisherId,
             publishedYear = book.publishedYear,
             isbn = book.isbn,
             genre = book.genre
         )
     }
 
-    fun toBookDto(books: List<Book>): List<BookResponseDto> = books.map { toBookDto(it) }
+    fun toBookDto(books: List<Book>): List<BookDto> = books.map { toBookDto(it) }
 }

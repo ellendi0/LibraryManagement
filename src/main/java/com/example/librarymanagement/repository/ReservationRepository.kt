@@ -1,16 +1,15 @@
 package com.example.librarymanagement.repository
 
 import com.example.librarymanagement.model.domain.Reservation
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 interface ReservationRepository {
-    fun save(reservation: Reservation): Reservation
-    fun findById(reservationId: String): Reservation?
-    fun deleteById(reservationId: String)
-    fun findAllByBookIdAndUserId(bookId: String, userId: String): List<Reservation>
-    fun findAllByLibraryId(libraryId: String): List<Reservation>
-    fun findAllByUserId(userId: String): List<Reservation>
-    fun findAllByBookId(bookId: String): List<Reservation>
-    fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: String, libraryId: String?): Reservation?
-    fun existsByBookIdAndUserId(bookId: String, userId: String): Boolean
-    fun findAllByBookIdAndLibraryId(bookId: String, libraryId: String): List<Reservation>
+    fun save(reservation: Reservation): Mono<Reservation>
+    fun findById(reservationId: String): Mono<Reservation>
+    fun deleteById(reservationId: String): Mono<Unit>
+    fun findAllByBookIdAndUserId(bookId: String, userId: String): Flux<Reservation>
+    fun findAllByUserId(userId: String): Flux<Reservation>
+    fun findFirstByBookIdAndLibraryId(bookId: String, libraryId: String): Mono<Reservation>
+    fun existsByBookIdAndUserId(bookId: String, userId: String): Mono<Boolean>
 }

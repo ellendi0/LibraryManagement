@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Size
 const val USER_NAMING_REGEX = "[A-Z][a-z]+"
 
 data class UserRequestDto(
+    val id: String? = null,
+
     @field:Size(max = 50, message = "First name must contain no more than 50 characters")
     @field:Pattern(
         regexp = USER_NAMING_REGEX,

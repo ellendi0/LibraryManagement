@@ -32,14 +32,14 @@ class GlobalExceptionHandler(private val errorMapper: ErrorMapper) {
 
     @ExceptionHandler(IllegalArgumentException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleIllegalArgumentException(exception: IllegalArgumentException): ErrorDto {
-        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, exception.message!!)
+    fun handleIllegalArgumentException(exception: IllegalArgumentException): ErrorDto? {
+        return exception.message?.let { errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, it) }
     }
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleHttpMessageNotReadableException(exception: HttpMessageNotReadableException): ErrorDto {
-        return errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, exception.message!!)
+    fun handleHttpMessageNotReadableException(exception: HttpMessageNotReadableException): ErrorDto? {
+        return exception.message?.let { errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, it) }
     }
 
     @ExceptionHandler(BookNotAvailableException::class)

@@ -25,8 +25,8 @@ data class JpaReservation(
     val book: JpaBook?,
 
     @ManyToOne
-    @JoinColumn(name = "library_id")
-    val library: JpaLibrary? = null
+    @JoinColumn(name = "library_id", nullable = false)
+    val library: JpaLibrary?
 ) {
     companion object {
         const val TABLE_NAME = "reservation"

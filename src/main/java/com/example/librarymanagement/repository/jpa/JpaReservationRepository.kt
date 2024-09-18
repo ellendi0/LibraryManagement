@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 @Repository
 @Profile("jpa")
@@ -18,57 +21,56 @@ class JpaReservationRepository(
     private val reservationRepository: ReservationRepositorySpring,
     private val userRepository: JpaUserRepository,
     private val bookRepository: JpaBookRepository,
-    private val libraryRepository: JpaLibraryRepository,
-) : ReservationRepository{
+    private val libraryRepository: JpaLibraryRepository
+) : ReservationRepository {
     private fun Reservation.toEntity() = JpaReservationMapper.toEntity(this)
     private fun JpaReservation.toDomain() = JpaReservationMapper.toDomain(this)
 
-    override fun save(reservation: Reservation): Reservation {
-        return reservationRepository.save(reservation.toEntity().copy(
-            user = JpaUserMapper.toEntity(userRepository.findById(reservation.userId)!!),
-            book = JpaBookMapper.toEntity(bookRepository.findById(reservation.bookId)!!),
-            library = reservation.libraryId?.let { JpaLibraryMapper.toEntity(libraryRepository.findById(it)!!) }
-        )).toDomain()
+    override fun save(reservation: Reservation): Mono<Reservation> {
+        return Mono.zip(
+            userRepository.findById(reservation.userId),
+            bookRepository.findById(reservation.bookId),
+            libraryRepository.findById(reservation.libraryId)
+        )
+            .flatMap {
+                val reservationEntity = reservation.toEntity()
+                    .copy(
+                        user = JpaUserMapper.toEntity(it.t1),
+                        book = JpaBookMapper.toEntity(it.t2),
+                        library = JpaLibraryMapper.toEntity(it.t3)
+                    )
+                Mono.fromCallable { reservationRepository.save(reservationEntity) }
+                    .subscribeOn(Schedulers.boundedElastic())
+            }
+            .map { it.toDomain() }
     }
 
-    override fun findById(reservationId: String): Reservation? {
-        return reservationRepository.findByIdOrNull(reservationId.toLong())?.toDomain()
-    }
+    override fun findById(reservationId: String): Mono<Reservation> =
+        Mono.fromCallable { reservationRepository.findByIdOrNull(reservationId.toLong())?.toDomain() }
 
-    override fun deleteById(reservationId: String) {
-        return reservationRepository.deleteById(reservationId.toLong())
-    }
+    override fun deleteById(reservationId: String): Mono<Unit> =
+        Mono.fromCallable { reservationRepository.deleteById(reservationId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .then(Mono.just(Unit))
 
-    override fun findAllByBookIdAndUserId(bookId: String, userId: String): List<Reservation> {
-        return reservationRepository.findAllByBookIdAndUserId(bookId.toLong(), userId.toLong()).map { it.toDomain() }
-    }
+    override fun findAllByBookIdAndUserId(bookId: String, userId: String): Flux<Reservation> =
+        Mono.fromCallable { reservationRepository.findAllByBookIdAndUserId(bookId.toLong(), userId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMapMany { Flux.fromIterable(it.map { reservation -> reservation.toDomain() }) }
 
-    override fun findAllByLibraryId(libraryId: String): List<Reservation> {
-        return reservationRepository.findAllByLibraryId(libraryId.toLong()).map { it.toDomain() }
-    }
+    override fun findAllByUserId(userId: String): Flux<Reservation> =
+        Mono.fromCallable { reservationRepository.findAllByUserId(userId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMapMany { Flux.fromIterable(it.map { reservation -> reservation.toDomain() }) }
 
-    override fun findAllByUserId(userId: String): List<Reservation> {
-        return reservationRepository.findAllByUserId(userId.toLong()).map { it.toDomain() }
-    }
+    override fun findFirstByBookIdAndLibraryId(bookId: String, libraryId: String): Mono<Reservation> =
+        Mono.fromCallable { reservationRepository.findFirstByBookIdAndLibraryId(bookId.toLong(), libraryId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .mapNotNull { it?.toDomain() }
 
-    override fun findAllByBookId(bookId: String): List<Reservation> {
-        return reservationRepository.findAllByBookId(bookId.toLong()).map { it.toDomain() }
-    }
-
-    override fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: String, libraryId: String?): Reservation? {
-        return reservationRepository.findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId.toLong(), libraryId?.toLong())
-                ?.toDomain()
-    }
-
-    override fun existsByBookIdAndUserId(bookId: String, userId: String): Boolean {
-        return reservationRepository
-            .existsByBookIdAndUserId(bookId.toLong(), userId.toLong())
-    }
-
-    override fun findAllByBookIdAndLibraryId(bookId: String, libraryId: String): List<Reservation> {
-        return reservationRepository
-            .findAllByBookIdAndLibraryId(bookId.toLong(), libraryId.toLong()).map { it.toDomain() }
-    }
+    override fun existsByBookIdAndUserId(bookId: String, userId: String): Mono<Boolean> =
+        Mono.fromCallable { reservationRepository.existsByBookIdAndUserId(bookId.toLong(), userId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
 }
 
 @Repository
@@ -77,7 +79,6 @@ interface ReservationRepositorySpring : JpaRepository<JpaReservation, Long> {
     fun findAllByLibraryId(libraryId: Long): List<JpaReservation>
     fun findAllByUserId(userId: Long): List<JpaReservation>
     fun findAllByBookId(bookId: Long): List<JpaReservation>
-    fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: Long, libraryId: Long?): JpaReservation?
+    fun findFirstByBookIdAndLibraryId(bookId: Long, libraryId: Long): JpaReservation?
     fun existsByBookIdAndUserId(bookId: Long, userId: Long): Boolean
-    fun findAllByBookIdAndLibraryId(bookId: Long, libraryId: Long): List<JpaReservation>
 }

@@ -6,28 +6,25 @@ import com.example.librarymanagement.repository.AuthorRepository
 import com.example.librarymanagement.repository.mongo.mapper.MongoAuthorMapper
 import org.bson.types.ObjectId
 import org.springframework.context.annotation.Profile
-import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.query.Criteria
-import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Repository
 @Profile("mongo")
 class MongoAuthorRepository(
-    private val mongoTemplate: MongoTemplate
-): AuthorRepository{
+    private val reactiveMongoTemplate: ReactiveMongoTemplate
+) : AuthorRepository {
     private fun Author.toEntity() = MongoAuthorMapper.toEntity(this)
     private fun MongoAuthor.toDomain() = MongoAuthorMapper.toDomain(this)
 
-    override fun save(author: Author): Author {
-        return mongoTemplate.save(author.toEntity()).toDomain()
-    }
+    override fun save(author: Author): Mono<Author> =
+        reactiveMongoTemplate.save(author.toEntity()).map { it.toDomain() }
 
-    override fun findById(authorId: String): Author? {
-        return mongoTemplate.findById(ObjectId(authorId), MongoAuthor::class.java)?.toDomain()
-    }
+    override fun findById(authorId: String): Mono<Author> =
+        reactiveMongoTemplate.findById(ObjectId(authorId), MongoAuthor::class.java).map { it.toDomain() }
 
-    override fun findAll(): List<Author> {
-       return mongoTemplate.findAll(MongoAuthor::class.java).map { it.toDomain() }
-    }
+    override fun findAll(): Flux<Author> =
+        reactiveMongoTemplate.findAll(MongoAuthor::class.java).map { it.toDomain() }
 }

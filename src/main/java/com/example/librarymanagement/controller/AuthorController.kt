@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/api/v1/author")
@@ -20,24 +22,25 @@ class AuthorController(
     private val authorService: AuthorService,
     private val authorMapper: AuthorMapper
 ) {
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllAuthors(): List<AuthorDto> = authorMapper.toAuthorDto(authorService.getAllAuthors())
+    fun getAllAuthors(): Flux<AuthorDto> = authorService.getAllAuthors().map { authorMapper.toAuthorDto(it) }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getAuthorById(@PathVariable id: String): AuthorDto = authorMapper.toAuthorDto(authorService.getAuthorById(id))
+    fun getAuthorById(@PathVariable id: String): Mono<AuthorDto> {
+        return authorService.getAuthorById(id).map { authorMapper.toAuthorDto(it) }
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createAuthor(@RequestBody @Valid authorDto: AuthorDto): AuthorDto {
-        return authorMapper.toAuthorDto(authorService.createAuthor(authorMapper.toAuthor(authorDto)))
+    fun createAuthor(@RequestBody @Valid authorDto: AuthorDto): Mono<AuthorDto> {
+        return authorService.createAuthor(authorMapper.toAuthor(authorDto)).map { authorMapper.toAuthorDto(it) }
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateAuthor(@PathVariable id: String, @RequestBody @Valid authorDto: AuthorDto): AuthorDto {
-        return authorMapper.toAuthorDto(authorService.updateAuthor(authorMapper.toAuthor(authorDto, id)))
+    fun updateAuthor(@PathVariable id: String, @RequestBody @Valid authorDto: AuthorDto): Mono<AuthorDto> {
+        return authorService.updateAuthor(authorMapper.toAuthor(authorDto, id)).map { authorMapper.toAuthorDto(it) }
     }
 }

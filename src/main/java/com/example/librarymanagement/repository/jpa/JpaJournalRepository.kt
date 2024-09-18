@@ -8,6 +8,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
+import reactor.kotlin.core.publisher.switchIfEmpty
 
 @Repository
 @Profile("jpa")
@@ -17,38 +21,59 @@ class JpaJournalRepository(
     private fun Journal.toEntity() = JpaJournalMapper.toEntity(this)
     private fun JpaJournal.toDomain() = JpaJournalMapper.toDomain(this)
 
-    override fun save(journal: Journal): Journal {
-        return journalRepository.save(journal.toEntity()).toDomain()
-    }
+    override fun saveOrUpdate(journal: Journal): Mono<Journal> =
+        update(journal)
+            .switchIfEmpty { save(journal.toEntity()) }
 
-    override fun findById(journalId: String): Journal? {
-        return journalRepository.findByIdOrNull(journalId.toLong())?.toDomain()
-    }
+    override fun findById(journalId: String): Mono<Journal> =
+        Mono.fromCallable { journalRepository.findByIdOrNull(journalId.toLong())?.toDomain() }
 
-    override fun deleteById(journalId: String) {
-        return journalRepository.deleteById(journalId.toLong())
-    }
+    override fun deleteById(journalId: String): Mono<Unit> =
+        Mono.fromCallable { journalRepository.deleteById(journalId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .then(Mono.just(Unit))
 
-    override fun findAllByUserId(userId: String): List<Journal> {
-        return journalRepository.findAllByUserId(userId.toLong()).map { it.toDomain() }
-    }
+    override fun findAllByUserId(userId: String): Flux<Journal> =
+        Mono.fromCallable { journalRepository.findAllByUserId(userId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMapMany { Flux.fromIterable(it.map { journal -> journal.toDomain() }) }
 
     override fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
         bookPresenceId: String,
         userId: String
-    ): Journal? {
-        return journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
-            bookPresenceId.toLong(),
-            userId.toLong()
-        )?.toDomain()
+    ): Mono<Journal> {
+        return Mono.fromCallable {
+            journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
+                bookPresenceId.toLong(),
+                userId.toLong()
+            )
+        }
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap { jpaJournal ->
+                if (jpaJournal != null) {
+                    Mono.just(jpaJournal.toDomain())
+                } else {
+                    Mono.empty()
+                }
+            }
     }
 
-    fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId: Long, userId: Long): JpaJournal? {
-        return journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(bookPresenceId, userId)
+    fun save(jpaJournal: JpaJournal): Mono<Journal> {
+        return Mono.fromCallable { journalRepository.save(jpaJournal) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .map { it.toDomain() }
     }
 
-    fun save(jpaJournal: JpaJournal): JpaJournal {
-        return journalRepository.save(jpaJournal)
+    fun update(journal: Journal): Mono<Journal> {
+        return Mono.defer {
+            journalRepository.findByIdOrNull(journal.id!!.toLong())
+                ?.let { jpa ->
+                    jpa.dateOfReturning = journal.dateOfReturning
+                    Mono.fromCallable { journalRepository.save(jpa) }
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .map { it.toDomain() }
+                } ?: Mono.empty()
+        }
     }
 }
 

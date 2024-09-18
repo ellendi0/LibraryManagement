@@ -19,16 +19,16 @@ class JpaBookRepositoryTest {
     private val jpaBook = TestDataFactory.createTestDataRelationsForJpaRepositories().book
 
     private val jpaId = BookDataFactory.JPA_ID
-    private val id = jpaId.toString()
+    private val id = BookDataFactory.JPA_ID.toString()
 
-    private val book = BookDataFactory.createBook(jpaId)
+    private val book = BookDataFactory.createBook()
 
     @Test
     fun `should save book`() {
         //GIVEN
         val expected = book
-        val author = AuthorDataFactory.createAuthor(jpaId)
-        val publisher = PublisherDataFactory.createPublisher(jpaId)
+        val author = AuthorDataFactory.createAuthor()
+        val publisher = PublisherDataFactory.createPublisher()
 
         every { authorRepository.findById(id) } returns author
         every { publisherRepository.findById(any()) } returns publisher

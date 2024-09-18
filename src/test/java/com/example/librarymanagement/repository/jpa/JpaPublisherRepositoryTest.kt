@@ -17,7 +17,7 @@ class JpaPublisherRepositoryTest {
     private val jpaId = JournalDataFactory.JPA_ID
     private val id = jpaId.toString()
 
-    private val publisher = PublisherDataFactory.createPublisher(jpaId)
+    private val publisher = PublisherDataFactory.createPublisher()
 
     @Test
     fun shouldFindAllPublishers() {

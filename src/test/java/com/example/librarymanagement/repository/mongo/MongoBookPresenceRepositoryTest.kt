@@ -20,8 +20,8 @@ class MongoBookPresenceRepositoryTest {
     private val mongoId = BookPresenceDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val bookPresence = BookPresenceDataFactory.createBookPresence(mongoId)
-    private val mongoBookPresence = BookPresenceDataFactory.createMongoBookPresence()
+    private val bookPresence = BookPresenceDataFactory.createBookPresence(id)
+    private val mongoBookPresence = BookPresenceDataFactory.createMongoBookPresence(mongoId)
 
     @Test
     fun shouldSaveBookPresence() {
@@ -61,33 +61,6 @@ class MongoBookPresenceRepositoryTest {
         verify(exactly = 1) { mongoTemplate.save(unavailableMongoBookPresence) }
     }
 
-    /*
-    @Transactional
-    override fun removeBookFromUser(user: User, libraryId: String, bookId: String): BookPresence? {
-        val mongoBookPresence = bookPresenceRepository
-            .findAllByLibraryIdAndBookIdAndAvailability(
-                libraryId.toLong(),
-                bookId.toLong(),
-                Availability.UNAVAILABLE
-            )
-            .firstOrNull { it.user?.id == user.id?.toLong() }
-            ?: return null
-
-        val journal = journalRepository.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
-            mongoBookPresence.id!!,
-            mongoBookPresence.user?.id!!
-        )
-            ?: return null
-
-        journal.dateOfReturning = LocalDate.now()
-
-        journalRepository.save(journal)
-
-        mongoBookPresence.availability = Availability.AVAILABLE
-        mongoBookPresence.user = null
-
-        return bookPresenceRepository.save(mongoBookPresence).toDomain()
-    }*/
     @Test
     fun shouldRemoveBookFromUser() {
         // GIVEN

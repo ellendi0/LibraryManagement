@@ -6,11 +6,13 @@ import com.example.librarymanagement.repository.BookRepository
 import com.example.librarymanagement.repository.jpa.mapper.JpaAuthorMapper
 import com.example.librarymanagement.repository.jpa.mapper.JpaBookMapper
 import com.example.librarymanagement.repository.jpa.mapper.JpaPublisherMapper
-import jakarta.transaction.Transactional
 import org.springframework.context.annotation.Profile
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 @Repository
 @Profile("jpa")
@@ -22,38 +24,42 @@ class JpaBookRepository(
     private fun Book.toEntity() = JpaBookMapper.toEntity(this)
     private fun JpaBook.toDomain() = JpaBookMapper.toDomain(this)
 
-    override fun save(book: Book): Book {
-        return bookRepository.save(
-            book.toEntity().copy(
-                author = JpaAuthorMapper.toEntity(authorRepository.findById(book.authorId)!!),
-                publisher = JpaPublisherMapper.toEntity(publisherRepository.findById(book.publisherId)!!)
-            )
-        ).toDomain()
+    override fun save(book: Book): Mono<Book> {
+        return Mono.zip(
+            authorRepository.findById(book.authorId),
+            publisherRepository.findById(book.publisherId)
+        )
+            .flatMap {
+                val bookEntity = book.toEntity()
+                    .copy(author = JpaAuthorMapper.toEntity(it.t1), publisher = JpaPublisherMapper.toEntity(it.t2))
+                Mono.fromCallable { bookRepository.save(bookEntity) }.subscribeOn(Schedulers.boundedElastic())
+            }
+            .map { it.toDomain() }
     }
 
-    override fun findById(bookId: String): Book? {
-        return bookRepository.findByIdOrNull(bookId.toLong())?.toDomain()
-    }
+    override fun findById(bookId: String): Mono<Book> =
+        Mono.fromCallable { bookRepository.findByIdOrNull(bookId.toLong())?.toDomain() }
 
-    override fun findAll(): List<Book> {
-        return bookRepository.findAll().map { it.toDomain() }
-    }
+    override fun findAll(): Flux<Book> = Flux.fromIterable(bookRepository.findAll().map { it.toDomain() })
 
-    @Transactional
-    override fun deleteById(bookId: String) {
-        bookRepository.deleteById(bookId.toLong())
-    }
+    override fun deleteById(bookId: String): Mono<Unit> =
+        Mono.fromCallable { bookRepository.deleteById(bookId.toLong()) }.subscribeOn(Schedulers.boundedElastic())
+            .then(Mono.just(Unit))
 
-    override fun existsByIsbn(isbn: Long): Boolean {
-        return bookRepository.existsById(isbn)
-    }
+    override fun existsById(bookId: String): Mono<Boolean> =
+        Mono.fromCallable { bookRepository.existsById(bookId.toLong()) }.subscribeOn(Schedulers.boundedElastic())
 
-    override fun findBookByTitleAndAuthorId(title: String, authorId: String): Book? {
-        return bookRepository.findBookByTitleAndAuthorId(title, authorId.toLong())?.toDomain()
+    override fun existsByIsbn(isbn: Long): Mono<Boolean> =
+        Mono.fromCallable { bookRepository.existsById(isbn) }.subscribeOn(Schedulers.boundedElastic())
+
+    override fun findBookByTitleAndAuthorId(title: String, authorId: String): Flux<Book> {
+        return Mono.fromCallable { bookRepository.findBookByTitleAndAuthorId(title, authorId.toLong()) }
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMapMany { Flux.fromIterable(it.map { book -> book.toDomain() }) }
     }
 }
 
 @Repository
 interface BookRepositorySpring : JpaRepository<JpaBook, Long> {
-    fun findBookByTitleAndAuthorId(title: String, id: Long): JpaBook?
+    fun findBookByTitleAndAuthorId(title: String, id: Long): List<JpaBook>
 }

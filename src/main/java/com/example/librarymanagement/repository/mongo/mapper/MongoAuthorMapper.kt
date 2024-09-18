@@ -7,17 +7,17 @@ import org.bson.types.ObjectId
 object MongoAuthorMapper {
     fun toEntity(author: Author): MongoAuthor {
         return MongoAuthor(
-                id = author.id?.let { ObjectId(it) },
-                firstName = author.firstName,
-                lastName = author.lastName
+            id = author.id?.let { ObjectId(it) },
+            firstName = author.firstName,
+            lastName = author.lastName
         )
     }
 
-    fun toDomain(mongoAuthor: MongoAuthor): Author{
+    fun toDomain(mongoAuthor: MongoAuthor): Author {
         return Author(
-                id = mongoAuthor.id.toString(),
-                firstName = mongoAuthor.firstName,
-                lastName = mongoAuthor.lastName
+            id = mongoAuthor.id.toString(),
+            firstName = mongoAuthor.firstName,
+            lastName = mongoAuthor.lastName
         )
     }
 }

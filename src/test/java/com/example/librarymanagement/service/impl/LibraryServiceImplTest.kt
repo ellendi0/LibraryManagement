@@ -1,6 +1,7 @@
 package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.TestDataFactory
+import com.example.librarymanagement.data.LibraryDataFactory
+import com.example.librarymanagement.data.ReservationDataFactory
 import com.example.librarymanagement.repository.LibraryRepository
 import com.example.librarymanagement.service.BookPresenceService
 import com.example.librarymanagement.service.ReservationService
@@ -9,66 +10,93 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import java.util.*
 
 class LibraryServiceImplTest {
     private val libraryRepository: LibraryRepository = mockk()
     private val bookPresenceService: BookPresenceService = mockk()
     private val reservationService: ReservationService = mockk()
     private val libraryService = LibraryServiceImpl(
-        libraryRepository,
-        bookPresenceService,
-        reservationService
+        libraryRepository
     )
+    private val id = "1"
 
-    private val testDataRel = TestDataFactory.createTestDataRelForServices()
-    private val library = testDataRel.library
+    private val library = LibraryDataFactory.createLibrary(id)
 
     @Test
     fun shouldCreateLibrary() {
+        //GIVEN
+        val expected = library
+
         every { libraryRepository.save(library) } returns library
 
-        Assertions.assertEquals(library, libraryService.createLibrary(library))
+        //WHEN
+        val actual = libraryService.createLibrary(library)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
         verify(exactly = 1) { libraryRepository.save(library) }
     }
 
     @Test
     fun shouldUpdateLibrary() {
-        val updatedLibrary = library.copy(name = "Updated")
-        every { libraryRepository.findById(1) } returns Optional.of(library)
-        every { libraryRepository.save(updatedLibrary) } returns updatedLibrary
+        //GIVEN
+        val expected = library.copy(name = "Updated")
 
-        Assertions.assertEquals(updatedLibrary, libraryService.updateLibrary(1, updatedLibrary))
-        verify(exactly = 1) { libraryRepository.findById(1) }
-        verify(exactly = 1) { libraryRepository.save(updatedLibrary) }
+        every { libraryRepository.findById(id) } returns library
+        every { libraryRepository.save(expected) } returns expected
+
+        //WHEN
+        val actual = libraryService.updateLibrary(expected)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+        verify(exactly = 1) { libraryRepository.findById(id) }
+        verify(exactly = 1) { libraryRepository.save(expected) }
     }
 
     @Test
-    fun shouldDeleteLibrary() {
-        every { libraryRepository.findById(1) } returns Optional.of(library)
-        every { bookPresenceService.deleteBookPresenceById(1) } returns Unit
-        every { reservationService.getReservationsByLibraryId(1) } returns listOf(testDataRel.reservation)
-        every { reservationService.deleteReservationById(1) } returns Unit
-        every { libraryRepository.deleteById(1) } returns Unit
+    fun shouldDeleteLibraryById() {
+        //GIVEN
+        val reservation = ReservationDataFactory.createReservation(id)
 
-        libraryService.deleteLibrary(1)
-        verify(exactly = 1) { libraryRepository.findById(1) }
-        verify(exactly = 1) { libraryRepository.deleteById(1) }
+        every { libraryRepository.findById(id) } returns library
+        every { bookPresenceService.deleteBookPresenceById(id) } returns Unit
+        every { reservationService.getReservationsByUserId(id) } returns listOf(reservation)
+        every { reservationService.deleteReservationById(id) } returns Unit
+        every { libraryRepository.deleteById(id) } returns Unit
+
+        //WHEN
+        libraryService.deleteLibraryById(id)
+
+        //THEN
+        verify(exactly = 1) { libraryRepository.deleteById(id) }
     }
 
     @Test
     fun shouldGetLibraryById() {
-        every { libraryRepository.findById(1) } returns Optional.of(library)
+        //GIVEN
+        val expected = library
+        every { libraryRepository.findById(id) } returns library
 
-        Assertions.assertEquals(library, libraryService.getLibraryById(1))
-        verify (exactly = 1) { libraryRepository.findById(1) }
+        //WHEN
+        val actual = libraryService.getLibraryById(id)
+
+        //THEN
+        Assertions.assertEquals(expected, actual)
+        verify(exactly = 1) { libraryRepository.findById(id) }
     }
 
     @Test
     fun shouldFindAll() {
+        //GIVEN
+        val excepted = listOf(library)
         every { libraryRepository.findAll() } returns listOf(library)
 
-        Assertions.assertEquals(listOf(library), libraryService.findAll())
+        //WHEN
+        val result = libraryService.findAll()
+
+        //THEN
+        Assertions.assertEquals(excepted, result)
         verify(exactly = 1) { libraryRepository.findAll() }
     }
 }

@@ -16,8 +16,8 @@ class MongoJournalRepositoryTest {
     private val mongoId = JournalDataFactory.MONGO_ID
     private val id = mongoId.toString()
 
-    private val journal = JournalDataFactory.createJournal(mongoId)
-    private val mongoJournal = JournalDataFactory.createMongoJournal()
+    private val journal = JournalDataFactory.createJournal(id)
+    private val mongoJournal = JournalDataFactory.createMongoJournal(mongoId)
 
     @Test
     fun save() {
