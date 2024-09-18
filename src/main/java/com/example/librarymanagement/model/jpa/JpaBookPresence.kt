@@ -6,6 +6,7 @@ import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -36,7 +37,11 @@ data class JpaBookPresence(
     @JoinColumn(name = "users_id")
     var user: JpaUser?,
 
-    @OneToMany(cascade = [CascadeType.ALL], mappedBy = "bookPresence", orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "bookPresence",
+        fetch = FetchType.EAGER,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE],
+    )
     val journals: MutableList<JpaJournal> = mutableListOf()
 ) {
     companion object {

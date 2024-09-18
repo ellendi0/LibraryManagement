@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/api/v1/book")
@@ -22,24 +24,23 @@ class BookController(private val bookService: BookService, private val bookMappe
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooks(): List<BookDto> = bookMapper.toBookDto(bookService.findAll())
+    fun getAllBooks(): Flux<BookDto> = bookService.findAll().map { bookMapper.toBookDto(it) }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getBookById(@PathVariable id: String): BookDto = bookMapper.toBookDto(bookService.getBookById(id))
+    fun getBookById(@PathVariable id: String): Mono<BookDto> =
+        bookService.getBookById(id).map { bookMapper.toBookDto(it) }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createBook(@RequestBody @Valid bookDto: BookDto): BookDto {
-        return bookMapper
-            .toBookDto(bookService.createBook(bookMapper.toBook(bookDto)))
+    fun createBook(@RequestBody @Valid bookDto: BookDto): Mono<BookDto> {
+        return bookService.createBook(bookMapper.toBook(bookDto)).map { bookMapper.toBookDto(it) }
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateBook(@PathVariable id: String, @RequestBody @Valid bookDto: BookDto): BookDto {
-        return bookMapper
-            .toBookDto(bookService.updateBook(bookMapper.toBook(bookDto, id)))
+    fun updateBook(@PathVariable id: String, @RequestBody @Valid bookDto: BookDto): Mono<BookDto> {
+        return bookService.updateBook(bookMapper.toBook(bookDto, id)).map { bookMapper.toBookDto(it) }
     }
 
     @GetMapping(params = ["title", "author"])
@@ -47,13 +48,11 @@ class BookController(private val bookService: BookService, private val bookMappe
     fun getBookByTitleAndAuthor(
         @RequestParam title: String,
         @RequestParam(name = "author") authorId: String
-    ): BookDto {
-        return bookMapper.toBookDto(bookService.getBookByTitleAndAuthor(title, authorId))
+    ): Flux<BookDto> {
+        return bookService.getBookByTitleAndAuthor(title, authorId).map { bookMapper.toBookDto(it) }
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteBookById(@PathVariable id: String) {
-        bookService.deleteBookById(id)
-    }
+    fun deleteBookById(@PathVariable id: String): Mono<Unit> = bookService.deleteBookById(id)
 }

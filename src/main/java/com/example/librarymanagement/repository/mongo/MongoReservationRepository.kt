@@ -7,84 +7,66 @@ import com.example.librarymanagement.repository.mongo.mapper.MongoReservationMap
 import org.bson.types.ObjectId
 import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.Sort
-import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Repository
 @Profile("mongo")
 class MongoReservationRepository(
-    private val mongoTemplate: MongoTemplate
+    private val reactiveMongoTemplate: ReactiveMongoTemplate,
 ) : ReservationRepository {
     private fun Reservation.toEntity() = MongoReservationMapper.toEntity(this)
     private fun MongoReservation.toDomain() = MongoReservationMapper.toDomain(this)
 
-    override fun save(reservation: Reservation): Reservation {
-        return mongoTemplate.save(reservation.toEntity()).toDomain()
-    }
+    override fun save(reservation: Reservation): Mono<Reservation> =
+        reactiveMongoTemplate.save(reservation.toEntity()).map { it.toDomain() }
 
-    override fun findById(reservationId: String): Reservation? {
-        return mongoTemplate.findById(ObjectId(reservationId), MongoReservation::class.java)?.toDomain()
-    }
+    override fun findById(reservationId: String): Mono<Reservation> =
+        reactiveMongoTemplate.findById(ObjectId(reservationId), MongoReservation::class.java).map { it.toDomain() }
 
-    override fun deleteById(reservationId: String) {
+    override fun deleteById(reservationId: String): Mono<Unit> {
         val query = Query(Criteria.where("_id").`is`(ObjectId(reservationId)))
-        mongoTemplate.findAndRemove(query, MongoReservation::class.java)
+        return reactiveMongoTemplate.findAndRemove(query, MongoReservation::class.java).then(Mono.just(Unit))
     }
 
-    override fun findAllByBookIdAndUserId(bookId: String, userId: String): List<Reservation> {
-        val query = Query(Criteria
-            .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
-            .and(MongoReservation::userId.name).`is`(ObjectId(userId)))
-        return mongoTemplate.find(query, MongoReservation::class.java).map { it.toDomain() }
+    override fun findAllByBookIdAndUserId(bookId: String, userId: String): Flux<Reservation> {
+        val query = Query(
+            Criteria
+                .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
+                .and(MongoReservation::userId.name).`is`(ObjectId(userId))
+        )
+        return reactiveMongoTemplate.find(query, MongoReservation::class.java).map { it.toDomain() }
     }
 
-    override fun findAllByLibraryId(libraryId: String): List<Reservation> {
-        return mongoTemplate.find(Query(Criteria
-            .where(MongoReservation::libraryId.name).`is`(ObjectId(libraryId))), MongoReservation::class.java)
+    override fun findAllByUserId(userId: String): Flux<Reservation> {
+        return reactiveMongoTemplate.find(
+            Query(Criteria.where(MongoReservation::userId.name).`is`(ObjectId(userId))),
+            MongoReservation::class.java
+        )
             .map { it.toDomain() }
     }
 
-    override fun findAllByUserId(userId: String): List<Reservation> {
-        return mongoTemplate.find(Query(Criteria
-            .where(MongoReservation::userId.name).`is`(ObjectId(userId))), MongoReservation::class.java)
-            .map { it.toDomain() }
-    }
-
-    override fun findAllByBookId(bookId: String): List<Reservation> {
-        return mongoTemplate.find(Query(Criteria
-            .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))), MongoReservation::class.java)
-            .map { it.toDomain() }
-    }
-
-    override fun findFirstByBookIdAndLibraryIdOrLibraryIsNull(bookId: String, libraryId: String?): Reservation? {
+    override fun findFirstByBookIdAndLibraryId(bookId: String, libraryId: String): Mono<Reservation> {
         val criteria = Criteria.where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
-        when {
-            libraryId != null -> criteria.and(MongoReservation::libraryId.name).`is`(ObjectId(libraryId))
-            else -> criteria.orOperator(Criteria.where(MongoReservation::libraryId.name).exists(false))
-        }
+            .and(MongoReservation::libraryId.name).`is`(ObjectId(libraryId))
 
         val query = Query(criteria)
             .with(Sort.by(Sort.Direction.ASC, "_id"))
             .limit(1)
 
-        return mongoTemplate.findOne(query, MongoReservation::class.java)?.toDomain()
+        return reactiveMongoTemplate.findOne(query, MongoReservation::class.java).map { it.toDomain() }
     }
 
-    override fun existsByBookIdAndUserId(bookId: String, userId: String): Boolean {
-        val query = Query(Criteria
-            .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
-            .and(MongoReservation::userId.name).`is`(ObjectId(userId))
+    override fun existsByBookIdAndUserId(bookId: String, userId: String): Mono<Boolean> {
+        val query = Query(
+            Criteria
+                .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
+                .and(MongoReservation::userId.name).`is`(ObjectId(userId))
         )
-        return mongoTemplate.exists(query, MongoReservation::class.java)
-    }
-
-    override fun findAllByBookIdAndLibraryId(bookId: String, libraryId: String): List<Reservation> {
-        val query = Query(Criteria
-            .where(MongoReservation::bookId.name).`is`(ObjectId(bookId))
-            .and(MongoReservation::libraryId.name).`is`(ObjectId(libraryId))
-        )
-        return mongoTemplate.find(query, MongoReservation::class.java).map { it.toDomain() }
+        return reactiveMongoTemplate.exists(query, MongoReservation::class.java)
     }
 }

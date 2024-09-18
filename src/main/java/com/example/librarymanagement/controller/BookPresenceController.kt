@@ -5,17 +5,19 @@ import com.example.librarymanagement.dto.BookPresenceDto
 import com.example.librarymanagement.dto.JournalDto
 import com.example.librarymanagement.dto.mapper.BookPresenceMapper
 import com.example.librarymanagement.dto.mapper.JournalMapper
-import com.example.librarymanagement.model.enums.Availability
 import com.example.librarymanagement.service.BookPresenceService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/api/v1")
@@ -26,20 +28,14 @@ class BookPresenceController(
 ) {
     @PostMapping("/library/{libraryId}/book/{bookId}/presence")
     @ResponseStatus(HttpStatus.CREATED)
-    fun addBookToLibrary(@PathVariable libraryId: String, @PathVariable bookId: String): BookPresenceDto {
-        return bookPresenceMapper.toBookPresenceDto(bookPresenceService.addBookToLibrary(libraryId, bookId))
+    fun addBookToLibrary(@PathVariable libraryId: String, @PathVariable bookId: String): Mono<BookPresenceDto> {
+        return bookPresenceService.addBookToLibrary(libraryId, bookId).map { bookPresenceMapper.toBookPresenceDto(it) }
     }
 
     @GetMapping("/library/{libraryId}/book")
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooksByLibraryId(
-        @PathVariable libraryId: String,
-        @RequestParam(required = false) availability: Availability?
-    ): List<BookPresenceDto> {
-        return bookPresenceMapper.toBookPresenceDto(
-            availability
-                ?.let { bookPresenceService.getAllBookPresencesByLibraryIdAndAvailability(libraryId, it) }
-                .run { bookPresenceService.getAllByLibraryId(libraryId) })
+    fun getAllBooksByLibraryId(@PathVariable libraryId: String): Flux<BookPresenceDto> {
+        return bookPresenceService.getAllByLibraryId(libraryId).map { bookPresenceMapper.toBookPresenceDto(it) }
     }
 
     @GetMapping("/library/{libraryId}/book/{bookId}/presence")
@@ -47,15 +43,15 @@ class BookPresenceController(
     fun getAllBooksByLibraryIdAndBookId(
         @PathVariable libraryId: String,
         @PathVariable bookId: String
-    ): List<BookPresenceDto> {
-        return bookPresenceMapper
-            .toBookPresenceDto(bookPresenceService.getAllBookPresencesByLibraryIdAndBookId(libraryId, bookId))
+    ): Flux<BookPresenceDto> {
+        return bookPresenceService.getAllBookPresencesByLibraryIdAndBookId(libraryId, bookId)
+            .map { bookPresenceMapper.toBookPresenceDto(it) }
     }
 
     @DeleteMapping("/library/presence/{presenceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun removeBookFromLibrary(@PathVariable presenceId: String) {
-        bookPresenceService.deleteBookPresenceById(presenceId)
+    fun removeBookFromLibrary(@PathVariable presenceId: String): Mono<Unit> {
+        return bookPresenceService.deleteBookPresenceById(presenceId)
     }
 
     @PostMapping("/user/{id}/borrowings")
@@ -64,18 +60,18 @@ class BookPresenceController(
         @PathVariable(name = "id") userId: String,
         @RequestParam libraryId: String,
         @RequestParam bookId: String
-    ): List<JournalDto> {
-        return journalMapper.toJournalDto(bookPresenceService.addUserToBook(userId, libraryId, bookId))
+    ): Flux<JournalDto> {
+        return bookPresenceService.addUserToBook(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
     }
 
-    @DeleteMapping("/user/{id}/borrowings")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping("/user/{id}/borrowings")
+    @ResponseStatus(HttpStatus.OK)
     @NotificationOnAvailability
     fun returnBookToLibrary(
         @PathVariable(name = "id") userId: String,
         @RequestParam libraryId: String,
         @RequestParam bookId: String
-    ): List<JournalDto> {
-        return journalMapper.toJournalDto(bookPresenceService.removeUserFromBook(userId, libraryId, bookId))
+    ): Flux<JournalDto> {
+        return bookPresenceService.removeUserFromBook(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
     }
 }

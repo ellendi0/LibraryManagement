@@ -10,7 +10,7 @@ data class MongoReservation (
     @Id val id: ObjectId? = null,
     val userId: ObjectId?,
     val bookId: ObjectId?,
-    val libraryId: ObjectId? = null
+    val libraryId: ObjectId?
 ) {
     companion object{
         const val COLLECTION_NAME = "reservation"

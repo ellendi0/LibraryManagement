@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/api/v1/library")
@@ -23,29 +25,28 @@ class LibraryController(
 ) {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun allLibraries(): List<LibraryDto> = libraryMapper.toLibraryDto(libraryService.findAll())
+    fun getAllLibraries(): Flux<LibraryDto> = libraryService.findAll().map { libraryMapper.toLibraryDto(it) }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun getById(@PathVariable id: String): LibraryDto {
-        return libraryMapper.toLibraryDto(libraryService.getLibraryById(id))
+    fun getById(@PathVariable id: String): Mono<LibraryDto> {
+        return libraryService.getLibraryById(id).map { libraryMapper.toLibraryDto(it) }
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createLibrary(@RequestBody @Valid libraryDto: LibraryDto): LibraryDto {
-        return libraryMapper.toLibraryDto(libraryService.createLibrary(libraryMapper.toLibrary(libraryDto)))
+    fun createLibrary(@RequestBody @Valid libraryDto: LibraryDto): Mono<LibraryDto> {
+        return libraryService.createLibrary(libraryMapper.toLibrary(libraryDto)).map { libraryMapper.toLibraryDto(it) }
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateLibrary(@PathVariable id: String, @RequestBody @Valid libraryDto: LibraryDto): LibraryDto {
-        return libraryMapper.toLibraryDto(libraryService.updateLibrary(libraryMapper.toLibrary(libraryDto, id)))
+    fun updateLibrary(@PathVariable id: String, @RequestBody @Valid libraryDto: LibraryDto): Mono<LibraryDto> {
+        return libraryService.updateLibrary(libraryMapper.toLibrary(libraryDto, id))
+            .map { libraryMapper.toLibraryDto(it) }
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteLibrary(@PathVariable id: String) {
-        libraryService.deleteLibraryById(id)
-    }
+    fun deleteLibrary(@PathVariable id: String): Mono<Unit> = libraryService.deleteLibraryById(id)
 }

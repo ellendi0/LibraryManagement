@@ -17,15 +17,14 @@ data class BookDto(
     val publishedYear: Int,
 
     @field:Digits(integer = 13, message = "ISBN must contain 13 digits", fraction = 0)
-    @field:NotNull(message = "ISBN can't be empty")
     val isbn: Long,
 
     @field:NotNull(message = "Genre can't be empty")
     val genre: Genre,
 
-    @field:NotNull(message = "Author can't be empty")
+    @field:NotBlank(message = "Author can't be empty")
     val authorId: String,
 
-    @field:NotNull(message = "Publisher can't be empty")
+    @field:NotBlank(message = "Publisher can't be empty")
     val publisherId: String
 )

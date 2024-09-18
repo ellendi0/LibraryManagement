@@ -7,76 +7,82 @@ import com.example.librarymanagement.model.domain.ReservationOutcome
 import com.example.librarymanagement.model.enums.Availability
 import com.example.librarymanagement.repository.ReservationRepository
 import com.example.librarymanagement.service.BookPresenceService
-import com.example.librarymanagement.service.JournalService
 import com.example.librarymanagement.service.LibraryService
 import com.example.librarymanagement.service.ReservationService
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 
 @Service
 class ReservationServiceImpl(
     private val reservationRepository: ReservationRepository,
     private val bookPresenceService: BookPresenceService,
     private val libraryService: LibraryService,
-    private val journalService: JournalService
 ) : ReservationService {
 
-    override fun getReservationsByUserId(userId: String): List<Reservation> =
+    override fun getAllReservationsByUserId(userId: String): Flux<Reservation> =
         reservationRepository.findAllByUserId(userId)
 
-    @Transactional
-    override fun reserveBook(userId: String, libraryId: String?, bookId: String): ReservationOutcome {
-        if (reservationRepository.existsByBookIdAndUserId(bookId, userId)) {
-            throw ExistingReservationException(bookId, userId)
-        }
-
-        val libraryForReservation = determineLibraryForReservation(libraryId, bookId)
-
-        val availableBookPresence = bookPresenceService
-            .getAllBookPresencesByLibraryIdAndBookId(libraryForReservation, bookId)
-            .firstOrNull { it.availability == Availability.AVAILABLE }
-
-        return availableBookPresence?.let {
-            bookPresenceService.addUserToBook(userId, availableBookPresence.libraryId, bookId)
-            ReservationOutcome.Journals(journalService.getJournalByUserId(userId))
-        } ?: run {
-            reservationRepository.save(Reservation(userId = userId, libraryId = libraryForReservation, bookId = bookId))
-            ReservationOutcome.Reservations(getReservationsByUserId(userId))
-        }
+    override fun reserveBook(userId: String, libraryId: String, bookId: String): Mono<ReservationOutcome> {
+        return validate(userId, libraryId, bookId)
+            .flatMap { tryAddUserIfAvailableBook(userId, libraryId, bookId) }
+            .switchIfEmpty { saveReservation(userId, libraryId, bookId) }
     }
 
-    @Transactional
-    override fun cancelReservation(userId: String, bookId: String) {
-        reservationRepository.findAllByBookIdAndUserId(bookId, userId)
-            .map { it.id?.let { it1 -> reservationRepository.deleteById(it1) } }
-    }
-
-    override fun deleteReservationById(id: String) {
-        reservationRepository.findById(id)?.let { reservationRepository.deleteById(id) }
-    }
-
-    private fun determineLibraryForReservation(libraryId: String?, bookId: String): String {
-        return libraryId?.let {
-            libraryService.getLibraryById(libraryId)
-            if (!bookPresenceService.existsBookPresenceByBookIdAndLibraryId(bookId, libraryId)) {
-                throw EntityNotFoundException("Presence of book")
+    override fun cancelReservation(userId: String, bookId: String): Mono<Unit> {
+        return reservationRepository.findAllByBookIdAndUserId(bookId, userId)
+            .flatMap { reservation ->
+                reservation.id?.let { reservationId ->
+                    reservationRepository.deleteById(reservationId)
+                } ?: Mono.empty()
             }
-            libraryId
-        } ?: run {
-            findLibraryWithFewestReservations(bookId) ?: throw EntityNotFoundException("Libraries with book")
-        }
+            .then(Mono.just(Unit))
     }
 
-    private fun findLibraryWithFewestReservations(bookId: String): String? {
-        return bookPresenceService.getAllByBookId(bookId)
-            .map { bookPresence ->
-                val reservationCount = reservationRepository.findAllByBookIdAndLibraryId(
-                    bookPresence.bookId,
-                    bookPresence.libraryId
-                ).size
-                bookPresence.libraryId to reservationCount
-            }
-            .minByOrNull { it.second }
-            ?.first
+    override fun deleteReservationById(id: String): Mono<Unit> =
+        reservationRepository.findById(id).let { reservationRepository.deleteById(id) }
+
+    private fun tryAddUserIfAvailableBook(userId: String, libraryId: String, bookId: String): Mono<ReservationOutcome> {
+        return bookPresenceService.getAllBookPresencesByLibraryIdAndBookId(libraryId, bookId)
+            .filter { it.availability == Availability.AVAILABLE }
+            .next()
+            .flatMap {
+                bookPresenceService.addUserToBook(userId, libraryId, bookId)
+                    .collectList()
+                    .map<ReservationOutcome> { ReservationOutcome.Journals(it) }
+            }.switchIfEmpty { Mono.empty() }
     }
+
+    private fun saveReservation(
+        userId: String,
+        libraryId: String,
+        bookId: String
+    ): Mono<ReservationOutcome> {
+        return reservationRepository.save(Reservation(userId = userId, libraryId = libraryId, bookId = bookId))
+            .flatMap {
+                getAllReservationsByUserId(userId)
+                    .collectList()
+                    .map { ReservationOutcome.Reservations(it) }
+            }
+    }
+
+    private fun validate(userId: String, libraryId: String, bookId: String): Mono<Boolean> {
+        return Mono.zip(
+            reservationRepository.existsByBookIdAndUserId(bookId, userId),
+            libraryService.existsLibraryById(libraryId),
+            bookPresenceService.existsBookPresenceByBookIdAndLibraryId(bookId, libraryId)
+        )
+            .flatMap {
+                val existsReservation = it.t1
+                val existsBookPresence = it.t3
+
+                when {
+                    existsReservation -> Mono.error(ExistingReservationException(bookId, userId))
+                    !existsBookPresence -> Mono.error(EntityNotFoundException("Presence of book"))
+                    else -> Mono.just(true)
+                }
+            }
+    }
+
 }

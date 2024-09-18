@@ -32,6 +32,8 @@ dependencies {
     // Database Drivers
     runtimeOnly("com.h2database:h2")
     implementation("mysql:mysql-connector-java:8.0.33")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.3")
+
 
     // Kotlin Dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.23")
@@ -41,16 +43,18 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.mongock:mongock-springboot-v3:5.4.4")
     implementation("io.mongock:mongodb-springdata-v4-driver:5.4.4")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive:3.3.3")
 
     // Other Dependencies
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("org.jetbrains.kotlin:kotlin-maven-allopen:1.9.23")
 
     // Test Dependencies
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:testcontainers:1.20.1")
-    testImplementation("org.testcontainers:junit-jupiter:1.20.1")
     testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("io.projectreactor:reactor-test:3.6.9")
+
 }
 
 group = "com.example"
