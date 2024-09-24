@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.example.internalapi.request.publisher.create.proto;
+
+option java_multiple_files = true;
+
+import "com/example/internalapi/model/publisher.proto";
+import "com/example/internalapi/model/error/error.proto";
+
+message GetPublisherByIdRequest {
+  string id = 1;
+}
+
+message GetPublisherByIdResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+    example.internalapi.model.Publisher publisher = 1;
+  }
+
+  message Failure {
+    string message = 100;
+
+    oneof error {
+      example.internalapi.model.Error not_found_error = 1;
+      example.internalapi.model.Error illegal_argument_expression = 2;
+      example.internalapi.model.Error unknown_error = 3;
+    }}
+}
