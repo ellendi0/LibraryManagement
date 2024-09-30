@@ -10,7 +10,7 @@ interface UserService {
     fun getUserById(id: String): Mono<User>
     fun createUser(user: User): Mono<User>
     fun updateUser(updatedUser: User): Mono<User>
-    fun findAll(): Flux<User>
-    fun findJournalsByUser(userId: String): Flux<Journal>
+    fun getAllUsers(): Flux<User>
+    fun getAllJournalsByUser(userId: String): Flux<Journal>
     fun existsUserById(userId: String): Mono<Boolean>
 }

@@ -25,7 +25,7 @@ class LibraryController(
 ) {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllLibraries(): Flux<LibraryDto> = libraryService.findAll().map { libraryMapper.toLibraryDto(it) }
+    fun getAllLibraries(): Flux<LibraryDto> = libraryService.getAllLibraries().map { libraryMapper.toLibraryDto(it) }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

@@ -42,9 +42,9 @@ class GlobalExceptionHandler(private val errorMapper: ErrorMapper) {
         return exception.message?.let { errorMapper.toErrorDto(HttpStatus.BAD_REQUEST, it) }
     }
 
-    @ExceptionHandler(BookNotAvailableException::class)
+    @ExceptionHandler(BookAvailabilityException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    fun handleBookNotAvailableException(exception: BookNotAvailableException): ErrorDto {
+    fun handleBookNotAvailableException(exception: BookAvailabilityException): ErrorDto {
         return errorMapper.toErrorDto(HttpStatus.NOT_FOUND, exception.message)
     }
 

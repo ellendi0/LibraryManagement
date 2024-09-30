@@ -19,7 +19,7 @@ class JournalServiceImpl(private val journalRepository: JournalRepository) : Jou
             .switchIfEmpty { Mono.error(EntityNotFoundException("Journal")) }
     }
 
-    override fun findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
+    override fun getByBookPresenceIdAndUserIdAndDateOfReturningIsNull(
         bookPresenceId: String,
         userId: String
     ): Mono<Journal> {

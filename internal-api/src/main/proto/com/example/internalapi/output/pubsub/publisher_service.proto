@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/publisher/create.proto";
+import "com/example/internalapi/input/reqreply/publisher/get_all.proto";
+import "com/example/internalapi/input/reqreply/publisher/get_by_id.proto";
+import "com/example/internalapi/input/reqreply/publisher/update.proto";
+
+service PublisherService {
+  rpc createPublisher(com.example.internalapi.request.publisher.create.proto.CreatePublisherRequest)
+      returns (com.example.internalapi.request.publisher.create.proto.CreatePublisherResponse);
+
+  rpc getAllPublishers(com.example.internalapi.request.publisher.get_all.proto.GetAllPublishersRequest)
+      returns (com.example.internalapi.request.publisher.get_all.proto.GetAllPublishersResponse);
+
+  rpc getPublisherById(com.example.internalapi.request.publisher.get_by_id.proto.GetPublisherByIdRequest)
+      returns (com.example.internalapi.request.publisher.get_by_id.proto.GetPublisherByIdResponse);
+
+  rpc updatePublisher(com.example.internalapi.request.publisher.update.proto.UpdatePublisherRequest)
+      returns (com.example.internalapi.request.publisher.update.proto.UpdatePublisherResponse);
+}

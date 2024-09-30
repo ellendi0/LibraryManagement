@@ -61,7 +61,7 @@ class BookPresenceController(
         @RequestParam libraryId: String,
         @RequestParam bookId: String
     ): Flux<JournalDto> {
-        return bookPresenceService.addUserToBook(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
+        return bookPresenceService.borrowBookFromLibrary(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
     }
 
     @PutMapping("/user/{id}/borrowings")
@@ -72,6 +72,6 @@ class BookPresenceController(
         @RequestParam libraryId: String,
         @RequestParam bookId: String
     ): Flux<JournalDto> {
-        return bookPresenceService.removeUserFromBook(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
+        return bookPresenceService.returnBookToLibrary(userId, libraryId, bookId).map { journalMapper.toJournalDto(it) }
     }
 }

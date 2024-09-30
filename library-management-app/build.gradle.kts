@@ -42,7 +42,7 @@ dependencies {
     implementation("io.nats:jnats:2.20.2")
 //    implementation("com.google.protobuf:protobuf-java:4.28.1")
     implementation(project(":internal-api"))
-    implementation(project(":gateway"))
+//    implementation(project(":gateway"))
 
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")

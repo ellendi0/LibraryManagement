@@ -22,8 +22,7 @@ class CreatePublisherNatsController(
     override val parser: Parser<CreatePublisherRequest> = CreatePublisherRequest.parser()
 
     override fun handle(request: CreatePublisherRequest): Mono<CreatePublisherResponse> {
-        return publisherMapper.toPublisherDto(request)
-            .let { publisherMapper.toPublisher(it) }
+        return publisherMapper.toPublisher(request)
             .let { publisherService.createPublisher(it) }
             .map { publisherMapper.toPublisherProto(it) }
             .map { buildSuccessResponse(it) }

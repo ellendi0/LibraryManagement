@@ -2,8 +2,8 @@ package com.example.librarymanagement.controller.nats.publisher
 
 import com.example.internalapi.NatsSubject.Publisher.GET_BY_ID
 import com.example.internalapi.model.Publisher
-import com.example.internalapi.request.publisher.create.proto.GetPublisherByIdRequest
-import com.example.internalapi.request.publisher.create.proto.GetPublisherByIdResponse
+import com.example.internalapi.request.publisher.get_by_id.proto.GetPublisherByIdRequest
+import com.example.internalapi.request.publisher.get_by_id.proto.GetPublisherByIdResponse
 import com.example.librarymanagement.controller.nats.NatsController
 import com.example.librarymanagement.dto.mapper.nats.ErrorMapper
 import com.example.librarymanagement.dto.mapper.nats.PublisherMapper

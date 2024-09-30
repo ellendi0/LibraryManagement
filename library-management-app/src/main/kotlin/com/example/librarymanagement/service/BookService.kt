@@ -5,7 +5,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface BookService {
-    fun findAll(): Flux<Book>
+    fun getAll(): Flux<Book>
     fun getBookById(id: String): Mono<Book>
     fun getBookByTitleAndAuthor(title: String, authorId: String): Flux<Book>
     fun createBook(book: Book): Mono<Book>

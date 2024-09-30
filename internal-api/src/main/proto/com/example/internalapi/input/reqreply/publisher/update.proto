@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.example.internalapi.request.publisher.create.proto;
+package com.example.internalapi.request.publisher.update.proto;
 
 option java_multiple_files = true;
 
@@ -8,8 +8,7 @@ import "com/example/internalapi/model/publisher.proto";
 import "com/example/internalapi/model/error/error.proto";
 
 message UpdatePublisherRequest {
-  string id = 1;
-  example.internalapi.model.Publisher publisher = 2;
+  example.internalapi.model.Publisher publisher = 1;
 }
 
 message UpdatePublisherResponse {

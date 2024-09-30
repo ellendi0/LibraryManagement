@@ -25,7 +25,7 @@ message CreatePublisherResponse {
     string message = 100;
 
     oneof error {
-      example.internalapi.model.Error unknown_error = 3;
+      example.internalapi.model.Error unknown_error = 1;
     }
   }
 }

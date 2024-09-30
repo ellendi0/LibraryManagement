@@ -24,7 +24,7 @@ class BookController(private val bookService: BookService, private val bookMappe
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllBooks(): Flux<BookDto> = bookService.findAll().map { bookMapper.toBookDto(it) }
+    fun getAllBooks(): Flux<BookDto> = bookService.getAll().map { bookMapper.toBookDto(it) }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

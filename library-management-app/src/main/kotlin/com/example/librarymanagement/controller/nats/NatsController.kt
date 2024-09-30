@@ -1,5 +1,6 @@
 package com.example.librarymanagement.controller.nats
 
+import com.google.protobuf.GeneratedMessage
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.Parser
 import reactor.core.publisher.Mono
