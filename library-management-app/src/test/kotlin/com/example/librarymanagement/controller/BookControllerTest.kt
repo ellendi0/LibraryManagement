@@ -160,7 +160,7 @@ class BookControllerTest {
         // Given
         val expected = listOf(bookResponseDto)
 
-        every { bookService.findAll() } returns Flux.fromIterable(listOf(book))
+        every { bookService.getAll() } returns Flux.fromIterable(listOf(book))
         every { bookMapper.toBookDto(book) } returns bookResponseDto
 
         // When

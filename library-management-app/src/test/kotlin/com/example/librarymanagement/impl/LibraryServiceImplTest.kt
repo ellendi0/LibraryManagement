@@ -1,10 +1,7 @@
 package com.example.librarymanagement.service.impl
 
 import com.example.librarymanagement.data.LibraryDataFactory
-import com.example.librarymanagement.data.ReservationDataFactory
 import com.example.librarymanagement.repository.LibraryRepository
-import com.example.librarymanagement.service.BookPresenceService
-import com.example.librarymanagement.service.ReservationService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -99,7 +96,7 @@ class LibraryServiceImplTest {
         every { libraryRepository.findAll() } returns Flux.just(library)
 
         // WHEN
-        val result = StepVerifier.create(libraryService.findAll())
+        val result = StepVerifier.create(libraryService.getAllLibraries())
 
         // THEN
         result.assertNext { actual ->

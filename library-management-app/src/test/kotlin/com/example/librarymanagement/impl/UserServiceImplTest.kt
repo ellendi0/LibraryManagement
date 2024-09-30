@@ -106,7 +106,7 @@ class UserServiceImplTest {
         every { userRepository.findAll() } returns Flux.just(user)
 
         // WHEN
-        val result = StepVerifier.create(userService.findAll())
+        val result = StepVerifier.create(userService.getAllUsers())
 
         // THEN
         result.assertNext { actual ->
@@ -122,7 +122,7 @@ class UserServiceImplTest {
         every { journalService.getJournalByUserId(id) } returns Flux.just(journal)
 
         // WHEN
-        val result = StepVerifier.create(userService.findJournalsByUser(id))
+        val result = StepVerifier.create(userService.getAllJournalsByUser(id))
 
         // THEN
         result.assertNext { actual ->

@@ -1,6 +1,5 @@
 package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.data.BookDataFactory
 import com.example.librarymanagement.data.BookPresenceDataFactory
 import com.example.librarymanagement.data.JournalDataFactory
 import com.example.librarymanagement.data.LibraryDataFactory
@@ -64,7 +63,7 @@ class BookPresenceImplTest {
         every { journalService.getJournalByUserId(id) } returns Flux.just(journal)
 
         // WHEN
-        val result = StepVerifier.create(bookPresenceService.addUserToBook(id, id, id))
+        val result = StepVerifier.create(bookPresenceService.borrowBookFromLibrary(id, id, id))
 
         // THEN
         result.assertNext { actual ->
@@ -91,7 +90,7 @@ class BookPresenceImplTest {
         every { journalService.getJournalByUserId(id) } returns Flux.just(journal)
 
         // WHEN
-        val result = StepVerifier.create(bookPresenceService.addUserToBook(id, id, id))
+        val result = StepVerifier.create(bookPresenceService.borrowBookFromLibrary(id, id, id))
 
         // THEN
         result.assertNext { actual ->
@@ -132,14 +131,14 @@ class BookPresenceImplTest {
         every { bookService.existsBookById(id) } returns Mono.just(true)
         every { bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(id, id, Availability.UNAVAILABLE) }
             .returns(Flux.just(bookPresence))
-        every { journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(id, id) }
+        every { journalService.getByBookPresenceIdAndUserIdAndDateOfReturningIsNull(id, id) }
             .returns (Mono.just(journal))
         every { journalService.save(journal) } returns Mono.just(journal)
         every { bookPresenceRepository.saveOrUpdate(bookPresence) } returns Mono.just(bookPresence)
         every { journalService.getJournalByUserId(id) } returns Flux.just(journal)
 
         // WHEN
-        val result = StepVerifier.create(bookPresenceService.removeUserFromBook(id, id, id))
+        val result = StepVerifier.create(bookPresenceService.returnBookToLibrary(id, id, id))
 
         // THEN
         result.assertNext { actual ->
