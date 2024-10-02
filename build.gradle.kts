@@ -24,7 +24,8 @@ subprojects {
         implementation("io.grpc:grpc-protobuf:1.68.0")
         implementation("io.grpc:grpc-netty:1.68.0")
         implementation("io.grpc:grpc-stub:1.68.0")
-        implementation("net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE")
+        implementation("io.grpc:grpc-services:1.68.0")
+//        implementation("net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE")
         implementation("com.salesforce.servicelibs:reactor-grpc-stub:1.2.4")
     }
 }

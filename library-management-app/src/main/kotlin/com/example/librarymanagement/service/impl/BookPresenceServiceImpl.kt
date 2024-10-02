@@ -5,8 +5,10 @@ import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.model.domain.BookPresence
 import com.example.librarymanagement.model.domain.Journal
 import com.example.librarymanagement.model.enums.Availability
+import com.example.librarymanagement.publisher.NotifyOnAvailabilityNatsPublisher
 import com.example.librarymanagement.repository.BookPresenceRepository
 import com.example.librarymanagement.repository.ReservationRepository
+import com.example.librarymanagement.service.AvailabilityNotificationService
 import com.example.librarymanagement.service.BookPresenceService
 import com.example.librarymanagement.service.BookService
 import com.example.librarymanagement.service.JournalService
@@ -25,6 +27,8 @@ class BookPresenceServiceImpl(
     private val bookService: BookService,
     private val libraryService: LibraryService,
     private val userService: UserService,
+    private val notifyOnAvailabilityNatsPublisher: NotifyOnAvailabilityNatsPublisher,
+    private val availabilityNotificationService: AvailabilityNotificationService
 ) : BookPresenceService {
 
     override fun borrowBookFromLibrary(userId: String, libraryId: String, bookId: String): Flux<Journal> {
@@ -80,6 +84,8 @@ class BookPresenceServiceImpl(
                 presence.userId = null
                 bookPresenceRepository.saveOrUpdate(presence)
             }
+            .flatMap { availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId) }
+            .flatMap { notifyOnAvailabilityNatsPublisher.publish(bookId, libraryId, it) }
             .flatMapMany { journalService.getJournalByUserId(userId) }
             .switchIfEmpty(Mono.error(EntityNotFoundException("Journal")))
     }

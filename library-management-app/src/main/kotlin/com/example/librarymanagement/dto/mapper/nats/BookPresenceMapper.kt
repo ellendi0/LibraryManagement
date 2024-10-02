@@ -13,7 +13,7 @@ class BookPresenceMapper {
             .setAvailability(Availability.valueOf(bookPresence.availability.toString()))
             .setBookId(bookPresence.bookId)
             .setLibraryId(bookPresence.libraryId)
-            .setUserId(bookPresence.userId)
+            .setUserId(bookPresence.userId ?: " ")
             .build()
     }
 }

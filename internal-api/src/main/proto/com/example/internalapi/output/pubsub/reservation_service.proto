@@ -5,6 +5,7 @@ package com.example.internalapi;
 import "com/example/internalapi/input/reqreply/reservation/create.proto";
 import "com/example/internalapi/input/reqreply/reservation/get_all_by_user_id.proto";
 import "com/example/internalapi/input/reqreply/reservation/delete.proto";
+import "com/example/internalapi/input/reqreply/reservation/notify_on_availability.proto";
 
 service ReservationService {
   rpc createReservation(com.example.internalapi.request.reservation.create.proto.CreateReservationRequest)
@@ -15,4 +16,7 @@ service ReservationService {
 
   rpc getAllReservationByUserId(com.example.internalapi.request.reservation.get_all_by_user_id.proto.GetAllReservationsByUserIdRequest)
       returns (com.example.internalapi.request.reservation.get_all_by_user_id.proto.GetAllReservationsByUserIdResponse);
+
+  rpc notifyOnAvailability(com.example.internalapi.request.reservation.notify_on_availability.proto.NotifyOnAvailabilityRequest)
+      returns (stream com.example.internalapi.request.reservation.notify_on_availability.proto.NotifyOnAvailabilityResponse);
 }

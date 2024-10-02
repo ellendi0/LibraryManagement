@@ -65,6 +65,7 @@ object NatsSubject {
         const val CREATE = "$RESERVATION_PREFIX.create"
         const val GET_ALL_BY_USER_ID = "$RESERVATION_PREFIX.get_all"
         const val DELETE = "$RESERVATION_PREFIX.delete"
+        const val NOTIFY_ON_AVAILABILITY = "$RESERVATION_PREFIX.notify_availability"
     }
 
     object User {

@@ -20,7 +20,7 @@ dependencies {
     implementation("io.nats:jnats:2.20.2")
     implementation("com.google.protobuf:protobuf-java:3.24.3")
     implementation(project(":internal-api"))
-//    implementation(project(":grpc-server-starter"))
+    implementation(project(":grpc-server-starter"))
 
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")

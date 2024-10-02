@@ -29,7 +29,8 @@ message CreateReservationResponse {
     oneof error {
       example.internalapi.model.Error not_found_error = 1;
       example.internalapi.model.Error book_availability_error = 2;
-      example.internalapi.model.Error unknown_error = 3;
+      example.internalapi.model.Error existing_reservation_error = 3;
+      example.internalapi.model.Error unknown_error = 4;
     }
   }
 }
