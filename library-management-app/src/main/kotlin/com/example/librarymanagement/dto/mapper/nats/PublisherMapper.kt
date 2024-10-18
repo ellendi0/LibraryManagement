@@ -1,39 +1,31 @@
 package com.example.librarymanagement.dto.mapper.nats
 
 import com.example.internalapi.request.publisher.create.proto.CreatePublisherRequest
-import com.example.internalapi.request.publisher.create.proto.UpdatePublisherRequest
-import com.example.librarymanagement.dto.PublisherDto
+import com.example.internalapi.request.publisher.update.proto.UpdatePublisherRequest
 import com.example.librarymanagement.model.domain.Publisher
 import org.springframework.stereotype.Component
+import com.example.internalapi.model.Publisher as PublisherProto
 
 @Component("natsPublisherMapper")
 class PublisherMapper {
-    fun toPublisherDto(request: CreatePublisherRequest): PublisherDto {
-        return PublisherDto(
+    fun toPublisher(request: CreatePublisherRequest): Publisher {
+        return Publisher(
             id = request.publisher.id.ifEmpty { null },
             name = request.publisher.name,
         )
     }
 
-    fun toPublisherDto(request: UpdatePublisherRequest): PublisherDto {
-        return PublisherDto(
+    fun toPublisher(request: UpdatePublisherRequest): Publisher {
+        return Publisher(
             id = request.publisher.id,
             name = request.publisher.name,
         )
     }
 
-    fun toPublisher(publisherDto: PublisherDto, id: String? = null): Publisher {
-        return Publisher(
-            id = publisherDto.id ?: id,
-            name = publisherDto.name
-        )
-    }
-
-    fun toPublisherProto(publisher: Publisher): com.example.internalapi.model.Publisher {
-        return com.example.internalapi.model.Publisher.newBuilder()
+    fun toPublisherProto(publisher: Publisher): PublisherProto {
+        return PublisherProto.newBuilder()
             .setId(publisher.id)
             .setName(publisher.name)
             .build()
     }
-
 }

@@ -49,9 +49,9 @@ class UserServiceImpl(
             .flatMap { userRepository.save(it) }
     }
 
-    override fun findAll(): Flux<User> = userRepository.findAll()
+    override fun getAllUsers(): Flux<User> = userRepository.findAll()
 
-    override fun findJournalsByUser(userId: String): Flux<Journal> = journalService.getJournalByUserId(userId)
+    override fun getAllJournalsByUser(userId: String): Flux<Journal> = journalService.getJournalByUserId(userId)
 
     override fun existsUserById(userId: String): Mono<Boolean> =
         userRepository.existsById(userId)

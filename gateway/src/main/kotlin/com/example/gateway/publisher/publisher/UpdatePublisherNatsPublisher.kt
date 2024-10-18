@@ -1,9 +1,9 @@
-package com.example.com.example.gateway.publisher.publisher
+package com.example.gateway.publisher.publisher
 
 import com.example.gateway.publisher.NatsPublisher
 import com.example.internalapi.NatsSubject
-import com.example.internalapi.request.publisher.create.proto.UpdatePublisherRequest
-import com.example.internalapi.request.publisher.create.proto.UpdatePublisherResponse
+import com.example.internalapi.request.publisher.update.proto.UpdatePublisherRequest
+import com.example.internalapi.request.publisher.update.proto.UpdatePublisherResponse
 import com.google.protobuf.Parser
 import io.nats.client.Connection
 import org.springframework.stereotype.Component

@@ -1,12 +1,14 @@
 package com.example.librarymanagement.service.impl
 
-import com.example.librarymanagement.exception.BookNotAvailableException
+import com.example.librarymanagement.exception.BookAvailabilityException
 import com.example.librarymanagement.exception.EntityNotFoundException
 import com.example.librarymanagement.model.domain.BookPresence
 import com.example.librarymanagement.model.domain.Journal
 import com.example.librarymanagement.model.enums.Availability
+import com.example.librarymanagement.publisher.NotifyOnAvailabilityNatsPublisher
 import com.example.librarymanagement.repository.BookPresenceRepository
 import com.example.librarymanagement.repository.ReservationRepository
+import com.example.librarymanagement.service.AvailabilityNotificationService
 import com.example.librarymanagement.service.BookPresenceService
 import com.example.librarymanagement.service.BookService
 import com.example.librarymanagement.service.JournalService
@@ -25,9 +27,11 @@ class BookPresenceServiceImpl(
     private val bookService: BookService,
     private val libraryService: LibraryService,
     private val userService: UserService,
+    private val notifyOnAvailabilityNatsPublisher: NotifyOnAvailabilityNatsPublisher,
+    private val availabilityNotificationService: AvailabilityNotificationService
 ) : BookPresenceService {
 
-    override fun addUserToBook(userId: String, libraryId: String, bookId: String): Flux<Journal> {
+    override fun borrowBookFromLibrary(userId: String, libraryId: String, bookId: String): Flux<Journal> {
         return validate(userId, libraryId, bookId)
             .flatMap {
                 reservationRepository.findFirstByBookIdAndLibraryId(bookId, libraryId)
@@ -36,13 +40,13 @@ class BookPresenceServiceImpl(
                             reservation.userId == userId -> reservationRepository.deleteById(reservation.id!!)
                                 .thenReturn(Mono.just(reservation))
 
-                            else -> Mono.error(BookNotAvailableException(libraryId, bookId))
+                            else -> Mono.error(BookAvailabilityException(libraryId, bookId, Availability.UNAVAILABLE))
                         }
                     }.switchIfEmpty(Mono.empty())
             }
             .then(bookPresenceRepository.addBookToUser(userId, libraryId, bookId))
             .flatMapMany { journalService.getJournalByUserId(userId) }
-            .switchIfEmpty(Mono.error(BookNotAvailableException(libraryId, bookId)))
+            .switchIfEmpty(Mono.error(BookAvailabilityException(libraryId, bookId, Availability.UNAVAILABLE)))
     }
 
     override fun addBookToLibrary(libraryId: String, bookId: String): Mono<BookPresence> {
@@ -56,7 +60,7 @@ class BookPresenceServiceImpl(
             }
     }
 
-    override fun removeUserFromBook(userId: String, libraryId: String, bookId: String): Flux<Journal> {
+    override fun returnBookToLibrary(userId: String, libraryId: String, bookId: String): Flux<Journal> {
         return validate(userId, libraryId, bookId)
             .flatMap {
                 bookPresenceRepository.findAllByLibraryIdAndBookIdAndAvailability(
@@ -68,7 +72,7 @@ class BookPresenceServiceImpl(
                     .next()
             }
             .flatMap { presence ->
-                journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(presence.id!!, presence.userId!!)
+                journalService.getByBookPresenceIdAndUserIdAndDateOfReturningIsNull(presence.id!!, presence.userId!!)
                     .zipWith(Mono.just(presence))
             }
             .flatMap {
@@ -80,6 +84,8 @@ class BookPresenceServiceImpl(
                 presence.userId = null
                 bookPresenceRepository.saveOrUpdate(presence)
             }
+            .flatMap { availabilityNotificationService.notifyUserAboutBookAvailability(bookId, libraryId) }
+            .flatMap { notifyOnAvailabilityNatsPublisher.publish(bookId, libraryId, it) }
             .flatMapMany { journalService.getJournalByUserId(userId) }
             .switchIfEmpty(Mono.error(EntityNotFoundException("Journal")))
     }
@@ -93,6 +99,12 @@ class BookPresenceServiceImpl(
         bookPresenceRepository.findAllByLibraryIdAndBookId(libraryId, bookId)
 
     override fun deleteBookPresenceById(id: String): Mono<Unit> = bookPresenceRepository.deleteById(id)
+
+    override fun existsAvailableBookInLibrary(bookId: String, libraryId: String): Mono<Boolean> {
+        return getAllBookPresencesByLibraryIdAndBookId(libraryId, bookId)
+            .filter { it.availability == Availability.AVAILABLE }
+            .hasElements()
+    }
 
     override fun existsBookPresenceByBookIdAndLibraryId(bookId: String, libraryId: String): Mono<Boolean> =
         bookPresenceRepository.existsByBookIdAndLibraryId(bookId, libraryId)

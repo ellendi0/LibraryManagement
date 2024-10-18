@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/book/create.proto";
+import "com/example/internalapi/input/reqreply/book/delete.proto";
+import "com/example/internalapi/input/reqreply/book/get_all.proto";
+import "com/example/internalapi/input/reqreply/book/get_by_id.proto";
+import "com/example/internalapi/input/reqreply/book/get_by_title_and_author.proto";
+import "com/example/internalapi/input/reqreply/book/update.proto";
+import "com/example/internalapi/model/book.proto";
+
+service BookService {
+  rpc createBook(com.example.internalapi.request.book.create.proto.CreateBookRequest)
+      returns (com.example.internalapi.request.book.create.proto.CreateBookResponse);
+
+  rpc deleteBook(com.example.internalapi.request.book.delete.proto.DeleteBookRequest)
+      returns (com.example.internalapi.request.book.delete.proto.DeleteBookResponse);
+
+  rpc getAllBooks(com.example.internalapi.request.book.get_all.proto.GetAllBooksRequest)
+      returns (com.example.internalapi.request.book.get_all.proto.GetAllBooksResponse);
+
+  rpc getBookById(com.example.internalapi.request.book.get_by_id.proto.GetBookByIdRequest)
+      returns (com.example.internalapi.request.book.get_by_id.proto.GetBookByIdResponse);
+
+  rpc getBookByTitleAndAuthor(com.example.internalapi.request.book.get_by_title_and_author.proto.GetBookByTitleAndAuthorRequest)
+      returns (com.example.internalapi.request.book.get_by_title_and_author.proto.GetBookByTitleAndAuthorResponse);
+
+  rpc updateBook(com.example.internalapi.request.book.update.proto.UpdateBookRequest)
+      returns (com.example.internalapi.request.book.update.proto.UpdateBookResponse);
+}

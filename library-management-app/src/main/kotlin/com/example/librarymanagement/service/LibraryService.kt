@@ -5,7 +5,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface LibraryService {
-    fun findAll(): Flux<Library>
+    fun getAllLibraries(): Flux<Library>
     fun getLibraryById(id: String): Mono<Library>
     fun createLibrary(library: Library): Mono<Library>
     fun updateLibrary(updatedLibrary: Library): Mono<Library>

@@ -79,7 +79,7 @@ class JournalServiceImplTest {
             .returns(Mono.just(journal))
 
         // WHEN
-        val result = StepVerifier.create(journalService.findByBookPresenceIdAndUserIdAndDateOfReturningIsNull(id, id))
+        val result = StepVerifier.create(journalService.getByBookPresenceIdAndUserIdAndDateOfReturningIsNull(id, id))
 
         // THEN
         result.assertNext { actual ->

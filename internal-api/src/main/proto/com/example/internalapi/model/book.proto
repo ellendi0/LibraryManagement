@@ -1,0 +1,25 @@
+syntax = "proto3";
+package com.example.internalapi.model;
+
+option java_package = "com.example.internalapi.model";
+option java_multiple_files = true;
+
+message Book {
+  optional string id = 1;
+  string title = 2;
+  string author_id = 3;
+  string publisher_id = 4;
+  int32 published_year = 5;
+  int64 isbn = 6;
+  Genre genre = 7;
+}
+
+message BookList {
+  repeated Book books = 1;
+}
+
+enum Genre {
+  POETRY = 0;
+  PROSE = 1;
+  DRAMA = 2;
+}

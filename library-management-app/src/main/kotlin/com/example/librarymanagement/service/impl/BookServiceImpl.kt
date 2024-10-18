@@ -18,7 +18,7 @@ class BookServiceImpl(
     private val publisherService: PublisherService
 ) : BookService {
 
-    override fun findAll(): Flux<Book> = bookRepository.findAll()
+    override fun getAll(): Flux<Book> = bookRepository.findAll()
 
     override fun getBookById(id: String): Mono<Book> =
         bookRepository

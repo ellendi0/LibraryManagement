@@ -2,8 +2,8 @@ package com.example.librarymanagement.controller.nats.publisher
 
 import com.example.internalapi.NatsSubject.Publisher.UPDATE
 import com.example.internalapi.model.Publisher
-import com.example.internalapi.request.publisher.create.proto.UpdatePublisherRequest
-import com.example.internalapi.request.publisher.create.proto.UpdatePublisherResponse
+import com.example.internalapi.request.publisher.update.proto.UpdatePublisherRequest
+import com.example.internalapi.request.publisher.update.proto.UpdatePublisherResponse
 import com.example.librarymanagement.controller.nats.NatsController
 import com.example.librarymanagement.dto.mapper.nats.ErrorMapper
 import com.example.librarymanagement.dto.mapper.nats.PublisherMapper
@@ -23,8 +23,7 @@ class UpdatePublisherNatsController(
     override val parser: Parser<UpdatePublisherRequest> = UpdatePublisherRequest.parser()
 
     override fun handle(request: UpdatePublisherRequest): Mono<UpdatePublisherResponse> {
-        return publisherMapper.toPublisherDto(request)
-            .let { publisherMapper.toPublisher(it) }
+        return publisherMapper.toPublisher(request)
             .let { publisherService.updatePublisher(it) }
             .map { publisherMapper.toPublisherProto(it) }
             .map { buildSuccessResponse(it) }
@@ -36,24 +35,13 @@ class UpdatePublisherNatsController(
     }
 
     private fun buildFailureResponse(exception: Throwable): UpdatePublisherResponse {
-        return when (exception) {
-            is EntityNotFoundException -> {
-                UpdatePublisherResponse.newBuilder().apply {
-                    failureBuilder.setNotFoundError(errorMapper.toErrorProto(exception))
-                }.build()
+        return UpdatePublisherResponse.newBuilder().apply {
+            val errorProto = errorMapper.toErrorProto(exception)
+            when (exception) {
+                is EntityNotFoundException -> failureBuilder.setNotFoundError(errorProto)
+                is IllegalArgumentException -> failureBuilder.setIllegalArgumentExpression(errorProto)
+                else -> failureBuilder.setUnknownError(errorProto)
             }
-
-            is IllegalArgumentException -> {
-                UpdatePublisherResponse.newBuilder().apply {
-                    failureBuilder.setIllegalArgumentExpression(errorMapper.toErrorProto(exception))
-                }.build()
-            }
-
-            else -> {
-                UpdatePublisherResponse.newBuilder().apply {
-                    failureBuilder.setUnknownError(errorMapper.toErrorProto(exception))
-                }.build()
-            }
-        }
+        }.build()
     }
 }

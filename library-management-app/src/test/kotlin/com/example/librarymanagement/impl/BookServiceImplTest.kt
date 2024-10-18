@@ -46,7 +46,7 @@ class BookServiceImplTest {
         every { bookRepository.findAll() } returns Flux.just(expected)
 
         // WHEN
-        val result = StepVerifier.create(bookService.findAll())
+        val result = StepVerifier.create(bookService.getAll())
 
         // THEN
         result.assertNext { actual ->
@@ -97,7 +97,7 @@ class BookServiceImplTest {
         every { bookRepository.findAll() } returns Flux.just(book)
 
         // WHEN
-        val result = StepVerifier.create(bookService.findAll())
+        val result = StepVerifier.create(bookService.getAll())
 
         // THEN
         result.assertNext { actual ->

@@ -20,9 +20,7 @@ dependencies {
     implementation("io.nats:jnats:2.20.2")
     implementation("com.google.protobuf:protobuf-java:3.24.3")
     implementation(project(":internal-api"))
-    runtimeOnly ("io.grpc:grpc-netty-shaded:1.49.2")
-    implementation("io.grpc:grpc-protobuf:1.68.0")
-    implementation("io.grpc:grpc-stub:1.68.0")
+    implementation(project(":grpc-server-starter"))
 
     // Test Dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -39,3 +37,5 @@ tasks.withType<Test> {
 kotlin {
     jvmToolchain(21)
 }
+
+

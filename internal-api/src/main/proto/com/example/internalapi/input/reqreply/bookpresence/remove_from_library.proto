@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package com.example.internalapi.request.book_presence.remove_from_library.proto;
+
+option java_multiple_files = true;
+
+import "com/example/internalapi/model/book_presence.proto";
+import "com/example/internalapi/model/error/error.proto";
+
+message RemoveBookFromLibraryRequest {
+  string book_presence_id = 1;
+}
+
+message RemoveBookFromLibraryResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+
+  }
+
+  message Failure {
+    string message = 100;
+  }
+}

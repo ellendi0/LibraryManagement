@@ -62,7 +62,7 @@ class ReservationServiceImplTest {
         every { bookPresenceService.existsBookPresenceByBookIdAndLibraryId(id, id) } returns Mono.just(true)
         every { bookPresenceService.getAllBookPresencesByLibraryIdAndBookId(id, id) }
             .returns(Flux.just(bookPresence))
-        every { bookPresenceService.addUserToBook(id, id, id) } returns Flux.just(journal)
+        every { bookPresenceService.borrowBookFromLibrary(id, id, id) } returns Flux.just(journal)
 
         // WHEN
         val result = StepVerifier.create(reservationService.reserveBook(id, id, id))
@@ -70,7 +70,7 @@ class ReservationServiceImplTest {
         // THEN
         result.assertNext { actual ->
             Assertions.assertEquals(expected, actual)
-            verify(exactly = 1) { bookPresenceService.addUserToBook(id, id, id) }
+            verify(exactly = 1) { bookPresenceService.borrowBookFromLibrary(id, id, id) }
         }.verifyComplete()
     }
 

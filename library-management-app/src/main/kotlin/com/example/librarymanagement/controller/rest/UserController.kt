@@ -7,7 +7,6 @@ import com.example.librarymanagement.dto.UserResponseDto
 import com.example.librarymanagement.dto.mapper.JournalMapper
 import com.example.librarymanagement.dto.mapper.ReservationMapper
 import com.example.librarymanagement.dto.mapper.UserMapper
-import com.example.librarymanagement.model.domain.ReservationOutcome
 import com.example.librarymanagement.service.ReservationService
 import com.example.librarymanagement.service.UserService
 import jakarta.validation.Valid
@@ -36,7 +35,7 @@ class UserController(
 ) {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    fun findById(@PathVariable id: String): Mono<UserResponseDto> =
+    fun getById(@PathVariable id: String): Mono<UserResponseDto> =
         userService.getUserById(id).map { userMapper.toUserResponseDto(it) }
 
     @GetMapping(params = ["email", "phoneNumber"])
@@ -65,41 +64,32 @@ class UserController(
 
     @GetMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.OK)
-    fun findReservationsByUser(@PathVariable id: String): Flux<ReservationDto> {
+    fun getAllReservationsByUser(@PathVariable id: String): Flux<ReservationDto> {
         return reservationService.getAllReservationsByUserId(id).map { reservationMapper.toReservationDto(it) }
     }
 
     @GetMapping("/{id}/journals")
     @ResponseStatus(HttpStatus.OK)
-    fun findJournalsByUser(@PathVariable id: String): Flux<JournalDto> {
-        return userService.findJournalsByUser(id).map { journalMapper.toJournalDto(it) }
+    fun getAllJournalsByUser(@PathVariable id: String): Flux<JournalDto> {
+        return userService.getAllJournalsByUser(id).map { journalMapper.toJournalDto(it) }
     }
 
     @PostMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.CREATED)
-    fun reserveBookInLibrary(
+    fun createReservation(
         @PathVariable(name = "id") userId: String,
         @RequestParam libraryId: String,
         @RequestParam bookId: String
-    ): Flux<Any> =
-        reservationService.reserveBook(userId, libraryId, bookId)
-            .flatMapMany {
-                when (it) {
-                    is ReservationOutcome.Journals ->
-                        Flux.fromIterable(journalMapper.toJournalDto(it.journals))
-
-                    is ReservationOutcome.Reservations ->
-                        Flux.fromIterable(reservationMapper.toReservationDto(it.reservations))
-                }
-            }
+    ): Mono<ReservationDto> =
+        reservationService.reserveBook(userId, libraryId, bookId).map { reservationMapper.toReservationDto(it) }
 
     @DeleteMapping("/{userId}/reservations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun cancelBookInLibrary(@PathVariable userId: String, @RequestParam(name = "id") bookId: String): Mono<Unit> {
+    fun cancelReservation(@PathVariable userId: String, @RequestParam(name = "id") bookId: String): Mono<Unit> {
         return reservationService.cancelReservation(userId, bookId)
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    fun getAllUsers(): Flux<UserResponseDto> = userService.findAll().map { userMapper.toUserResponseDto(it) }
+    fun getAllUsers(): Flux<UserResponseDto> = userService.getAllUsers().map { userMapper.toUserResponseDto(it) }
 }

@@ -13,7 +13,7 @@ class LibraryServiceImpl(
     private val libraryRepository: LibraryRepository,
 ) : LibraryService {
 
-    override fun findAll(): Flux<Library> = libraryRepository.findAll()
+    override fun getAllLibraries(): Flux<Library> = libraryRepository.findAll()
 
     override fun getLibraryById(id: String): Mono<Library> {
         return libraryRepository
