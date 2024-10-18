@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/bookpresence/find_all_by_library_id_and_book_id.proto";
+
+service FindAllByLibraryIdAndBookIdService {
+  rpc findAllByLibraryIdAndBookId(com.example.internalapi.request.book_presence.find_all_by_library_id_and_book_id.proto.FindAllBooksByLibraryIdAndBookIdRequest)
+      returns (com.example.internalapi.request.book_presence.find_all_by_library_id_and_book_id.proto.FindAllBooksByLibraryIdAndBookIdResponse);
+}

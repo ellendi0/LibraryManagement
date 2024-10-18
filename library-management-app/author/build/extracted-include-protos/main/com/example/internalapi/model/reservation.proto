@@ -1,0 +1,16 @@
+syntax = "proto3";
+package com.example.internalapi.model;
+
+option java_package = "com.example.internalapi.model";
+option java_multiple_files = true;
+
+message Reservation {
+  optional string id = 1;
+  string user_id = 2;
+  string book_id = 3;
+  string library_id = 4;
+}
+
+message ReservationList {
+  repeated Reservation reservations = 1;
+}

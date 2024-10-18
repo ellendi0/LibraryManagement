@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/bookpresence/remove_from_library.proto";
+
+service RemoveBookPresenceFromLibrary {
+  rpc removeFromLibrary(com.example.internalapi.request.book_presence.remove_from_library.proto.RemoveBookFromLibraryRequest)
+      returns (com.example.internalapi.request.book_presence.remove_from_library.proto.RemoveBookFromLibraryResponse);
+}

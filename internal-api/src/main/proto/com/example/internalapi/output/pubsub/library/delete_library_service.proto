@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/library/delete.proto";
+
+service DeleteLibraryService {
+  rpc deleteLibrary(com.example.internalapi.request.library.delete.proto.DeleteLibraryRequest)
+      returns (com.example.internalapi.request.library.delete.proto.DeleteLibraryResponse);
+}

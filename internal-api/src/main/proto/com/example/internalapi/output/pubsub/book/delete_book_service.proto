@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/book/delete.proto";
+
+service DeleteBookService {
+  rpc deleteBook(com.example.internalapi.request.book.delete.proto.DeleteBookRequest)
+      returns (com.example.internalapi.request.book.delete.proto.DeleteBookResponse);
+}

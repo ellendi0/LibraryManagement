@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     jacoco
     kotlin("jvm") version "1.9.23"
@@ -25,7 +27,16 @@ subprojects {
         implementation("io.grpc:grpc-netty:1.68.0")
         implementation("io.grpc:grpc-stub:1.68.0")
         implementation("io.grpc:grpc-services:1.68.0")
-//        implementation("net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE")
         implementation("com.salesforce.servicelibs:reactor-grpc-stub:1.2.4")
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }

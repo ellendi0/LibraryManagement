@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/publisher/create.proto";
+
+service CreatePublisherService {
+  rpc createPublisher(com.example.internalapi.request.publisher.create.proto.CreatePublisherRequest)
+      returns (com.example.internalapi.request.publisher.create.proto.CreatePublisherResponse);
+}

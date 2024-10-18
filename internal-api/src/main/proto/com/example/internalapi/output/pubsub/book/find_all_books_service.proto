@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/book/find_all.proto";
+
+service FindAllBooksService {
+  rpc findAllBooks(com.example.internalapi.request.book.find_all.proto.FindAllBooksRequest)
+      returns (com.example.internalapi.request.book.find_all.proto.FindAllBooksResponse);
+}

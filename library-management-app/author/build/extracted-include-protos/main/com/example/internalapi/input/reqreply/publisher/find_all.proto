@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package com.example.internalapi.request.publisher.find_all.proto;
+
+option java_multiple_files = true;
+
+import "com/example/internalapi/model/publisher.proto";
+
+message FindAllPublishersRequest {
+
+}
+
+message FindAllPublishersResponse {
+  oneof response {
+    Success success = 1;
+  }
+
+  message Success {
+    example.internalapi.model.PublisherList publishers = 1;
+  }
+}

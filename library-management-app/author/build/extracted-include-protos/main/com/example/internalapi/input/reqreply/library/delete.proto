@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package com.example.internalapi.request.library.delete.proto;
+
+option java_multiple_files = true;
+
+import "com/example/internalapi/model/library.proto";
+import "com/example/internalapi/model/error/error.proto";
+
+message DeleteLibraryRequest {
+  string id = 1;
+}
+
+message DeleteLibraryResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+
+  }
+
+  message Failure {
+    string message = 100;
+  }
+}

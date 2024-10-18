@@ -1,0 +1,15 @@
+syntax = "proto3";
+package com.example.internalapi.model;
+
+option java_package = "com.example.internalapi.model";
+option java_multiple_files = true;
+
+message Library {
+  optional string id = 1;
+  string name = 2;
+  string address = 3;
+}
+
+message LibraryList {
+  repeated Library libraries = 1;
+}
