@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/library/get_by_id.proto";
+
+service GetLibraryByIdService {
+  rpc getLibraryById(com.example.internalapi.request.library.get_by_id.proto.GetLibraryByIdRequest)
+      returns (com.example.internalapi.request.library.get_by_id.proto.GetLibraryByIdResponse);
+}

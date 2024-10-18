@@ -1,0 +1,17 @@
+syntax = "proto3";
+package com.example.internalapi.model;
+
+option java_package = "com.example.internalapi.model";
+option java_multiple_files = true;
+
+message Journal {
+  optional string id = 1;
+  string date_of_borrowing = 2;
+  string date_of_returning = 3;
+  string user_id = 4;
+  string book_presence_id = 5;
+}
+
+message JournalList {
+  repeated Journal journals = 1;
+}

@@ -3,15 +3,16 @@ package com.example.grpcserverstarter
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-
 
 @Configuration
 class GrpcConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
     fun grpcServer(applicationContext: ApplicationContext): Server {
         val serverBuilder = ServerBuilder.forPort(9091)
 
@@ -20,7 +21,6 @@ class GrpcConfiguration {
         for ((_, service) in grpcServiceBeans) {
             serverBuilder.addService(service as io.grpc.BindableService)
         }
-
         serverBuilder.addService(ProtoReflectionService.newInstance())
         val server = serverBuilder.build()
         server.start()

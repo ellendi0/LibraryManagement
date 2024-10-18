@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/reservation/create.proto";
+
+service CreateReservationService {
+  rpc createReservation(com.example.internalapi.request.reservation.create.proto.CreateReservationRequest)
+      returns (com.example.internalapi.request.reservation.create.proto.CreateReservationResponse);
+}

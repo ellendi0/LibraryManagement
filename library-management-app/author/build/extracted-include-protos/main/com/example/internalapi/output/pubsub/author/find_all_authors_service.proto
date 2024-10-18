@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/author/find_all.proto";
+
+service FindAllAuthorsService {
+  rpc findAllAuthors(com.example.internalapi.request.author.find_all.proto.FindAllAuthorsRequest)
+      returns (com.example.internalapi.request.author.find_all.proto.FindAllAuthorsResponse);
+}

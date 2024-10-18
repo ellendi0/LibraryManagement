@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/library/create.proto";
+
+service CreateLibraryService {
+  rpc createLibrary(com.example.internalapi.request.library.create.proto.CreateLibraryRequest)
+      returns (com.example.internalapi.request.library.create.proto.CreateLibraryResponse);
+}

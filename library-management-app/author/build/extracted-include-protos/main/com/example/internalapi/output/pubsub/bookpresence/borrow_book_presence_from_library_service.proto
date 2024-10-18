@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/bookpresence/borrow_from_library.proto";
+
+service BorrowBookFromLibraryService {
+  rpc borrowFromLibrary(com.example.internalapi.request.book_presence.borrow_from_library.proto.BorrowBookFromLibraryRequest)
+      returns (com.example.internalapi.request.book_presence.borrow_from_library.proto.BorrowBookFromLibraryResponse);
+}

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.example.internalapi.request.reservation.notify_on_availability.proto;
+
+option java_multiple_files = true;
+
+import "com/example/internalapi/model/reservation.proto";
+import "com/example/internalapi/model/notification.proto";
+
+message NotifyOnAvailabilityRequest {
+  string book_id = 1;
+  string library_id = 2;
+}
+
+message NotifyOnAvailabilityResponse {
+  com.example.internalapi.model.Notification notification = 1;
+}

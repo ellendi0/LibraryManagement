@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/bookpresence/return_to_library.proto";
+
+service ReturnBookToLibraryService {
+  rpc returnToLibrary(com.example.internalapi.request.book_presence.return_to_library.proto.ReturnBookToLibraryRequest)
+      returns (com.example.internalapi.request.book_presence.return_to_library.proto.ReturnBookToLibraryResponse);
+}

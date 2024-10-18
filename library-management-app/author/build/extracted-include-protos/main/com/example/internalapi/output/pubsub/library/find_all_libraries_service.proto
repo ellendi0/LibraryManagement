@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.example.internalapi;
+
+import "com/example/internalapi/input/reqreply/library/find_all.proto";
+
+service FindAllLibrariesService {
+  rpc findAllLibraries(com.example.internalapi.request.library.find_all.proto.FindAllLibrariesRequest)
+      returns (com.example.internalapi.request.library.find_all.proto.FindAllLibrariesResponse);
+}
